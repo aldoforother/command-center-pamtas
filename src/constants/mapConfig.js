@@ -1,9 +1,9 @@
-// Default map config untuk wilayah Latihan Yonkav 8/NSW
-// Jawa Timur - daerah latihan
+// Default map config — Satgas Pamtas RI-MAL Yonkav 8/NSW
+// Wilayah: Kab. Nunukan, Kalimantan Utara
 
 export const MAP_CONFIG = {
   center: [-8.295, 112.700],
-  zoom: 13,
+  zoom: 12,
   minZoom: 6,
   maxZoom: 17,
   // Dark tile — CartoDB Dark Matter
