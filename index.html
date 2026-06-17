@@ -11,6 +11,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <!-- GitHub Pages SPA routing: restore path dari 404.html redirect -->
+    <script>
+      (function() {
+        var redirect = sessionStorage.getItem('redirect');
+        if (redirect) {
+          sessionStorage.removeItem('redirect');
+          window.history.replaceState(null, null,
+            '/command-center-pamtas' + (redirect === '/' ? '' : redirect)
+          );
+        }
+      })();
+    </script>
     <script type="module" crossorigin src="/command-center-pamtas/assets/index-Bw9FDKRx.js"></script>
     <link rel="stylesheet" crossorigin href="/command-center-pamtas/assets/index-uYTVVo4v.css">
   </head>
