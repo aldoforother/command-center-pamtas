@@ -27,9 +27,11 @@ export default function OverviewPage() {
     .sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal))
     .slice(0, 5)
 
-  const posRawan = [...new Set(activeKerawanan.map(k => k.pos_id))].length
-  const totalPos = (posList || []).length || 14
-  const posAman  = totalPos - posRawan
+  const posRawan     = [...new Set(activeKerawanan.map(k => k.pos_id))].length
+  const totalPos     = (posList || []).length || 18
+  const posAman      = totalPos - posRawan
+  // Hitung total personel dari posList (field jumlah_personel sudah dinormalisasi dari kuat_pers)
+  const totalPersonel = (posList || []).reduce((s, p) => s + (Number(p.jumlah_personel) || 0), 0)
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-[#050810]">
@@ -57,11 +59,18 @@ export default function OverviewPage() {
       {/* ══ TOP ROW — metric cards aligned with panel outer boundaries ══ */}
       <div className="absolute left-2 right-2 z-[10] flex gap-2 pointer-events-none" style={{ top: '8px' }}>
         <MetricCard
+          label="TOTAL PERSONEL"
+          value={posLoading ? '—' : totalPersonel}
+          unit="pax"
+          color="#00ff88"
+          icon="◫"
+        />
+        <MetricCard
           label="TOTAL POS"
           value={posLoading ? '—' : (posList || []).length}
           unit="pos aktif"
-          color="#00ff88"
-          icon="◫"
+          color="#4488ff"
+          icon="◈"
         />
         <MetricCard
           label="TOTAL PENDUDUK"
@@ -191,6 +200,35 @@ export default function OverviewPage() {
             <IntelRow label="Pos Rawan"         value={posRawan}               total={totalPos}  color="#ff3333" />
             <IntelRow label="Kegiatan Binter"   value={(binter||[]).length}    unit="kegiatan" color="#4488ff" />
             <IntelRow label="Tindak Pelanggaran" value={activeKerawanan.length} unit="kasus"   color="#ffaa00" />
+          </div>
+        </OverlayPanel>
+
+        {/* Kerawanan Utama per Pos */}
+        <OverlayPanel title="⚠ POTENSI ANCAMAN" onMore={() => navigate('/kerawanan')}>
+          <div className="space-y-1.5 max-h-52 overflow-y-auto pr-0.5">
+            {(posList || []).filter(p => p.kerawanan_utama && p.kerawanan_utama !== 'Nihil' && p.kerawanan_utama !== '—').length === 0 ? (
+              <p className="text-[9px] text-[rgba(200,214,229,0.3)] py-2 text-center tracking-widest uppercase">
+                Belum ada data
+              </p>
+            ) : (
+              (posList || [])
+                .filter(p => p.kerawanan_utama && p.kerawanan_utama !== 'Nihil' && p.kerawanan_utama !== '—')
+                .map(pos => (
+                  <div key={pos.pos_id}
+                    className="flex items-start gap-2 p-1.5 rounded-sm cursor-pointer"
+                    style={{ background: 'rgba(255,170,0,0.04)', border: '1px solid rgba(255,170,0,0.12)' }}
+                    onClick={() => navigate(`/pos/${pos.pos_id}`)}
+                  >
+                    <span className="font-mono text-[8px] font-bold flex-shrink-0 px-1 py-0.5 rounded-sm"
+                      style={{ color: '#ffaa00', background: 'rgba(255,170,0,0.1)', border: '1px solid rgba(255,170,0,0.2)' }}>
+                      {pos.pos_id.replace('POS-', 'P')}
+                    </span>
+                    <p className="text-[9px] text-[rgba(200,214,229,0.55)] leading-tight line-clamp-2">
+                      {pos.kerawanan_utama}
+                    </p>
+                  </div>
+                ))
+            )}
           </div>
         </OverlayPanel>
       </div>

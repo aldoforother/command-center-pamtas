@@ -4,9 +4,22 @@ import { KERAWANAN_COLOR_MAP } from '../../constants/kerawananCategories'
 /**
  * Pos marker — HUD style dengan pulse ring effect
  */
-export function createPosIcon(posNum, isSelected = false) {
-  const color = isSelected ? '#00ff88' : '#00cc6a'
+export function createPosIcon(posNum, isSelected = false, isKotis = false) {
+  const color = isSelected ? '#00ff88' : isKotis ? '#ffd700' : '#00cc6a'
   const size = isSelected ? 36 : 30
+
+  // Label: bintang untuk KOTIS, angka untuk pos biasa
+  const label = isKotis
+    ? `<span style="transform:rotate(45deg); color:#ffd700; font-weight:900; font-size:14px; line-height:1; text-shadow:0 0 8px rgba(255,215,0,0.9);">★</span>`
+    : `<span style="
+        transform:rotate(45deg);
+        color:${color};
+        font-weight:700;
+        font-size:${posNum > 9 ? '8px' : '10px'};
+        line-height:1;
+        font-family:'JetBrains Mono','Courier New',monospace;
+        text-shadow: 0 0 6px rgba(0,255,136,0.8);
+      ">${isNaN(posNum) ? '?' : posNum}</span>`
 
   const html = `
     <div style="position:relative; width:${size}px; height:${size}px;">
@@ -14,42 +27,34 @@ export function createPosIcon(posNum, isSelected = false) {
         <div style="
           position:absolute; inset:-8px;
           border-radius:50%;
-          border: 1px solid rgba(0,255,136,0.5);
+          border: 1px solid ${color}80;
           animation: posRing1 2s ease-out infinite;
         "></div>
         <div style="
           position:absolute; inset:-16px;
           border-radius:50%;
-          border: 1px solid rgba(0,255,136,0.25);
+          border: 1px solid ${color}40;
           animation: posRing2 2s ease-out infinite 0.5s;
         "></div>
       ` : `
         <div style="
           position:absolute; inset:-6px;
           border-radius:50%;
-          border: 1px solid rgba(0,255,136,0.3);
+          border: 1px solid ${color}4d;
           animation: posRing1 3s ease-out infinite;
         "></div>
       `}
       <div style="
         width:${size}px; height:${size}px;
-        background: radial-gradient(circle at 35% 35%, rgba(0,255,136,0.25), rgba(0,60,30,0.95));
+        background: radial-gradient(circle at 35% 35%, ${isKotis ? 'rgba(255,215,0,0.25)' : 'rgba(0,255,136,0.25)'}, ${isKotis ? 'rgba(60,40,0,0.95)' : 'rgba(0,60,30,0.95)'});
         border-radius: 50% 50% 50% 0;
         transform: rotate(-45deg);
         border: 1.5px solid ${color};
-        box-shadow: 0 0 ${isSelected ? 16 : 8}px rgba(0,255,136,${isSelected ? 0.6 : 0.3}),
-                    inset 0 0 8px rgba(0,255,136,0.1);
+        box-shadow: 0 0 ${isSelected ? 16 : 8}px ${color}${isSelected ? '99' : '4d'},
+                    inset 0 0 8px ${color}1a;
         display:flex; align-items:center; justify-content:center;
       ">
-        <span style="
-          transform:rotate(45deg);
-          color:${color};
-          font-weight:700;
-          font-size:${posNum > 9 ? '8px' : '10px'};
-          line-height:1;
-          font-family:'JetBrains Mono','Courier New',monospace;
-          text-shadow: 0 0 6px rgba(0,255,136,0.8);
-        ">${posNum}</span>
+        ${label}
       </div>
     </div>
     <style>
@@ -64,7 +69,6 @@ export function createPosIcon(posNum, isSelected = false) {
     </style>
   `
 
-  const anchor = isSelected ? size / 2 + 8 : size / 2 + 6
   return divIcon({
     html,
     className: '',

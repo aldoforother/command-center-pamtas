@@ -88,15 +88,16 @@ export function PamtasMap({
             {validPos.map((pos) => {
               const posNum = parseInt(pos.pos_id.replace('POS-', ''), 10)
               const isSelected = pos.pos_id === selectedPosId
+              const isKotis = pos.pos_id === 'KOTIS'
               return (
                 <Marker
                   key={pos.pos_id}
                   position={[Number(pos.lat), Number(pos.lng)]}
-                  icon={createPosIcon(posNum, isSelected)}
+                  icon={createPosIcon(posNum, isSelected, isKotis)}
                   eventHandlers={{
                     click: () => setSelectedPosId(pos.pos_id),
                   }}
-                  zIndexOffset={isSelected ? 1000 : 0}
+                  zIndexOffset={isKotis ? 2000 : isSelected ? 1000 : 0}
                 >
                   <Popup maxWidth={220} className="military-popup">
                     <PosPopup pos={pos} onDetailClick={(id) => navigate(`/pos/${id}`)} />
