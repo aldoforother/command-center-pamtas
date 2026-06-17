@@ -4,7 +4,7 @@ import { KERAWANAN_COLOR_MAP } from '../../constants/kerawananCategories'
 /**
  * Pos marker — HUD style dengan pulse ring effect
  */
-export function createPosIcon(posNum, isSelected = false, isKotis = false) {
+export function createPosIcon(posId, isSelected = false, isKotis = false) {
   const color = isSelected ? '#00ff88' : isKotis ? '#ffd700' : '#00cc6a'
   const size = isSelected ? 36 : 30
 
@@ -15,11 +15,11 @@ export function createPosIcon(posNum, isSelected = false, isKotis = false) {
         transform:rotate(45deg);
         color:${color};
         font-weight:700;
-        font-size:${posNum > 9 ? '8px' : '10px'};
+        font-size:${String(posId).length > 3 ? '7px' : String(posId).length > 2 ? '8px' : '10px'};
         line-height:1;
         font-family:'JetBrains Mono','Courier New',monospace;
         text-shadow: 0 0 6px rgba(0,255,136,0.8);
-      ">${isNaN(posNum) ? '?' : posNum}</span>`
+      ">${String(posId ?? '?')}</span>`
 
   const html = `
     <div style="position:relative; width:${size}px; height:${size}px;">

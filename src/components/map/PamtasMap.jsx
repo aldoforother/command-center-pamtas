@@ -86,14 +86,14 @@ export function PamtasMap({
         {mapLayers.pos && (
           <LayerGroup>
             {validPos.map((pos) => {
-              const posNum = parseInt(pos.pos_id.replace('POS-', ''), 10)
+              // pos_id dipakai langsung sebagai label marker
               const isSelected = pos.pos_id === selectedPosId
               const isKotis = pos.pos_id === 'KOTIS'
               return (
                 <Marker
                   key={pos.pos_id}
                   position={[Number(pos.lat), Number(pos.lng)]}
-                  icon={createPosIcon(posNum, isSelected, isKotis)}
+                  icon={createPosIcon(pos.pos_id, isSelected, isKotis)}
                   eventHandlers={{
                     click: () => setSelectedPosId(pos.pos_id),
                   }}

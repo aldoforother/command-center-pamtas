@@ -15,6 +15,7 @@ export default function PanduanPage() {
   const [activeTab, setActiveTab] = useState('overview')
 
   return (
+    <div className="h-full overflow-y-auto">
     <div className="p-4 space-y-4 fade-in max-w-4xl">
 
       {/* Header */}
@@ -59,6 +60,7 @@ export default function PanduanPage() {
         {activeTab === 'kerawanan' && <KerawananTab />}
       </div>
 
+    </div>
     </div>
   )
 }
