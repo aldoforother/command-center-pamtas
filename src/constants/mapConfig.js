@@ -1,9 +1,9 @@
-// Default map config untuk wilayah Satgas Pamtas RI-MAL
-// Kalimantan Utara - perbatasan RI-Malaysia
+// Default map config untuk wilayah Latihan Yonkav 8/NSW
+// Jawa Timur - daerah latihan
 
 export const MAP_CONFIG = {
-  center: [3.5, 116.5],
-  zoom: 8,
+  center: [-8.295, 112.700],
+  zoom: 13,
   minZoom: 6,
   maxZoom: 17,
   // Dark tile — CartoDB Dark Matter

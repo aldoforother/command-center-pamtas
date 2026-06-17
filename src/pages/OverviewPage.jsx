@@ -28,7 +28,8 @@ export default function OverviewPage() {
     .slice(0, 5)
 
   const posRawan = [...new Set(activeKerawanan.map(k => k.pos_id))].length
-  const posAman  = 17 - posRawan
+  const totalPos = (posList || []).length || 14
+  const posAman  = totalPos - posRawan
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-[#050810]">
@@ -87,7 +88,7 @@ export default function OverviewPage() {
         <MetricCard
           label="POS RAWAN"
           value={posRawan}
-          unit={`dari 17 pos`}
+          unit={`dari ${totalPos} pos`}
           color={posRawan > 0 ? '#ff8844' : '#00ff88'}
           icon="◆"
           danger={posRawan > 3}
@@ -186,8 +187,8 @@ export default function OverviewPage() {
         {/* Situasi Intelijen */}
         <OverlayPanel title="◉ SITUASI INTELIJEN">
           <div className="space-y-3">
-            <IntelRow label="Pos Aman"          value={posAman}                total={17}  color="#00ff88" />
-            <IntelRow label="Pos Rawan"         value={posRawan}               total={17}  color="#ff3333" />
+            <IntelRow label="Pos Aman"          value={posAman}                total={totalPos}  color="#00ff88" />
+            <IntelRow label="Pos Rawan"         value={posRawan}               total={totalPos}  color="#ff3333" />
             <IntelRow label="Kegiatan Binter"   value={(binter||[]).length}    unit="kegiatan" color="#4488ff" />
             <IntelRow label="Tindak Pelanggaran" value={activeKerawanan.length} unit="kasus"   color="#ffaa00" />
           </div>
