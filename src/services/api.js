@@ -3,7 +3,7 @@
  * Semua request ke GAS endpoint lewat sini
  */
 
-const GAS_URL = import.meta.env.VITE_GAS_URL || 'https://script.google.com/macros/s/AKfycbxBUt9tgBQx-37JEA-GxftPN7h4WvECHn79anAEupLZZr1l1__8BA44JoZCv1Bo3CSdZA/exec'
+const GAS_URL = import.meta.env.VITE_GAS_URL || 'https://script.google.com/macros/s/AKfycbxAhOtTasSQ-EQGYyUBffKg_jgQm2IedXaRMioLdGGyW-f1GQGVoIChZFMUm5ETp61PNg/exec'
 
 /**
  * GET request ke GAS
