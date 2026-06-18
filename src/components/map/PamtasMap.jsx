@@ -43,11 +43,6 @@ export function PamtasMap({
   const navigate = useNavigate()
   const { selectedPosId, setSelectedPosId, mapLayer, mapLayers } = useApp()
 
-  const tileConfig = mapLayer === 'satellite' ? SATELLITE_TILE : {
-    url: MAP_CONFIG.tileUrl,
-    attribution: MAP_CONFIG.tileAttribution,
-  }
-
   // Filter pos yang punya koordinat valid
   const validPos = posList.filter(p => p.lat && p.lng && !isNaN(Number(p.lat)))
 
@@ -73,12 +68,18 @@ export function PamtasMap({
         style={{ height: '100%', width: '100%' }}
         zoomControl={false}
       >
-        {/* Tile layer — key forces remount when layer changes */}
-        <TileLayer
-          key={mapLayer}
-          url={tileConfig.url}
-          attribution={tileConfig.attribution}
-        />
+        {/* Tile layer — conditional rendering forces proper swap */}
+        {mapLayer === 'satellite' ? (
+          <TileLayer
+            url={SATELLITE_TILE.url}
+            attribution={SATELLITE_TILE.attribution}
+          />
+        ) : (
+          <TileLayer
+            url={MAP_CONFIG.tileUrl}
+            attribution={MAP_CONFIG.tileAttribution}
+          />
+        )}
 
         {/* Controller: fly to selected pos */}
         <MapController selectedPosId={selectedPosId} posList={validPos} />

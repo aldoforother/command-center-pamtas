@@ -2,130 +2,125 @@ import { formatDate } from '../../utils/formatDate'
 import { KerawananBadge } from '../ui/Badge'
 
 /**
- * Popup konten untuk marker Pos — dark military HUD theme
- * Warna cyan/gold agar berbeda dari dashboard utama (hijau #00ff88)
+ * Popup marker Pos — desain bersih, teks jelas
+ * KOTIS: gold · Pos biasa: cyan
  */
 export function PosPopup({ pos, onDetailClick }) {
-  const isKotis      = pos.pos_id === 'KOTIS'
-  const accent       = isKotis ? '#ffd700'              : '#00ccff'
-  const accentDim    = isKotis ? 'rgba(255,215,0,0.12)' : 'rgba(0,204,255,0.10)'
-  const accentBorder = isKotis ? 'rgba(255,215,0,0.35)' : 'rgba(0,204,255,0.30)'
-  const accentGlow   = isKotis ? 'rgba(255,215,0,0.18)' : 'rgba(0,204,255,0.14)'
+  const isKotis = pos.pos_id === 'KOTIS'
+  const accent  = isKotis ? '#ffd700' : '#00ccff'
+  const bgHead  = isKotis ? 'rgba(255,215,0,0.10)' : 'rgba(0,204,255,0.08)'
+  const border  = isKotis ? 'rgba(255,215,0,0.40)'  : 'rgba(0,204,255,0.35)'
+  const bgBtn   = isKotis ? 'rgba(255,215,0,0.12)'  : 'rgba(0,204,255,0.10)'
+  const bgBtnHv = isKotis ? 'rgba(255,215,0,0.22)'  : 'rgba(0,204,255,0.20)'
 
   return (
     <div style={{
-      minWidth: '215px',
-      background: 'linear-gradient(135deg, #080d1a 0%, #0c1422 100%)',
-      border: `1px solid ${accentBorder}`,
-      borderRadius: '3px',
-      boxShadow: `0 0 28px rgba(0,0,0,0.85), 0 0 14px ${accentGlow}`,
-      fontFamily: "'JetBrains Mono', monospace",
+      minWidth: '230px',
+      background: '#0b1120',
+      border: `1px solid ${border}`,
+      borderRadius: '4px',
+      fontFamily: 'Inter, sans-serif',
       overflow: 'hidden',
     }}>
 
-      {/* Header */}
+      {/* ── Header ── */}
       <div style={{
-        background: `linear-gradient(90deg, ${accentDim}, transparent)`,
-        borderBottom: `1px solid ${accentBorder}`,
-        padding: '7px 10px',
+        background: bgHead,
+        borderBottom: `1px solid ${border}`,
+        padding: '9px 12px',
         display: 'flex',
         alignItems: 'center',
-        gap: '8px',
+        gap: '10px',
       }}>
+        {/* Badge pos_id — full text, no truncation */}
         <div style={{
-          padding: '2px 8px',
-          borderRadius: '2px',
-          background: accentDim,
-          border: `1px solid ${accentBorder}`,
-          fontSize: '10px',
-          fontWeight: 'bold',
+          padding: '4px 10px',
+          borderRadius: '3px',
+          background: bgBtn,
+          border: `1px solid ${border}`,
+          fontSize: '12px',
+          fontWeight: '800',
           color: accent,
-          letterSpacing: '0.08em',
-          textShadow: `0 0 8px ${accent}`,
+          letterSpacing: '0.04em',
           flexShrink: 0,
+          whiteSpace: 'nowrap',
         }}>
           {pos.pos_id}
         </div>
-        <div style={{ minWidth: 0 }}>
+
+        {/* Nama pos */}
+        <div style={{ minWidth: 0, flex: 1 }}>
           <p style={{
             margin: 0,
-            fontSize: '10px',
+            fontSize: '12px',
             fontWeight: '700',
-            color: 'rgba(200,220,240,0.95)',
-            letterSpacing: '0.03em',
-            lineHeight: 1.3,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
+            color: '#ddeeff',
+            lineHeight: 1.35,
+            wordBreak: 'break-word',
           }}>
             {pos.nama_pos}
           </p>
-          <p style={{
-            margin: 0,
-            fontSize: '8px',
-            color: 'rgba(150,180,210,0.4)',
-            letterSpacing: '0.05em',
-          }}>
-            {pos.lokasi_desa !== '—' ? pos.lokasi_desa : pos.kabupaten}
-          </p>
+          {pos.lokasi_desa && pos.lokasi_desa !== '—' && (
+            <p style={{
+              margin: '2px 0 0',
+              fontSize: '10px',
+              color: 'rgba(170,195,220,0.5)',
+            }}>
+              {pos.lokasi_desa}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Scan line */}
-      <div style={{
-        height: '1px',
-        background: `linear-gradient(90deg, transparent, ${accent}55, transparent)`,
-      }} />
+      {/* ── Data rows ── */}
+      <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
 
-      {/* Data rows */}
-      <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
-        <DataRow label="DPP"      value={pos.komandan_pos || '—'} accent={accent} />
-        <DataRow label="PERSONEL" value={`${pos.jumlah_personel || 0} orang`} accent={accent} highlight />
+        <DataRow
+          label="DPP"
+          value={pos.komandan_pos || '—'}
+          valueColor="#ddeeff"
+          valueBold
+        />
+
+        <DataRow
+          label="PERSONEL"
+          value={`${pos.jumlah_personel || 0} orang`}
+          valueColor={accent}
+          valueBold
+          valueLarge
+        />
+
         {pos.lat && pos.lng && (
           <DataRow
             label="KOORDINAT"
-            value={`${Number(pos.lat).toFixed(4)}, ${Number(pos.lng).toFixed(4)}`}
-            accent={accent}
+            value={`${Number(pos.lat).toFixed(5)}, ${Number(pos.lng).toFixed(5)}`}
+            valueColor="rgba(170,195,220,0.6)"
             mono
           />
         )}
+
       </div>
 
-      {/* Divider */}
-      <div style={{
-        margin: '0 10px',
-        height: '1px',
-        background: `linear-gradient(90deg, transparent, ${accentBorder}, transparent)`,
-      }} />
-
-      {/* Button */}
-      <div style={{ padding: '7px 10px' }}>
+      {/* ── Button ── */}
+      <div style={{ padding: '0 12px 10px' }}>
         <button
           onClick={() => onDetailClick && onDetailClick(pos.pos_id)}
           style={{
             width: '100%',
-            padding: '5px 0',
-            background: `linear-gradient(90deg, ${accentDim}, rgba(0,0,0,0.15))`,
-            border: `1px solid ${accentBorder}`,
-            borderRadius: '2px',
+            padding: '8px 0',
+            background: bgBtn,
+            border: `1px solid ${border}`,
+            borderRadius: '3px',
             color: accent,
-            fontSize: '9px',
-            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: '11px',
             fontWeight: '700',
-            letterSpacing: '0.18em',
+            letterSpacing: '0.1em',
             cursor: 'pointer',
             textTransform: 'uppercase',
-            textShadow: `0 0 8px ${accent}`,
-            transition: 'all 0.15s',
+            transition: 'background 0.15s',
           }}
-          onMouseEnter={e => {
-            e.currentTarget.style.boxShadow = `0 0 16px ${accentGlow}`
-            e.currentTarget.style.borderColor = accent
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.boxShadow = 'none'
-            e.currentTarget.style.borderColor = accentBorder
-          }}
+          onMouseEnter={e => e.currentTarget.style.background = bgBtnHv}
+          onMouseLeave={e => e.currentTarget.style.background = bgBtn}
         >
           ▶ LIHAT DETAIL POS
         </button>
@@ -135,12 +130,12 @@ export function PosPopup({ pos, onDetailClick }) {
   )
 }
 
-function DataRow({ label, value, accent, highlight, mono }) {
+function DataRow({ label, value, valueColor, valueBold, valueLarge, mono }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
       <span style={{
-        fontSize: '8px',
-        color: 'rgba(150,180,210,0.4)',
+        fontSize: '9px',
+        color: 'rgba(150,180,210,0.45)',
         letterSpacing: '0.12em',
         textTransform: 'uppercase',
         flexShrink: 0,
@@ -148,13 +143,11 @@ function DataRow({ label, value, accent, highlight, mono }) {
         {label}
       </span>
       <span style={{
-        fontSize: mono ? '9px' : '10px',
-        color: highlight ? accent : 'rgba(200,220,240,0.8)',
-        fontWeight: highlight ? '700' : '500',
-        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: valueLarge ? '14px' : mono ? '10px' : '12px',
+        color: valueColor || '#ddeeff',
+        fontWeight: valueBold ? '700' : '400',
+        fontFamily: mono ? 'monospace' : 'inherit',
         textAlign: 'right',
-        textShadow: highlight ? `0 0 6px ${accent}88` : 'none',
-        letterSpacing: mono ? '0.02em' : '0.04em',
       }}>
         {value}
       </span>
