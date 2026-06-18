@@ -90,7 +90,7 @@ export function PamtasMap({
             {validPos.map((pos) => {
               // pos_id dipakai langsung sebagai label marker
               const isSelected = pos.pos_id === selectedPosId
-              const isKotis = pos.pos_id === 'KOTIS'
+              const isKotis = pos.pos_id === 'KT'
               return (
                 <Marker
                   key={pos.pos_id}
@@ -101,7 +101,7 @@ export function PamtasMap({
                   }}
                   zIndexOffset={isKotis ? 2000 : isSelected ? 1000 : 0}
                 >
-                  <Popup maxWidth={220} className="military-popup">
+                  <Popup maxWidth={300} className="military-popup">
                     <PosPopup pos={pos} onDetailClick={(id) => navigate(`/pos/${id}`)} />
                   </Popup>
                 </Marker>
