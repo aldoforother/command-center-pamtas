@@ -5,7 +5,7 @@ import { formatDate } from '../../utils/formatDate'
  * KOTIS: gold · Pos biasa: cyan
  */
 export function PosPopup({ pos, onDetailClick }) {
-  const isKotis = pos.pos_id === 'KOTIS'
+  const isKotis = pos.pos_id === 'KT'
   const accent  = isKotis ? '#ffd700' : '#00ccff'
   const bgHead  = isKotis ? 'rgba(255,215,0,0.10)' : 'rgba(0,204,255,0.08)'
   const border  = isKotis ? 'rgba(255,215,0,0.40)'  : 'rgba(0,204,255,0.35)'
