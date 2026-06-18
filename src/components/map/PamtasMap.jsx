@@ -73,8 +73,9 @@ export function PamtasMap({
         style={{ height: '100%', width: '100%' }}
         zoomControl={false}
       >
-        {/* Tile layer */}
+        {/* Tile layer — key forces remount when layer changes */}
         <TileLayer
+          key={mapLayer}
           url={tileConfig.url}
           attribution={tileConfig.attribution}
         />

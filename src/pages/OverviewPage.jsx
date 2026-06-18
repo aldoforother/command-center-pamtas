@@ -203,34 +203,6 @@ export default function OverviewPage() {
           </div>
         </OverlayPanel>
 
-        {/* Kerawanan Utama per Pos */}
-        <OverlayPanel title="⚠ POTENSI ANCAMAN" onMore={() => navigate('/kerawanan')}>
-          <div className="space-y-1.5 max-h-52 overflow-y-auto pr-0.5">
-            {(posList || []).filter(p => p.kerawanan_utama && p.kerawanan_utama !== 'Nihil' && p.kerawanan_utama !== '—').length === 0 ? (
-              <p className="text-[9px] text-[rgba(200,214,229,0.3)] py-2 text-center tracking-widest uppercase">
-                Belum ada data
-              </p>
-            ) : (
-              (posList || [])
-                .filter(p => p.kerawanan_utama && p.kerawanan_utama !== 'Nihil' && p.kerawanan_utama !== '—')
-                .map(pos => (
-                  <div key={pos.pos_id}
-                    className="flex items-start gap-2 p-1.5 rounded-sm cursor-pointer"
-                    style={{ background: 'rgba(255,170,0,0.04)', border: '1px solid rgba(255,170,0,0.12)' }}
-                    onClick={() => navigate(`/pos/${pos.pos_id}`)}
-                  >
-                    <span className="font-mono text-[8px] font-bold flex-shrink-0 px-1 py-0.5 rounded-sm"
-                      style={{ color: '#ffaa00', background: 'rgba(255,170,0,0.1)', border: '1px solid rgba(255,170,0,0.2)' }}>
-                      {pos.pos_id.replace('POS-', 'P')}
-                    </span>
-                    <p className="text-[9px] text-[rgba(200,214,229,0.55)] leading-tight line-clamp-2">
-                      {pos.kerawanan_utama}
-                    </p>
-                  </div>
-                ))
-            )}
-          </div>
-        </OverlayPanel>
       </div>
 
       {/* ══ BOTTOM — layer toggles ══ */}
