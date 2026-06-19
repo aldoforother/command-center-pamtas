@@ -48,7 +48,8 @@ export function PamtasMap({
 
   // Filter kerawanan berdasarkan mapLayers
   const visibleKerawanan = kerawananList.filter(k => {
-    if (!k.lat || !k.lng || isNaN(Number(k.lat))) return false
+    if (!k.lat || !k.lng || isNaN(Number(k.lat)) || isNaN(Number(k.lng))) return false
+    if (Number(k.lat) === 0 || Number(k.lng) === 0) return false
     if (!showKerawanan) return false
     // cek layer global kerawanan
     if (!mapLayers.kerawanan) return false

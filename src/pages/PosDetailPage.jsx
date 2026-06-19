@@ -24,13 +24,16 @@ const TABS = [
 ]
 
 export default function PosDetailPage() {
-  const { posId } = useParams()
+  const { posId, tab } = useParams()
   const navigate  = useNavigate()
   const { setSelectedPosId } = useApp()
 
-  const [activeTab, setActiveTab] = useState('info')
+  const [activeTab, setActiveTab] = useState(() => {
+    const validTabs = ['info', 'demografi', 'geodemo', 'tokoh', 'binter', 'kerawanan', 'foto']
+    return validTabs.includes(tab) ? tab : 'info'
+  })
 
-  const { data: posList } = usePos()
+  const { data: posList, loading: posListLoading, error: posListError } = usePos()
   const pos = (posList || []).find(p => p.pos_id === posId)
 
   const {
@@ -55,6 +58,28 @@ export default function PosDetailPage() {
   useEffect(() => {
     setSelectedPosId && setSelectedPosId(posId)
   }, [posId, setSelectedPosId])
+
+  // Error state — GAS gagal
+  if (posListError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-3 text-center p-8">
+        <div className="text-3xl text-[rgba(255,51,51,0.4)]">⚠</div>
+        <p className="text-[rgba(255,100,100,0.7)] text-sm font-bold uppercase tracking-widest">
+          Gagal Memuat Data
+        </p>
+        <p className="text-[rgba(200,214,229,0.35)] text-xs max-w-xs">
+          Koneksi ke server gagal. Periksa koneksi internet dan coba lagi.
+        </p>
+        <p className="font-mono text-[rgba(255,100,100,0.4)] text-[10px]">{posListError}</p>
+        <button
+          className="hud-btn mt-2"
+          onClick={() => window.location.reload()}
+        >
+          ↺ Coba Lagi
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col h-full fade-in">

@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { PamtasMap } from '../components/map/PamtasMap'
 import { KerawananBadge } from '../components/ui/Badge'
-import { usePos, useSummary, useAllKerawanan, useAllBinter } from '../hooks/useGasApi'
+import { usePos, useSummary, useAllKerawanan, useAllBinter, useAutoRefresh } from '../hooks/useGasApi'
 import { formatDate } from '../utils/formatDate'
 import { useApp } from '../context/AppContext'
 
@@ -17,10 +17,13 @@ const JENIS_COLOR = {
 export default function OverviewPage() {
   const navigate = useNavigate()
 
-  const { data: posList,   loading: posLoading }       = usePos()
-  const { data: summary,   loading: summaryLoading }   = useSummary()
-  const { data: kerawanan, loading: kerawananLoading } = useAllKerawanan()
-  const { data: binter,    loading: binterLoading }    = useAllBinter()
+  const { data: posList,   loading: posLoading,       refetch: refetchPos }       = usePos()
+  const { data: summary,   loading: summaryLoading,   refetch: refetchSummary }   = useSummary()
+  const { data: kerawanan, loading: kerawananLoading, refetch: refetchKerawanan } = useAllKerawanan()
+  const { data: binter,    loading: binterLoading,    refetch: refetchBinter }    = useAllBinter()
+
+  // Auto-refresh setiap 5 menit
+  useAutoRefresh([refetchPos, refetchSummary, refetchKerawanan, refetchBinter])
 
   const activeKerawanan = (kerawanan || []).filter(k => k.status === 'aktif')
   const recentBinter    = (binter || [])

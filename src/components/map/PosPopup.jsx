@@ -181,7 +181,29 @@ export function PosPopup({ pos, onDetailClick }) {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={rowLabel}>Ancaman</span>
-              <span style={rowVal}>NIHIL</span>
+              <span style={{
+                fontSize: '9px', fontWeight: '700',
+                color: pos.kerawanan_utama && pos.kerawanan_utama !== '—' && pos.kerawanan_utama !== ''
+                  ? '#ffaa00' : G,
+                textShadow: '0 0 5px rgba(0,255,136,0.45)',
+              }}>
+                {pos.kerawanan_utama && pos.kerawanan_utama !== '—' && pos.kerawanan_utama !== ''
+                  ? pos.kerawanan_utama.slice(0, 12).toUpperCase()
+                  : 'NIHIL'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={rowLabel}>Bangunan</span>
+              <span style={{
+                fontSize: '9px', fontWeight: '700',
+                color: pos.kondisi_bangunan && pos.kondisi_bangunan !== '—' && pos.kondisi_bangunan !== ''
+                  ? G : 'rgba(0,255,136,0.45)',
+                textShadow: '0 0 5px rgba(0,255,136,0.3)',
+              }}>
+                {pos.kondisi_bangunan && pos.kondisi_bangunan !== '—' && pos.kondisi_bangunan !== ''
+                  ? pos.kondisi_bangunan.slice(0, 10).toUpperCase()
+                  : '—'}
+              </span>
             </div>
           </div>
         </div>
@@ -194,12 +216,43 @@ export function PosPopup({ pos, onDetailClick }) {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={rowLabel}>Sinyal</span>
-              <span style={rowVal}>KUAT</span>
+              <span style={rowLabel}>Sinyal GSM</span>
+              <span style={{
+                fontSize: '9px', fontWeight: '700',
+                color: pos.jaringan_gsm && pos.jaringan_gsm !== '—' && pos.jaringan_gsm !== ''
+                  ? G : 'rgba(0,255,136,0.45)',
+                textShadow: '0 0 5px rgba(0,255,136,0.3)',
+              }}>
+                {pos.jaringan_gsm && pos.jaringan_gsm !== '—' && pos.jaringan_gsm !== ''
+                  ? pos.jaringan_gsm.slice(0, 12).toUpperCase()
+                  : '—'}
+              </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={rowLabel}>Sistem</span>
-              <span style={rowVal}>ONLINE</span>
+              <span style={rowLabel}>Listrik</span>
+              <span style={{
+                fontSize: '9px', fontWeight: '700',
+                color: pos.sumber_listrik && pos.sumber_listrik !== '—' && pos.sumber_listrik !== ''
+                  ? G : 'rgba(0,255,136,0.45)',
+                textShadow: '0 0 5px rgba(0,255,136,0.3)',
+              }}>
+                {pos.sumber_listrik && pos.sumber_listrik !== '—' && pos.sumber_listrik !== ''
+                  ? pos.sumber_listrik.slice(0, 12).toUpperCase()
+                  : '—'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={rowLabel}>Air</span>
+              <span style={{
+                fontSize: '9px', fontWeight: '700',
+                color: pos.sumber_air && pos.sumber_air !== '—' && pos.sumber_air !== ''
+                  ? G : 'rgba(0,255,136,0.45)',
+                textShadow: '0 0 5px rgba(0,255,136,0.3)',
+              }}>
+                {pos.sumber_air && pos.sumber_air !== '—' && pos.sumber_air !== ''
+                  ? pos.sumber_air.slice(0, 12).toUpperCase()
+                  : '—'}
+              </span>
             </div>
           </div>
         </div>
