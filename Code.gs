@@ -124,6 +124,9 @@ function doGet(e) {
         if (status) all = all.filter(function(r) { return r.status === status })
         return jsonResponse(all)
 
+      case 'getAllDemografi':
+        return jsonResponse(sheetToObjects(getSheet(SHEET_NAMES.demografi)))
+
       case 'getAllBinter':
         return jsonResponse(sheetToObjects(getSheet(SHEET_NAMES.binter)))
 

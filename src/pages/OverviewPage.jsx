@@ -214,7 +214,7 @@ export default function OverviewPage() {
       <div className="absolute right-2 z-[10] w-52 flex flex-col gap-2" style={{ top: 'calc(8px + 72px + 20px)' }}>
 
         {/* Status Personel — redesigned */}
-        <OverlayPanel title="◆ STATUS PERSONEL" onMore={() => navigate('/admin')}>
+        <OverlayPanel title="◆ STATUS PERSONEL" onMore={() => navigate('/laporan/demografi')}>
           <PersonelPanel posList={posList} loading={posLoading} navigate={navigate} />
         </OverlayPanel>
 

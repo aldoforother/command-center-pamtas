@@ -1,18 +1,35 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { api } from '../services/api'
+import { APP_CONFIG } from '../constants/config'
 
-// Simple in-memory cache
+const CACHE_TTL       = APP_CONFIG.CACHE_TTL_MS
+const CACHE_MAX       = APP_CONFIG.CACHE_MAX_ENTRIES
+
+/**
+ * In-memory LRU cache.
+ * Map preserves insertion order — oldest key is Map.keys().next().
+ * Max entries bounded to CACHE_MAX to prevent unbounded growth on long sessions.
+ */
 const cache = new Map()
-const CACHE_TTL = 5 * 60 * 1000 // 5 menit
 
 function getCached(key) {
   const entry = cache.get(key)
   if (!entry) return null
   if (Date.now() - entry.ts > CACHE_TTL) { cache.delete(key); return null }
+  // LRU: move to end on access
+  cache.delete(key)
+  cache.set(key, entry)
   return entry.data
 }
 
 function setCached(key, data) {
+  // Jangan cache null/undefined — biarkan re-fetch terjadi berikutnya
+  if (data === null || data === undefined) return
+  // Evict oldest entry jika sudah penuh
+  if (cache.size >= CACHE_MAX) {
+    const oldest = cache.keys().next().value
+    cache.delete(oldest)
+  }
   cache.set(key, { data, ts: Date.now() })
 }
 
@@ -31,11 +48,17 @@ export function useGasData(fetcher, cacheKey, deps = []) {
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(null)
   const mountedRef            = useRef(true)
+  const prevKeyRef            = useRef(cacheKey)
+
+  // Reset state saat cacheKey berubah (pindah pos) agar tidak tampil data stale
+  if (prevKeyRef.current !== cacheKey) {
+    prevKeyRef.current = cacheKey
+  }
 
   const fetch = useCallback(async (force = false) => {
     if (!force) {
       const cached = getCached(cacheKey)
-      if (cached) { setData(cached); setLoading(false); return }
+      if (cached !== null) { setData(cached); setLoading(false); return }
     }
 
     setLoading(true)
@@ -55,6 +78,9 @@ export function useGasData(fetcher, cacheKey, deps = []) {
 
   useEffect(() => {
     mountedRef.current = true
+    // Reset data saat key berubah sebelum fetch baru
+    setData(null)
+    setError(null)
     fetch()
     return () => { mountedRef.current = false }
   }, [fetch])
@@ -110,6 +136,17 @@ export function useAllBinter() {
 }
 
 /**
+ * Hook: semua demografi (untuk halaman laporan)
+ */
+export function useAllDemografi() {
+  return useGasData(
+    () => api.getAllDemografi(),
+    'all-demografi',
+    []
+  )
+}
+
+/**
  * Hook: demografi per pos
  */
 export function useDemografi(posId) {
@@ -117,6 +154,17 @@ export function useDemografi(posId) {
     () => api.getDemografi(posId),
     `demografi-${posId}`,
     [posId]
+  )
+}
+
+/**
+ * Hook: semua tokoh (untuk halaman laporan)
+ */
+export function useAllTokoh() {
+  return useGasData(
+    () => api.getAllTokoh(),
+    'all-tokoh',
+    []
   )
 }
 
@@ -157,11 +205,16 @@ export function useKerawanan(posId, status) {
  * Hook: auto-refresh data setiap interval
  */
 export function useAutoRefresh(refetchFns, intervalMs = 5 * 60 * 1000) {
+  // refetchFns diabaikan dari dependency karena referensinya selalu baru
+  // setiap render tapi fungsinya stabil — aman digunakan via closure
+  const refetchRef = useRef(refetchFns)
+  useEffect(() => { refetchRef.current = refetchFns })
+
   useEffect(() => {
     const id = setInterval(() => {
       clearCache()
-      refetchFns.forEach(fn => fn())
+      refetchRef.current.forEach(fn => fn())
     }, intervalMs)
     return () => clearInterval(id)
-  }, [intervalMs]) // eslint-disable-line
+  }, [intervalMs])
 }

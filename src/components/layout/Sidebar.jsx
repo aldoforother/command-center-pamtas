@@ -20,15 +20,16 @@ export function Sidebar() {
         {/* ── Nav Utama ───────────────────────────────── */}
         <nav className="px-2 pt-2 pb-1.5 border-b border-[rgba(0,255,136,0.1)] space-y-px">
           <SectionLabel>NAVIGASI</SectionLabel>
-          <NavItem to="/"           icon={<IconMap />}       label="Overview"        end />
-          <NavItem to="/kerawanan"  icon={<IconAlert />}     label="Kerawanan"       badge={activeKraw > 0 ? activeKraw : null} badgeDanger />
+          <NavItem to="/"           icon={<IconHome />}      label="Home"            end />
+          <NavItem to="/overview"   icon={<IconMap />}       label="Overview"        end />
+          <NavItem to="/insiden"    icon={<IconAlert />}     label="Data Insiden"    badge={activeKraw > 0 ? activeKraw : null} badgeDanger />
           <NavItem to="/binter"     icon={<IconHandshake />} label="Program Binter" />
         </nav>
 
         {/* ── Laporan & Analitik ───────────────────────── */}
         <nav className="px-2 pt-2 pb-1.5 border-b border-[rgba(0,255,136,0.1)] space-y-px">
           <SectionLabel>LAPORAN</SectionLabel>
-          <NavItem to="/laporan/kerawanan" icon={<IconChart />}    label="Grafik Kerawanan" />
+          <NavItem to="/laporan/kerawanan" icon={<IconChart />}    label="Grafik Insiden"  />
           <NavItem to="/laporan/binter"    icon={<IconTimeline />} label="Timeline Binter"  />
           <NavItem to="/laporan/demografi" icon={<IconPeople />}   label="Data Demografi"   />
           <NavItem to="/laporan/tokoh"     icon={<IconPerson />}   label="Tokoh Wilayah"    />
@@ -157,6 +158,12 @@ function PosNavItem({ pos, kerawanan }) {
 }
 
 /* ── SVG Icons ──────────────────────────────────────────── */
+function IconHome() {
+  return <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+  </svg>
+}
 function IconMap() {
   return <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}

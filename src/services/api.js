@@ -5,6 +5,29 @@
 
 const GAS_URL = import.meta.env.VITE_GAS_URL || 'https://script.google.com/macros/s/AKfycbxAhOtTasSQ-EQGYyUBffKg_jgQm2IedXaRMioLdGGyW-f1GQGVoIChZFMUm5ETp61PNg/exec'
 
+// Timeout request dalam milidetik (30 detik)
+const REQUEST_TIMEOUT_MS = 30_000
+
+/**
+ * Fetch dengan timeout menggunakan AbortController.
+ * Melempar error "Request timeout" jika melewati batas waktu.
+ */
+async function fetchWithTimeout(url, options = {}) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal })
+    return res
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error('Request timeout — periksa koneksi internet atau coba lagi')
+    }
+    throw err
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 /**
  * GET request ke GAS
  */
@@ -22,10 +45,14 @@ async function gasGet(action, params = {}) {
     }
   })
 
-  const res = await fetch(url.toString(), { redirect: 'follow' })
+  const res = await fetchWithTimeout(url.toString(), { redirect: 'follow' })
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
-  const data = await res.json()
-  if (data.error) throw new Error(data.error)
+  const json = await res.json()
+  if (json.error) throw new Error(json.error)
+  if (json.status === 'error') throw new Error(json.message || 'GAS error')
+
+  // Unwrap envelope {status:'ok', data: ...} dari GAS
+  const data = (json.status === 'ok' && json.data !== undefined) ? json.data : json
 
   // Normalisasi field dari GAS ke format dashboard
   if (action === 'getAllPos' && Array.isArray(data)) {
@@ -33,6 +60,46 @@ async function gasGet(action, params = {}) {
   }
   if (action === 'getAllPos' && data?.value) {
     return data.value.map(normalizePos)
+  }
+
+  // Endpoint yang WAJIB mengembalikan array — normalisasi defensif
+  // GAS bisa mengembalikan object ({rows:[...]}, {values:[...]}, dst) atau
+  // nilai truthy lain saat data kosong. Semua kasus di-handle di sini supaya
+  // consumer code yang pakai (data || []).filter() tidak crash di production.
+  const LIST_ACTIONS = [
+    'getAllKerawanan', 'getAllBinter', 'getAllDemografi', 'getAllTokoh',
+    'getTokoh', 'getBinter', 'getKerawanan',
+  ]
+  if (LIST_ACTIONS.includes(action)) {
+    if (Array.isArray(data)) return data
+    // Coba ambil dari property umum yang dipakai di GAS
+    if (data && Array.isArray(data.data))   return data.data
+    if (data && Array.isArray(data.rows))   return data.rows
+    if (data && Array.isArray(data.values)) return data.values
+    if (data && Array.isArray(data.value))  return data.value
+    // Fallback: array kosong daripada crash
+    return []
+  }
+
+  // getDemografi: GAS bisa mengembalikan array (multiple rows per pos/kelurahan)
+  // atau single object. Kita aggregate ke satu object agar DemografiTable tidak
+  // menolaknya dengan cek Array.isArray().
+  if (action === 'getDemografi') {
+    const rows = Array.isArray(data)         ? data
+               : Array.isArray(data?.data)   ? data.data
+               : Array.isArray(data?.rows)   ? data.rows
+               : Array.isArray(data?.values) ? data.values
+               : null
+
+    if (rows && rows.length > 0) {
+      return normalizeDemografi(aggregateDemografi(rows))
+    }
+    // GAS sudah kirim single object langsung
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      return normalizeDemografi(data)
+    }
+    // Tidak ada data → null supaya DemografiTable tampil "belum tersedia"
+    return null
   }
 
   return data
@@ -47,7 +114,7 @@ async function gasPost(action, data) {
     return { success: true, message: 'Mock: GAS belum dikonfigurasi' }
   }
 
-  const res = await fetch(GAS_URL, {
+  const res = await fetchWithTimeout(GAS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify({ action, data }),
@@ -59,7 +126,80 @@ async function gasPost(action, data) {
   return result
 }
 
-// ─── Normalisasi field dari Google Sheets → format dashboard ─────────────────
+// ─── Aggregate demografi rows → single object ────────────────────────────────
+// Sheet demografi bisa punya beberapa baris per pos (satu per kelurahan).
+// Fungsi ini menjumlahkan semua kolom numerik dan menggabungkan teks.
+
+function aggregateDemografi(rows) {
+  const NUM_FIELDS = [
+    'total_penduduk', 'total_kk',
+    'islam', 'kristen', 'katolik', 'hindu', 'buddha', 'konghucu', 'lainnya',
+    'masjid', 'gereja', 'pura', 'vihara',
+  ]
+
+  const base = { ...rows[0] }
+
+  // Reset semua field numerik ke 0 dulu, lalu akumulasi
+  NUM_FIELDS.forEach(f => { base[f] = 0 })
+  rows.forEach(row => {
+    NUM_FIELDS.forEach(f => {
+      base[f] = (base[f] || 0) + (Number(row[f]) || 0)
+    })
+  })
+
+  // Gabungkan field teks dari semua baris (unik, pisah " | ")
+  const TEXT_FIELDS = ['geografi', 'demografi_notes', 'konsos_notes']
+  TEXT_FIELDS.forEach(f => {
+    const parts = [...new Set(
+      rows.map(r => (r[f] || '').trim()).filter(Boolean)
+    )]
+    base[f] = parts.join(' | ') || '—'
+  })
+
+  // Simpan daftar kelurahan untuk info tambahan
+  const kelurahans = rows
+    .map(r => r.nama_kelurahan || r.kelurahan || '')
+    .filter(Boolean)
+  if (kelurahans.length > 0) {
+    base._kelurahan_list = kelurahans
+  }
+
+  return base
+}
+
+// ─── Normalisasi field demografi dari GAS → format dashboard ─────────────────
+// GAS bisa mengirim nama kolom yang berbeda tergantung header di sheet.
+// Fungsi ini menjamin field yang dipakai DemografiTable selalu ada.
+
+function normalizeDemografi(obj) {
+  if (!obj || typeof obj !== 'object') return obj
+  return {
+    ...obj,
+    // Jumlah penduduk: bisa total_penduduk, jumlah_penduduk, penduduk
+    total_penduduk: Number(obj.total_penduduk ?? obj.jumlah_penduduk ?? obj.penduduk ?? 0),
+    // KK: bisa total_kk, jumlah_kk, kk
+    total_kk: Number(obj.total_kk ?? obj.jumlah_kk ?? obj.kk ?? 0),
+    // Agama — fallback ke 0 jika field tidak ada
+    islam:    Number(obj.islam    ?? 0),
+    kristen:  Number(obj.kristen  ?? 0),
+    katolik:  Number(obj.katolik  ?? 0),
+    hindu:    Number(obj.hindu    ?? 0),
+    buddha:   Number(obj.buddha   ?? 0),
+    konghucu: Number(obj.konghucu ?? 0),
+    lainnya:  Number(obj.lainnya  ?? 0),
+    // Tempat ibadah
+    masjid:  Number(obj.masjid  ?? obj.masjid_mushola ?? 0),
+    gereja:  Number(obj.gereja  ?? 0),
+    pura:    Number(obj.pura    ?? 0),
+    vihara:  Number(obj.vihara  ?? 0),
+    // Teks
+    geografi:        obj.geografi        || obj.kondisi_geografi || '',
+    demografi_notes: obj.demografi_notes || obj.kondisi_demografi || '',
+    konsos_notes:    obj.konsos_notes    || obj.kondisi_sosial    || obj.konsos || '',
+  }
+}
+
+
 
 function normalizePos(p) {
   return {
@@ -86,6 +226,8 @@ export const api = {
   // READ
   getAllPos:        ()               => gasGet('getAllPos'),
   getSummary:      ()               => gasGet('getSummary'),
+  getAllDemografi:  ()               => gasGet('getAllDemografi'),
+  getAllTokoh:      ()               => gasGet('getAllTokoh'),
   getDemografi:    (pos_id)         => gasGet('getDemografi', { pos_id }),
   getTokoh:        (pos_id)         => gasGet('getTokoh', { pos_id }),
   getBinter:       (pos_id, bulan)  => gasGet('getBinter', { pos_id, bulan }),
@@ -136,6 +278,9 @@ function getDummyData(action, params) {
       }
 
     case 'getTokoh':
+      return []
+
+    case 'getAllTokoh':
       return []
 
     case 'getBinter':

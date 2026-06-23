@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import {
   useDemografi, useTokoh, useBinter, useKerawanan, usePos
@@ -11,20 +11,22 @@ import { BinterList } from '../components/pos/BinterList'
 import { KerawananList } from '../components/pos/KerawananList'
 import { PhotoGallery } from '../components/ui/PhotoGallery'
 import { formatNumber } from '../utils/formatDate'
+import { hitungKerawananPos } from '../constants/kerawananCategories'
 
 const TABS = [
-  { id: 'info',       label: 'Info Pos',   icon: '◆' },
-  { id: 'demografi',  label: 'Demografi',  icon: '◈' },
+  { id: 'info',       label: 'Info Pos',      icon: '◆' },
+  { id: 'demografi',  label: 'Demografi',     icon: '◈' },
   { id: 'geodemo',    label: 'Geo-Demo-Konsos', icon: '◬' },
-  { id: 'tokoh',      label: 'Tokoh',      icon: '◉' },
-  { id: 'binter',     label: 'Binter',     icon: '◫' },
-  { id: 'kerawanan',  label: 'Kerawanan',  icon: '⚠' },
-  { id: 'foto',       label: 'Foto Satelit', icon: '▣' },
+  { id: 'tokoh',      label: 'Tokoh',         icon: '◉' },
+  { id: 'binter',     label: 'Binter',        icon: '◫' },
+  { id: 'kerawanan',  label: 'Data Insiden',  icon: '⚠' },
+  { id: 'foto',       label: 'Dokumentasi',   icon: '▣' },
 ]
 
 export default function PosDetailPage() {
   const { posId, tab } = useParams()
   const navigate  = useNavigate()
+  const location  = useLocation()
   const { setSelectedPosId } = useApp()
 
   const VALID_TABS = ['info', 'demografi', 'geodemo', 'tokoh', 'binter', 'kerawanan', 'foto']
@@ -32,6 +34,8 @@ export default function PosDetailPage() {
   const [activeTab, setActiveTab] = useState(
     VALID_TABS.includes(normalizedTab) ? normalizedTab : 'info'
   )
+  // ID insiden yang harus di-highlight (dikirim via navigate state dari InsidenPage)
+  const highlightId = location.state?.highlightId || null
 
   // Sync activeTab jika URL tab berubah (navigasi langsung via URL)
   useEffect(() => {
@@ -61,6 +65,7 @@ export default function PosDetailPage() {
   } = useKerawanan(posId)
 
   const activeKerawanan = (kerawananList || []).filter(k => k.status === 'aktif').length
+  const { totalPoin, level } = hitungKerawananPos(kerawananList)
 
   // Sync ke map saat halaman dibuka
   useEffect(() => {
@@ -135,7 +140,16 @@ export default function PosDetailPage() {
               <InfoPill label="Penduduk" value={formatNumber(demografi.total_penduduk)} color="#4488ff" />
             )}
             {activeKerawanan > 0 && (
-              <InfoPill label="Kerawanan" value={`${activeKerawanan} aktif`} color="#ff3333" pulse />
+              <InfoPill label="Insiden" value={`${activeKerawanan} aktif`} color="#ff3333" pulse />
+            )}
+            {/* Klasifikasi kerawanan */}
+            {level !== 'AMAN' && (
+              <InfoPill
+                label="Klasifikasi"
+                value={`${level} (${totalPoin} poin)`}
+                color={level === 'SIAGA' ? '#ff3333' : '#ffaa00'}
+                pulse={level === 'SIAGA'}
+              />
             )}
           </div>
         </div>
@@ -206,11 +220,12 @@ export default function PosDetailPage() {
             loading={kerawananLoading}
             posId={posId}
             onRefresh={kerawananRefresh}
+            highlightId={highlightId}
           />
         )}
 
         {activeTab === 'foto' && (
-          <FotoTab pos={pos} />
+          <DokumentasiTab pos={pos} />
         )}
       </div>
     </div>
@@ -308,44 +323,59 @@ function InfoPosTab({ pos }) {
   )
 }
 
-function FotoTab({ pos }) {
+function DokumentasiTab({ pos }) {
   const urls = pos?.foto_satelit_url
     ? pos.foto_satelit_url.split(',').map(s => s.trim()).filter(Boolean)
     : []
 
-  if (urls.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="text-3xl mb-3 text-[rgba(0,255,136,0.2)]">▣</div>
-        <p className="text-[rgba(200,214,229,0.3)] text-xs uppercase tracking-widest mb-2">
-          Belum ada foto satelit
-        </p>
-        <p className="text-[rgba(200,214,229,0.2)] text-[10px] max-w-xs">
-          Tambahkan URL foto Google Drive pada kolom <span className="font-mono text-[rgba(0,255,136,0.4)]">foto_satelit_url</span> di Google Sheets
-        </p>
-        {pos?.lat && pos?.lng && (
-          <div className="mt-4 px-3 py-2 rounded-sm"
-            style={{ background: 'rgba(0,255,136,0.05)', border: '1px solid rgba(0,255,136,0.15)' }}>
-            <p className="font-mono text-[rgba(0,255,136,0.6)] text-xs">
-              {pos.lat}°N, {pos.lng}°E
-            </p>
-          </div>
-        )}
-      </div>
-    )
-  }
-
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      {/* Koordinat info */}
       {pos?.lat && pos?.lng && (
-        <div className="flex items-center gap-2">
-          <span className="hud-label">Koordinat</span>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-sm"
+          style={{ background: 'rgba(0,255,136,0.04)', border: '1px solid rgba(0,255,136,0.12)' }}>
+          <span className="hud-label">Koordinat Pos</span>
           <span className="font-mono text-xs text-[rgba(0,255,136,0.6)]">
             {pos.lat}°N, {pos.lng}°E
           </span>
         </div>
       )}
-      <PhotoGallery urls={urls} />
+
+      {/* Foto dari URL (foto satelit / dokumentasi lama) */}
+      {urls.length > 0 && (
+        <div>
+          <p className="hud-label mb-2">Dokumentasi Tersimpan ({urls.length})</p>
+          <PhotoGallery urls={urls} />
+        </div>
+      )}
+
+      {urls.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-10 text-center">
+          <div className="text-3xl mb-3 text-[rgba(0,255,136,0.2)]">▣</div>
+          <p className="text-[rgba(200,214,229,0.3)] text-xs uppercase tracking-widest mb-2">
+            Belum ada dokumentasi
+          </p>
+          <p className="text-[rgba(200,214,229,0.2)] text-[10px] max-w-xs">
+            Upload foto pos, dokumentasi kegiatan, atau foto patok perbatasan.
+          </p>
+        </div>
+      )}
+
+      {/* Upload info */}
+      <div className="px-3 py-2.5 rounded-sm"
+        style={{ background: 'rgba(68,136,255,0.05)', border: '1px solid rgba(68,136,255,0.15)' }}>
+        <p className="text-[9px] font-bold uppercase tracking-wider mb-1"
+          style={{ color: 'rgba(68,136,255,0.7)' }}>
+          ℹ Cara Menambah Dokumentasi
+        </p>
+        <p className="text-[9px] leading-relaxed" style={{ color: 'rgba(200,214,229,0.45)' }}>
+          Upload foto ke Google Drive → klik kanan → "Dapatkan link" → pastikan akses
+          "Siapa saja yang punya link" → salin URL → isi di kolom{' '}
+          <span className="font-mono text-[rgba(0,255,136,0.5)]">foto_satelit_url</span>{' '}
+          di sheet <span className="font-mono text-[rgba(0,255,136,0.5)]">pos</span>.
+          Pisahkan beberapa URL dengan koma.
+        </p>
+      </div>
     </div>
   )
 }

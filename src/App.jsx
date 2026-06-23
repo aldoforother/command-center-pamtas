@@ -8,9 +8,10 @@ import PageErrorBoundary from './components/ui/PageErrorBoundary'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { AppShell } from './components/layout/AppShell'
 import LoginPage            from './pages/LoginPage'
+import HomePage             from './pages/HomePage'
 import OverviewPage         from './pages/OverviewPage'
 import PosDetailPage        from './pages/PosDetailPage'
-import KerawananPage        from './pages/KerawananPage'
+import InsidenPage          from './pages/InsidenPage'
 import BinterPage           from './pages/BinterPage'
 import AdminPage            from './pages/AdminPage'
 import PanduanPage          from './pages/PanduanPage'
@@ -19,7 +20,7 @@ import TimelineBinterPage   from './pages/laporan/TimelineBinterPage'
 import DataDemografiPage    from './pages/laporan/DataDemografiPage'
 import TokohWilayahPage     from './pages/laporan/TokohWilayahPage'
 
-// Error boundary global — menangkap crash di luar routing
+// Error boundary global
 class GlobalErrorBoundary extends Component {
   constructor(props) {
     super(props)
@@ -77,7 +78,6 @@ class GlobalErrorBoundary extends Component {
   }
 }
 
-// Helper: wrap element dengan PageErrorBoundary per route
 function Safe({ children }) {
   return <PageErrorBoundary>{children}</PageErrorBoundary>
 }
@@ -91,26 +91,27 @@ export default function App() {
             <AppProvider>
               <BrowserRouter basename={import.meta.env.BASE_URL}>
                 <Routes>
-                  {/* Halaman login — tidak perlu auth */}
                   <Route path="/login" element={<LoginPage />} />
 
-                  {/* Semua route lain butuh login */}
                   <Route path="/*" element={
                     <ProtectedRoute>
                       <AppShell>
                         <Routes>
-                          <Route path="/"                       element={<Safe><OverviewPage /></Safe>} />
-                          <Route path="/pos/:posId"              element={<Safe><PosDetailPage /></Safe>} />
-                          <Route path="/pos/:posId/:tab"         element={<Safe><PosDetailPage /></Safe>} />
-                          <Route path="/kerawanan"               element={<Safe><KerawananPage /></Safe>} />
-                          <Route path="/binter"                  element={<Safe><BinterPage /></Safe>} />
-                          <Route path="/admin"                   element={<Safe><AdminPage requireAdmin /></Safe>} />
-                          <Route path="/panduan"                 element={<Safe><PanduanPage /></Safe>} />
-                          <Route path="/laporan/kerawanan"       element={<Safe><GrafikKerawananPage /></Safe>} />
-                          <Route path="/laporan/binter"          element={<Safe><TimelineBinterPage /></Safe>} />
-                          <Route path="/laporan/demografi"       element={<Safe><DataDemografiPage /></Safe>} />
-                          <Route path="/laporan/tokoh"           element={<Safe><TokohWilayahPage /></Safe>} />
-                          <Route path="*"                        element={<Navigate to="/" replace />} />
+                          <Route path="/"                       element={<Safe><HomePage /></Safe>} />
+                          <Route path="/overview"               element={<Safe><OverviewPage /></Safe>} />
+                          <Route path="/pos/:posId"             element={<Safe><PosDetailPage /></Safe>} />
+                          <Route path="/pos/:posId/:tab"        element={<Safe><PosDetailPage /></Safe>} />
+                          <Route path="/insiden"                element={<Safe><InsidenPage /></Safe>} />
+                          {/* Alias lama supaya bookmark lama tidak 404 */}
+                          <Route path="/kerawanan"              element={<Navigate to="/insiden" replace />} />
+                          <Route path="/binter"                 element={<Safe><BinterPage /></Safe>} />
+                          <Route path="/admin"                  element={<Safe><AdminPage requireAdmin /></Safe>} />
+                          <Route path="/panduan"                element={<Safe><PanduanPage /></Safe>} />
+                          <Route path="/laporan/kerawanan"      element={<Safe><GrafikKerawananPage /></Safe>} />
+                          <Route path="/laporan/binter"         element={<Safe><TimelineBinterPage /></Safe>} />
+                          <Route path="/laporan/demografi"      element={<Safe><DataDemografiPage /></Safe>} />
+                          <Route path="/laporan/tokoh"          element={<Safe><TokohWilayahPage /></Safe>} />
+                          <Route path="*"                       element={<Navigate to="/" replace />} />
                         </Routes>
                       </AppShell>
                     </ProtectedRoute>

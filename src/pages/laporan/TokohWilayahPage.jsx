@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { usePos, useAllTokoh } from '../../hooks/useSupabase'
 
-// Normalisasi kategori dari sheet (TOMAS/TODAT/TOGA) ke display label
 const KATEGORI_NORMALIZE = {
   'TOMAS': 'Masyarakat', 'tomas': 'Masyarakat',
   'TODAT': 'Adat',       'todat': 'Adat',
@@ -28,9 +27,9 @@ export default function TokohWilayahPage() {
   const [filterPos,      setFilterPos]      = useState('all')
   const [filterKategori, setFilterKategori] = useState('all')
   const [search,         setSearch]         = useState('')
+  const [selectedTokoh,  setSelectedTokoh]  = useState(null)
 
   const loading = posLoading || tokohLoading
-  // Normalisasi kategori dari sheet
   const allTokoh = (tokohData || []).map(t => ({
     ...t,
     _kategori: normalizeKategori(t.kategori),
@@ -69,8 +68,7 @@ export default function TokohWilayahPage() {
       </div>
 
       <div className="space-y-4">
-
-        {/* Summary + distribusi */}
+        {/* Summary */}
         <div className="grid grid-cols-4 gap-3">
           <StatCard label="Total Tokoh" value={allTokoh.length} color="#bb88ff" icon="◉" />
           {Object.entries(byKategori).map(([kat, count]) => (
@@ -80,7 +78,6 @@ export default function TokohWilayahPage() {
 
         {/* Filter bar */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Search */}
           <div className="flex items-center gap-1.5 px-2 py-1 rounded-sm flex-1 min-w-[150px]"
             style={{ background: 'rgba(5,8,10,0.8)', border: '1px solid rgba(0,255,136,0.15)' }}>
             <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="rgba(0,255,136,0.4)" viewBox="0 0 24 24">
@@ -97,7 +94,6 @@ export default function TokohWilayahPage() {
             />
           </div>
 
-          {/* Filter pos */}
           <select
             value={filterPos}
             onChange={e => setFilterPos(e.target.value)}
@@ -111,7 +107,6 @@ export default function TokohWilayahPage() {
             ))}
           </select>
 
-          {/* Filter kategori */}
           <select
             value={filterKategori}
             onChange={e => setFilterKategori(e.target.value)}
@@ -144,19 +139,35 @@ export default function TokohWilayahPage() {
             {tokoh.map((t, i) => {
               const color = KATEGORI_COLOR[t._kategori] || '#8899aa'
               return (
-                <div key={t.id || `${t.pos_id}-${t.nama}-${i}`} className="rounded-sm overflow-hidden transition-all"
+                <div
+                  key={t.id || `${t.pos_id}-${t.nama}-${i}`}
+                  className="rounded-sm overflow-hidden transition-all cursor-pointer"
                   style={{ background: 'rgba(5,8,10,0.8)', border: `1px solid ${color}22` }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = `${color}44`}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = `${color}22`}
+                  onClick={() => setSelectedTokoh(t)}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = `${color}55`
+                    e.currentTarget.style.boxShadow = `0 0 12px ${color}15`
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = `${color}22`
+                    e.currentTarget.style.boxShadow = 'none'
+                  }}
                 >
                   <div className="flex items-start gap-3 p-3">
-                    {/* Avatar */}
-                    <div className="w-9 h-9 rounded-sm flex-shrink-0 flex items-center justify-center"
+                    {/* Avatar / foto */}
+                    <div className="w-9 h-9 rounded-sm flex-shrink-0 flex items-center justify-center overflow-hidden"
                       style={{ background: `${color}15`, border: `1px solid ${color}33` }}>
-                      <svg className="w-4 h-4" fill="none" stroke={color} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
+                      {t.foto_url ? (
+                        <img src={t.foto_url} alt={t.nama}
+                          className="w-full h-full object-cover"
+                          onError={e => { e.target.style.display = 'none' }}
+                        />
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke={color} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      )}
                     </div>
                     {/* Info */}
                     <div className="min-w-0 flex-1">
@@ -179,11 +190,9 @@ export default function TokohWilayahPage() {
                             ? posNameMap[t.pos_id].replace(/^Pos /i, 'POS ').toUpperCase()
                             : t.pos_id}
                         </span>
-                        {t.catatan && (
-                          <p className="text-[8px] truncate" style={{ color: 'rgba(200,214,229,0.3)' }}>
-                            {t.catatan}
-                          </p>
-                        )}
+                        <span className="text-[8px]" style={{ color: 'rgba(0,255,136,0.35)' }}>
+                          → lihat profil
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -201,9 +210,129 @@ export default function TokohWilayahPage() {
               d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <p className="text-[9px]" style={{ color: 'rgba(68,136,255,0.7)' }}>
-            Data tokoh ditampilkan dari Google Sheets tab <span className="font-mono font-bold">tokoh</span>.
+            Klik kartu tokoh untuk melihat biografi lengkap.
             Input data tokoh melalui halaman detail masing-masing pos.
           </p>
+        </div>
+      </div>
+
+      {/* Modal biografi */}
+      {selectedTokoh && (
+        <TokohBiografiModal
+          tokoh={selectedTokoh}
+          posName={posNameMap[selectedTokoh.pos_id] || selectedTokoh.pos_id}
+          onClose={() => setSelectedTokoh(null)}
+        />
+      )}
+    </div>
+  )
+}
+
+/* ── Modal Biografi Tokoh ──────────────────────────────────── */
+function TokohBiografiModal({ tokoh, posName, onClose }) {
+  const kat   = normalizeKategori(tokoh.kategori)
+  const color = KATEGORI_COLOR[kat] || '#8899aa'
+
+  const rows = [
+    { label: 'Nama Lengkap', value: tokoh.nama },
+    { label: 'Kategori',     value: kat },
+    { label: 'Jabatan',      value: tokoh.jabatan },
+    { label: 'Alamat',       value: tokoh.alamat },
+    { label: 'No. Telp',     value: tokoh.no_telp },
+    { label: 'Pos Binaan',   value: posName },
+    { label: 'Catatan',      value: tokoh.catatan },
+  ].filter(r => r.value && r.value !== '—' && r.value !== '-')
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div
+        className="w-full max-w-md rounded-sm overflow-hidden fade-in"
+        style={{
+          background: 'rgba(5,12,8,0.98)',
+          border: `1px solid ${color}30`,
+          boxShadow: `0 0 40px rgba(0,0,0,0.8), 0 0 20px ${color}10`,
+          maxHeight: '90vh',
+          overflowY: 'auto',
+        }}
+      >
+        {/* Header modal */}
+        <div className="flex items-center justify-between px-4 py-3 flex-shrink-0"
+          style={{ background: `${color}08`, borderBottom: `1px solid ${color}20` }}>
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded-sm"
+              style={{ color, background: `${color}15`, border: `1px solid ${color}30` }}>
+              {kat}
+            </span>
+            <span className="font-mono text-[9px] text-[rgba(0,255,136,0.5)]">{posName}</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-[rgba(200,214,229,0.3)] hover:text-[rgba(200,214,229,0.7)] text-xl leading-none transition-colors px-1"
+          >×</button>
+        </div>
+
+        {/* Body */}
+        <div className="p-4 space-y-4">
+          {/* Foto + nama */}
+          <div className="flex items-start gap-4">
+            <div
+              className="w-20 h-20 rounded-sm flex-shrink-0 flex items-center justify-center overflow-hidden"
+              style={{ background: `${color}12`, border: `1px solid ${color}30` }}
+            >
+              {tokoh.foto_url ? (
+                <img
+                  src={tokoh.foto_url}
+                  alt={tokoh.nama}
+                  className="w-full h-full object-cover"
+                  onError={e => { e.target.style.display = 'none' }}
+                />
+              ) : (
+                <svg className="w-8 h-8" fill="none" stroke={color} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-base font-bold leading-tight mb-1"
+                style={{ color: 'rgba(200,214,229,0.9)' }}>
+                {tokoh.nama}
+              </h3>
+              <p className="text-[11px]" style={{ color: 'rgba(200,214,229,0.5)' }}>
+                {tokoh.jabatan}
+              </p>
+              {tokoh.alamat && (
+                <p className="text-[9px] mt-1" style={{ color: 'rgba(200,214,229,0.35)' }}>
+                  📍 {tokoh.alamat}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Data biodata */}
+          <div className="rounded-sm overflow-hidden"
+            style={{ border: '1px solid rgba(0,255,136,0.1)' }}>
+            <div className="px-3 py-1.5"
+              style={{ background: 'rgba(0,255,136,0.04)', borderBottom: '1px solid rgba(0,255,136,0.08)' }}>
+              <span className="text-[8px] font-bold tracking-[0.2em] uppercase"
+                style={{ color: 'rgba(0,255,136,0.6)' }}>BIODATA</span>
+            </div>
+            <div className="divide-y divide-[rgba(0,255,136,0.05)]">
+              {rows.map(row => (
+                <div key={row.label} className="flex items-start gap-3 px-3 py-2">
+                  <span className="text-[9px] uppercase tracking-wider flex-shrink-0 w-24"
+                    style={{ color: 'rgba(200,214,229,0.35)' }}>{row.label}</span>
+                  <span className="text-[11px] flex-1" style={{ color: 'rgba(200,214,229,0.75)' }}>
+                    {row.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

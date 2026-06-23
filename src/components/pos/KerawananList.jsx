@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { LoadingSpinner } from '../ui/LoadingSpinner'
 import { EmptyState } from '../ui/EmptyState'
 import { Modal } from '../ui/Modal'
@@ -20,12 +20,22 @@ function getCatLabel(kategori) {
   return cat?.label || kategori
 }
 
-export function KerawananList({ kerawananList, loading, posId, onRefresh }) {
+export function KerawananList({ kerawananList, loading, posId, onRefresh, highlightId }) {
   const { showToast } = useToast()
   const { confirm } = useConfirm()
   const [showForm, setShowForm] = useState(false)
   const [deleting, setDeleting] = useState(null)
   const [updatingId, setUpdatingId] = useState(null)
+  const highlightRef = useRef(null)
+
+  // Scroll ke item yang di-highlight saat data sudah ada
+  useEffect(() => {
+    if (!highlightId || !highlightRef.current) return
+    const timer = setTimeout(() => {
+      highlightRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [highlightId, loading])
 
   const handleSave = async (data) => {
     try {
@@ -114,18 +124,23 @@ export function KerawananList({ kerawananList, loading, posId, onRefresh }) {
         />
       ) : (
         <div className="space-y-2">
-          {sorted.map((item, i) => (
-            <KerawananCard
-              key={item.id || i}
-              item={item}
-              color={getCatColor(item.kategori)}
-              label={getCatLabel(item.kategori)}
-              onToggleStatus={() => handleToggleStatus(item)}
-              onDelete={() => handleDelete(item)}
-              updating={updatingId === item.id}
-              deleting={deleting === item.id}
-            />
-          ))}
+          {sorted.map((item, i) => {
+            const isHighlighted = highlightId && (item.id === highlightId || String(item.id) === String(highlightId))
+            return (
+              <KerawananCard
+                key={item.id || i}
+                item={item}
+                color={getCatColor(item.kategori)}
+                label={getCatLabel(item.kategori)}
+                onToggleStatus={() => handleToggleStatus(item)}
+                onDelete={() => handleDelete(item)}
+                updating={updatingId === item.id}
+                deleting={deleting === item.id}
+                highlighted={isHighlighted}
+                cardRef={isHighlighted ? highlightRef : null}
+              />
+            )
+          })}
         </div>
       )}
 
@@ -144,16 +159,21 @@ export function KerawananList({ kerawananList, loading, posId, onRefresh }) {
   )
 }
 
-function KerawananCard({ item, color, label, onToggleStatus, onDelete, updating, deleting }) {
-  const [expanded, setExpanded] = useState(false)
+function KerawananCard({ item, color, label, onToggleStatus, onDelete, updating, deleting, highlighted, cardRef }) {
+  const [expanded, setExpanded] = useState(highlighted || false)
   const isAktif = item.status?.toLowerCase() === 'aktif'
 
   return (
     <div
+      ref={cardRef}
       className={`hud-panel transition-all ${isAktif ? 'danger-pulse' : ''}`}
       style={{
         borderLeftColor: isAktif ? '#ff3333' : 'rgba(0,255,136,0.2)',
         borderLeftWidth: '2px',
+        ...(highlighted ? {
+          outline: '1px solid rgba(255,204,0,0.6)',
+          boxShadow: '0 0 16px rgba(255,204,0,0.15)',
+        } : {}),
       }}
     >
       <div

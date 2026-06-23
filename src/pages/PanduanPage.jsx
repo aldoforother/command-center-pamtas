@@ -1,7 +1,5 @@
 import { useState } from 'react'
 
-const GAS_SHEET_URL = 'https://docs.google.com/spreadsheets'
-
 const TABS = [
   { id: 'overview',   label: 'Overview',       icon: '◈' },
   { id: 'pos',        label: 'Data Pos',        icon: '◉' },
@@ -9,13 +7,14 @@ const TABS = [
   { id: 'tokoh',      label: 'Tokoh',           icon: '◆' },
   { id: 'binter',     label: 'Binter',          icon: '◇' },
   { id: 'kerawanan',  label: 'Kerawanan',       icon: '⚠' },
+  { id: 'patroli',    label: 'Patroli',         icon: '◎' },
 ]
 
 export default function PanduanPage() {
   const [activeTab, setActiveTab] = useState('overview')
 
   return (
-    <div className="absolute inset-0 overflow-y-auto">
+    <div className="h-full overflow-y-auto bg-[#050810]">
     <div className="p-4 space-y-4 fade-in max-w-4xl">
 
       {/* Header */}
@@ -52,12 +51,13 @@ export default function PanduanPage() {
 
       {/* Content */}
       <div className="space-y-4">
-        {activeTab === 'overview' && <OverviewTab />}
+        {activeTab === 'overview'  && <OverviewTab />}
         {activeTab === 'pos'       && <PosTab />}
         {activeTab === 'demografi' && <DemografiTab />}
         {activeTab === 'tokoh'     && <TokohTab />}
         {activeTab === 'binter'    && <BinterTab />}
         {activeTab === 'kerawanan' && <KerawananTab />}
+        {activeTab === 'patroli'   && <PatroliTab />}
       </div>
 
     </div>
@@ -193,12 +193,12 @@ function OverviewTab() {
       <Section title="◬ Struktur 6 Tab Google Sheets">
         <div className="grid grid-cols-2 gap-2">
           {[
-            { tab: 'pos',       desc: 'Data pokok 18 pos satgas (koordinat, personel, kondisi)',  color: '#00ff88', icon: '📍' },
+            { tab: 'pos',       desc: 'Data pokok 17 pos satgas (koordinat, personel, kondisi)',  color: '#00ff88', icon: '📍' },
             { tab: 'demografi', desc: 'Data kependudukan, agama, tempat ibadah per pos',          color: '#4ade80', icon: '👥' },
             { tab: 'tokoh',     desc: 'Tokoh adat, masyarakat, agama di wilayah binaan',          color: '#ffd700', icon: '👤' },
             { tab: 'binter',    desc: 'Riwayat kegiatan pembinaan teritorial',                   color: '#00bfff', icon: '🤝' },
             { tab: 'kerawanan', desc: 'Laporan insiden dan ancaman per pos',                      color: '#ff5555', icon: '⚠' },
-            { tab: 'summary',   desc: 'Agregat otomatis — JANGAN diedit manual',                  color: '#888',    icon: '📊' },
+            { tab: 'patroli',   desc: 'Laporan kegiatan patroli — rute, personel, dan temuan',    color: '#aa88ff', icon: '🪖' },
           ].map(t => (
             <div key={t.tab} className="flex gap-2.5 p-2.5 rounded-sm"
               style={{ background: 'rgba(0,255,136,0.025)', border: `1px solid ${t.color}20` }}>
@@ -241,27 +241,31 @@ function PosTab() {
           (rotasi komandan, penambahan personel, dsb).
         </p>
         <ColTable cols={[
-          ['pos_id',          'TEXT',   'POS-1',           'Wajib. Format: POS-1 s/d POS-17 atau KOTIS'],
-          ['nama_pos',        'TEXT',   'Pos Pulau Sebatik','Nama resmi pos'],
-          ['lokasi_desa',     'TEXT',   'Ds. Aji Kuning',  'Desa/kelurahan lokasi pos'],
-          ['kecamatan',       'TEXT',   'Sebatik Barat',   'Kecamatan'],
-          ['kabupaten',       'TEXT',   'Kab. Nunukan',    'Kabupaten'],
-          ['provinsi',        'TEXT',   'Kalimantan Utara','Provinsi'],
-          ['lat',             'NUMBER', '4.1234',          'Latitude (desimal, 4 angka di belakang koma)'],
-          ['lng',             'NUMBER', '117.8765',        'Longitude (desimal)'],
-          ['komandan_pos',    'TEXT',   'Lettu Kav Budi S','Nama dan pangkat Komandan Pos'],
-          ['danssk',          'TEXT',   'Kapten Kav Andi', 'Dansat Setingkat Kompi'],
-          ['dpp',             'TEXT',   'Kolonel Kav ...',  'Danpamtas Pos'],
-          ['kuat_pers',       'NUMBER', '22',              'Jumlah personel di pos'],
-          ['kondisi_bangunan','TEXT',   'Baik',            'Baik / Sedang / Rusak Ringan / Rusak Berat'],
-          ['sumber_air',      'TEXT',   'PDAM',            'PDAM / Sumur / Sungai / Hujan'],
-          ['sumber_listrik',  'TEXT',   'PLN',             'PLN / Genset / Solar Panel'],
-          ['jaringan_gsm',    'TEXT',   'Telkomsel',       'Provider yang tersedia di lokasi'],
-          ['jumlah_patok',    'NUMBER', '12',              'Jumlah patok perbatasan di AO pos'],
-          ['kerawanan_utama', 'TEXT',   'Ilegal Logging',  'Potensi ancaman utama di wilayah pos'],
+          ['pos_id',          'TEXT',   'KT',                                      'Wajib. Kode pos: KT, AJ, TA, BB, BK, GSG, KD, SU, SK, TB, SL, SMB, SML, LB, GSL, ML, LMS'],
+          ['nama_pos',        'TEXT',   'POS KOTIS',                               'Nama resmi pos satgas'],
+          ['lokasi_desa',     'TEXT',   'Ds. Pasir Putih',                         'Desa/kelurahan lokasi pos'],
+          ['kecamatan',       'TEXT',   'Kec. Nunukan Tengah',                     'Kecamatan'],
+          ['kabupaten',       'TEXT',   'Kab. Nunukan',                            'Kabupaten'],
+          ['provinsi',        'TEXT',   'Kalimantan Utara',                        'Provinsi'],
+          ['lat',             'NUMBER', '-8.265254',                               'Latitude (desimal). Salin dari Google Maps'],
+          ['lng',             'NUMBER', '112.7322575',                             'Longitude (desimal)'],
+          ['komandan_pos',    'TEXT',   'Letkol Kav Dian Kriswijaya',              'Nama dan pangkat Komandan Pos. Kosongkan jika belum ada'],
+          ['danssk',          'TEXT',   '—',                                       'Dansat Setingkat Kompi. Kosongkan jika belum ada data'],
+          ['dpp',             'TEXT',   '—',                                       'Danpamtas Pos. Kosongkan jika belum ada data'],
+          ['kuat_pers',       'NUMBER', '62',                                      'Jumlah personel di pos'],
+          ['kondisi_bangunan','TEXT',   'Permanen',                                'Permanen / Semi Permanen / Darurat'],
+          ['sumber_air',      'TEXT',   'PDAM',                                    'PDAM / Sumur / Sungai / Hujan'],
+          ['sumber_listrik',  'TEXT',   'PLN',                                     'PLN / Genset / Solar Panel'],
+          ['jaringan_gsm',    'TEXT',   'Telkomsel, Indosat',                      'Provider yang tersedia. Bisa lebih dari satu, pisahkan dengan koma'],
+          ['jumlah_patok',    'NUMBER', '0',                                       'Jumlah patok perbatasan di AO pos. Isi 0 jika tidak ada'],
+          ['kerawanan_utama', 'TEXT',   'TKI Ilegal, Terorisme, Penyelundupan Narkoba', 'Potensi ancaman utama. Bisa lebih dari satu, pisahkan dengan koma'],
+          ['foto_satelit_url','TEXT',   '—',                                       'Link foto satelit dari Google Drive (opsional)'],
         ]} />
         <AlertBox type="info">
           Koordinat lat/lng bisa didapat dari Google Maps: klik titik lokasi pos → salin angka koordinat.
+        </AlertBox>
+        <AlertBox type="warning">
+          Kode pos_id WAJIB sesuai daftar resmi: <code className="font-mono">KT AJ TA BB BK GSG KD SU SK TB SL SMB SML LB GSL ML LMS</code>. Salah kode → data tidak terhubung ke peta.
         </AlertBox>
       </Section>
     </div>
@@ -273,27 +277,36 @@ function DemografiTab() {
     <div className="space-y-4">
       <Section title="◬ Tab: demografi — Data Kependudukan">
         <p className="text-[rgba(200,214,229,0.5)] text-[10px] leading-relaxed">
-          Satu baris per pos. Diisi berdasarkan data dari pemerintah desa atau hasil pendataan langsung.
+          Satu baris per kelurahan/desa per pos. Satu pos bisa memiliki beberapa baris
+          (misal: Pos AJ mencakup Kel. Tanjung Karang dan Kel. Balansiku).
+          Diisi berdasarkan data dari pemerintah desa atau hasil pendataan langsung.
         </p>
         <ColTable cols={[
-          ['pos_id',          'TEXT',   'POS-3',     'Wajib. Harus sesuai dengan tab pos'],
-          ['total_penduduk',  'NUMBER', '1240',      'Total jiwa di wilayah binaan'],
-          ['total_kk',        'NUMBER', '310',       'Total Kepala Keluarga'],
-          ['islam',           'NUMBER', '980',       'Jumlah pemeluk agama Islam'],
-          ['kristen',         'NUMBER', '180',       'Jumlah pemeluk agama Kristen'],
-          ['katolik',         'NUMBER', '60',        'Jumlah pemeluk agama Katolik'],
-          ['hindu',           'NUMBER', '10',        'Jumlah pemeluk agama Hindu'],
-          ['buddha',          'NUMBER', '8',         'Jumlah pemeluk agama Buddha'],
-          ['konghucu',        'NUMBER', '2',         'Jumlah pemeluk agama Konghucu'],
-          ['lainnya',         'NUMBER', '0',         'Agama/kepercayaan lainnya'],
-          ['masjid',          'NUMBER', '3',         'Jumlah masjid/mushola'],
-          ['gereja',          'NUMBER', '2',         'Jumlah gereja'],
-          ['pura',            'NUMBER', '0',         'Jumlah pura'],
-          ['vihara',          'NUMBER', '0',         'Jumlah vihara'],
-          ['geografi',        'TEXT',   'Perbukitan berhutan lebat, berbatasan langsung dengan Malaysia', 'Deskripsi kondisi geografis'],
-          ['demografi_notes', 'TEXT',   'Mayoritas suku Tidung', 'Catatan demografi tambahan'],
-          ['konsos_notes',    'TEXT',   'Masyarakat kooperatif', 'Kondisi sosial masyarakat'],
+          ['pos_id',          'TEXT',   'AJ',                                    'Wajib. Harus sesuai kode pos di tab pos'],
+          ['nama_kelurahan',  'TEXT',   'Tanjung Karang',                        'Nama kelurahan/desa yang dicakup'],
+          ['kecamatan',       'TEXT',   'Sebatik',                               'Kecamatan'],
+          ['kabupaten',       'TEXT',   'Nunukan',                               'Kabupaten'],
+          ['total_penduduk',  'NUMBER', '2667',                                  'Total jiwa di kelurahan tersebut (contoh: Kel. Tanjung Karang)'],
+          ['total_kk',        'NUMBER', '651',                                   'Total Kepala Keluarga'],
+          ['islam',           'NUMBER', '2666',                                  'Jumlah pemeluk agama Islam'],
+          ['kristen',         'NUMBER', '1',                                     'Jumlah pemeluk agama Kristen'],
+          ['katolik',         'NUMBER', '0',                                     'Jumlah pemeluk agama Katolik'],
+          ['hindu',           'NUMBER', '0',                                     'Jumlah pemeluk agama Hindu'],
+          ['buddha',          'NUMBER', '0',                                     'Jumlah pemeluk agama Buddha'],
+          ['konghucu',        'NUMBER', '0',                                     'Jumlah pemeluk agama Konghucu'],
+          ['lainnya',         'NUMBER', '0',                                     'Agama/kepercayaan lainnya. Tulis "—" jika tidak ada data'],
+          ['masjid',          'NUMBER', '—',                                     'Jumlah masjid/mushola. Kosongkan jika belum ada data'],
+          ['gereja',          'NUMBER', '—',                                     'Jumlah gereja'],
+          ['pura',            'NUMBER', '—',                                     'Jumlah pura'],
+          ['vihara',          'NUMBER', '—',                                     'Jumlah vihara'],
+          ['geografi',        'TEXT',   'Pulau Sebatik, pegunungan rendah',      'Deskripsi kondisi geografis wilayah'],
+          ['demografi_notes', 'TEXT',   'Hampir 100% Bugis 2.658',               'Catatan suku/etnis dominan dan demografi tambahan'],
+          ['konsos_notes',    'TEXT',   'Berbatasan Malaysia, area perkebunan',  'Kondisi sosial, batas wilayah, potensi khusus'],
         ]} />
+        <AlertBox type="info">
+          Pos dengan lebih dari satu kelurahan binaan: input <strong>satu baris per kelurahan</strong> dengan pos_id yang sama.
+          Contoh: Pos AJ → baris 1 (Tanjung Karang, 2667 jiwa) + baris 2 (Balansiku, 1300 jiwa).
+        </AlertBox>
         <AlertBox type="warning">
           Pastikan total agama tidak melebihi total_penduduk. Dashboard akan menampilkan chart pie berdasarkan data ini.
         </AlertBox>
@@ -311,21 +324,25 @@ function TokohTab() {
           diupdate bila ada perubahan (pindah, meninggal, jabatan baru).
         </p>
         <ColTable cols={[
-          ['id',        'TEXT',   'TOK-001',         'ID unik. Format: TOK-001, TOK-002, dst.'],
-          ['pos_id',    'TEXT',   'POS-5',           'Wajib. Pos yang membina tokoh ini'],
-          ['nama',      'TEXT',   'H. Ahmad Yani',   'Nama lengkap tokoh'],
-          ['kategori',  'TEXT',   'Adat',            'Adat / Masyarakat / Agama'],
-          ['jabatan',   'TEXT',   'Kepala Adat',     'Jabatan/peran tokoh'],
-          ['alamat',    'TEXT',   'Jl. Perbatasan 5','Alamat tinggal'],
-          ['no_telp',   'TEXT',   '081234567890',    'Nomor HP yang bisa dihubungi'],
-          ['catatan',   'TEXT',   'Sangat kooperatif, aktif bantu patroli', 'Catatan penting dari pos'],
+          ['id',        'TEXT',   '1',                             'ID unik. Nomor urut: 1, 2, 3, dst.'],
+          ['pos_id',    'TEXT',   'KT',                            'Wajib. Kode pos yang membina tokoh ini'],
+          ['nama',      'TEXT',   'H. Irwan Sabri, S.E',           'Nama lengkap tokoh'],
+          ['kategori',  'TEXT',   'TOMAS',                         'TOMAS (Tokoh Masyarakat) / TODAT (Tokoh Adat) / TOGA (Tokoh Agama)'],
+          ['jabatan',   'TEXT',   'Bupati Nunukan',                'Jabatan/peran tokoh di pemerintahan atau masyarakat'],
+          ['alamat',    'TEXT',   'Jl. Ujang Dewa Selisun',        'Alamat tinggal atau kantor'],
+          ['no_telp',   'TEXT',   '—',                             'Nomor HP yang bisa dihubungi. Kosongkan jika tidak ada'],
+          ['catatan',   'TEXT',   'PEMDA',                         'Catatan penting: instansi, afiliasi, atau keterangan lain'],
         ]} />
+        <AlertBox type="info">
+          Contoh baris ke-2 (data nyata): <code className="font-mono">2 | KT | Hermanus | TOMAS | Wakil Bupati | Jl. Ujang Dewa Selisun | — | PEMDA</code>
+        </AlertBox>
         <StepList steps={[
           'Buka tab tokoh di Google Sheets',
           'Tambah baris baru di bawah data terakhir',
-          'Isi id dengan format TOK-XXX (lanjut dari nomor terakhir)',
-          'Isi pos_id sesuai pos yang melaporkan',
-          'Isi data tokoh lengkap',
+          'Isi id dengan nomor urut lanjutan (1, 2, 3, ...)',
+          'Isi pos_id sesuai kode pos yang melaporkan (contoh: KT, AJ, TA)',
+          'Isi kategori: TOMAS / TODAT / TOGA sesuai peran tokoh',
+          'Isi data tokoh lengkap — no_telp dan catatan boleh dikosongkan',
           'Simpan — data otomatis tampil di tab Tokoh pada halaman detail pos',
         ]} />
       </Section>
@@ -341,15 +358,15 @@ function BinterTab() {
           Setiap kegiatan binter diinput satu baris. Diisi segera setelah kegiatan selesai dilaksanakan.
         </p>
         <ColTable cols={[
-          ['id',             'TEXT',   'BIN-001',           'ID unik. Format: BIN-001, BIN-002, dst.'],
-          ['pos_id',         'TEXT',   'POS-2',             'Wajib. Pos pelaksana kegiatan'],
-          ['tanggal',        'DATE',   '2026-03-20',        'Tanggal kegiatan (format YYYY-MM-DD)'],
-          ['jenis_kegiatan', 'TEXT',   'Pengobatan Gratis', 'Pilih dari daftar jenis kegiatan'],
-          ['lokasi',         'TEXT',   'Balai Desa Sekatak','Lokasi pelaksanaan'],
-          ['sasaran',        'TEXT',   'Warga Desa Sekatak','Sasaran/peserta kegiatan'],
-          ['jumlah_peserta', 'NUMBER', '85',                'Jumlah peserta yang hadir'],
-          ['keterangan',     'TEXT',   'Bekerjasama dengan Puskesmas Kec. Sekatak', 'Keterangan tambahan'],
-          ['foto_url',       'TEXT',   'https://drive.google.com/...', 'Link foto dari Google Drive (opsional)'],
+          ['id',             'TEXT',   'BIN-001',                                         'ID unik. Format: BIN-001, BIN-002, dst.'],
+          ['pos_id',         'TEXT',   'AJ',                                              'Wajib. Kode pos pelaksana kegiatan'],
+          ['tanggal',        'DATE',   '2026-06-15',                                      'Tanggal kegiatan (format YYYY-MM-DD)'],
+          ['jenis_kegiatan', 'TEXT',   'Pengobatan Gratis',                               'Pilih dari daftar jenis kegiatan di bawah'],
+          ['lokasi',         'TEXT',   'Balai Desa Aji Kuning, Kec. Sebatik Barat',       'Lokasi pelaksanaan kegiatan'],
+          ['sasaran',        'TEXT',   'Warga Desa Aji Kuning dan sekitarnya',            'Sasaran/peserta kegiatan'],
+          ['jumlah_peserta', 'NUMBER', '87',                                              'Jumlah peserta yang hadir'],
+          ['keterangan',     'TEXT',   'Bekerjasama dengan Puskesmas Kec. Sebatik Barat, 6 personel Pos AJ, pelayanan kesehatan umum dan pembagian obat gratis', 'Keterangan tambahan'],
+          ['foto_url',       'TEXT',   '—',                                               'Link foto dari Google Drive (opsional)'],
         ]} />
 
         <div className="space-y-2">
@@ -386,36 +403,45 @@ function KerawananTab() {
           Data ini akan tampil sebagai marker merah di peta.
         </p>
         <ColTable cols={[
-          ['id',           'TEXT',   'KRW-001',           'ID unik. Format: KRW-001, KRW-002, dst.'],
-          ['pos_id',       'TEXT',   'POS-7',             'Wajib. Pos yang melaporkan'],
-          ['tanggal',      'DATE',   '2026-03-18',        'Tanggal kejadian (format YYYY-MM-DD)'],
-          ['kategori',     'TEXT',   'Ilegal Logging',    'Kategori insiden (lihat daftar di bawah)'],
-          ['deskripsi',    'TEXT',   'Ditemukan aktivitas penebangan liar...', 'Uraian singkat kejadian'],
-          ['status',       'TEXT',   'aktif',             'aktif = belum selesai / selesai = sudah ditangani'],
-          ['lat',          'NUMBER', '4.1122',            'Koordinat TKP (opsional, untuk marker di peta)'],
-          ['lng',          'NUMBER', '117.7833',          'Koordinat TKP (opsional)'],
-          ['pelaku',       'TEXT',   'Tidak dikenal, 3 orang', 'Identitas pelaku jika diketahui'],
-          ['tindak_lanjut','TEXT',   'Dilaporkan ke Polsek Sebatik', 'Tindak lanjut yang sudah dilakukan'],
-          ['foto_url',     'TEXT',   'https://drive.google.com/...', 'Link foto barang bukti (opsional)'],
+          ['id',           'TEXT',   'KRW-001',                                       'ID unik. Format: KRW-001, KRW-002, dst.'],
+          ['pos_id',       'TEXT',   'KT',                                            'Wajib. Kode pos yang melaporkan'],
+          ['tanggal',      'DATE',   '—',                                             'Tanggal kejadian (format YYYY-MM-DD). Kosongkan jika tidak diketahui persis'],
+          ['kategori',     'TEXT',   'Trafficking',                                   'Kategori insiden (lihat daftar di bawah)'],
+          ['deskripsi',    'TEXT',   'Pulau Nunukan merupakan daerah transit TKI ke Malaysia, sangat rawan perdagangan manusia (Human Trafficking) dan imigran gelap. Berfungsi sebagai pintu gerbang PJTKI Kab. Nunukan', 'Uraian lengkap kejadian / kondisi kerawanan'],
+          ['status',       'TEXT',   'aktif',                                         'aktif = belum selesai / selesai = sudah ditangani'],
+          ['lat',          'NUMBER', '—',                                             'Koordinat TKP (opsional, untuk marker di peta)'],
+          ['lng',          'NUMBER', '—',                                             'Koordinat TKP (opsional)'],
+          ['pelaku',       'TEXT',   'Jaringan PJTKI ilegal',                         'Identitas / kelompok pelaku jika diketahui'],
+          ['tindak_lanjut','TEXT',   'Pengawasan ketat di pelabuhan dan jalur penyeberangan', 'Tindak lanjut yang sudah atau sedang dilakukan'],
+          ['foto_url',     'TEXT',   '—',                                             'Link foto barang bukti dari Google Drive (opsional)'],
         ]} />
+        <AlertBox type="info">
+          Contoh baris ke-2 (data nyata): <code className="font-mono">KRW-002 | KT | — | PMI NP | Pulau Nunukan menjadi tempat transit dan proses TKI yang akan bekerja ke Malaysia, sebagian melalui jalur non-prosedural | aktif | — | — | Calo TKI | Koordinasi dengan BP2MI dan imigrasi | —</code>
+        </AlertBox>
 
         <div className="space-y-2">
-          <p className="hud-label">Kategori Kerawanan yang Valid:</p>
+          <p className="hud-label">Kategori Kerawanan yang Valid (7 Kategori):</p>
           <div className="flex flex-wrap gap-1.5">
             {[
-              { label: 'Kriminal',          color: '#dc2626' },
-              { label: 'Ilegal Logging',    color: '#d97706' },
-              { label: 'Illegal Mining',    color: '#7c3aed' },
-              { label: 'Human Trafficking', color: '#db2777' },
-              { label: 'Lintas Batas',      color: '#ea580c' },
-              { label: 'Lainnya',           color: '#6b7280' },
+              { label: 'Narkoba',     color: '#ff3333', desc: 'Peredaran/penggunaan narkoba' },
+              { label: 'Kriminal',    color: '#ff6600', desc: 'Kejahatan umum warga sekitar' },
+              { label: 'Logging',     color: '#22c55e', desc: 'Penebangan liar / illegal logging' },
+              { label: 'Trading',     color: '#eab308', desc: 'Penyelundupan, perdagangan ilegal, ketergantungan ekonomi' },
+              { label: 'Trafficking', color: '#ec4899', desc: 'Perdagangan orang / human trafficking' },
+              { label: 'Border',      color: '#3b82f6', desc: 'Patok batas hilang / rusak SAJA' },
+              { label: 'PMI NP',      color: '#8b5cf6', desc: 'PMI non-prosedural / imigran gelap' },
             ].map(k => (
-              <span key={k.label} className="px-2 py-0.5 rounded-sm text-[9px] font-bold"
-                style={{ background: `${k.color}15`, border: `1px solid ${k.color}40`, color: k.color }}>
-                {k.label}
-              </span>
+              <div key={k.label} className="flex items-center gap-1.5 px-2 py-1 rounded-sm"
+                style={{ background: `${k.color}10`, border: `1px solid ${k.color}35` }}>
+                <span className="text-[9px] font-bold" style={{ color: k.color }}>{k.label}</span>
+                <span className="text-[8px]" style={{ color: 'rgba(200,214,229,0.35)' }}>— {k.desc}</span>
+              </div>
             ))}
           </div>
+          <AlertBox type="warning">
+            Gunakan nama kategori <strong>persis seperti di atas</strong> (huruf besar/kecil harus sama).
+            Nama lama (Ilegal Logging, Human Trafficking, dll) masih terbaca tapi sebaiknya gunakan nama baru.
+          </AlertBox>
         </div>
 
         <AlertBox type="danger">
@@ -439,6 +465,74 @@ function KerawananTab() {
             ]} />
           </div>
         </div>
+      </Section>
+    </div>
+  )
+}
+
+function PatroliTab() {
+  return (
+    <div className="space-y-4">
+      <Section title="◎ Tab: patroli — Laporan Kegiatan Patroli">
+        <p className="text-[rgba(200,214,229,0.5)] text-[10px] leading-relaxed">
+          Setiap pelaksanaan patroli diinput satu baris. Diisi segera setelah patroli selesai dan kembali ke pos.
+          Data ini digunakan untuk evaluasi intensitas pengamanan wilayah perbatasan.
+        </p>
+        <ColTable cols={[
+          ['id',             'TEXT',   'PAT-001',                                         'ID unik. Format: PAT-001, PAT-002, dst.'],
+          ['pos_id',         'TEXT',   'TA',                                              'Wajib. Kode pos pelaksana patroli'],
+          ['tanggal',        'DATE',   '2026-06-18',                                      'Tanggal pelaksanaan patroli (format YYYY-MM-DD)'],
+          ['jenis_patroli',  'TEXT',   'Patroli Patok',                                   'Jenis patroli (lihat daftar di bawah)'],
+          ['rute',           'TEXT',   'Pos TA → Patok C.112 → Patok C.113 → Kembali Pos','Rute/jalur yang ditempuh'],
+          ['jumlah_personel','NUMBER', '6',                                               'Jumlah personel yang ikut patroli'],
+          ['hasil_patroli',  'TEXT',   'Patok C.112 kondisi baik, C.113 cat memudar perlu peremajaan', 'Temuan/hasil selama patroli. Isi "Nihil, kondisi aman" jika tidak ada temuan'],
+          ['catatan',        'TEXT',   'Cuaca cerah, tidak ada aktivitas mencurigakan sepanjang rute', 'Catatan tambahan (opsional)'],
+          ['foto_url',       'TEXT',   '—',                                               'Link foto dokumentasi dari Google Drive (opsional)'],
+        ]} />
+
+        <div className="space-y-2">
+          <p className="hud-label">Jenis Patroli yang Valid:</p>
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              { label: 'Patroli Patok',    desc: 'Pengecekan kondisi patok batas RI-MAL' },
+              { label: 'Patroli Rutin',    desc: 'Patroli harian wilayah AO' },
+              { label: 'Patroli Malam',    desc: 'Patroli malam hari' },
+              { label: 'Patroli Bersama',  desc: 'Bersama aparat lain (Polri, BNPP)' },
+              { label: 'Patroli Sungai',   desc: 'Patroli menggunakan jalur sungai' },
+              { label: 'Patroli Udara',    desc: 'Pengamatan dari ketinggian / drone' },
+              { label: 'Lainnya',          desc: 'Patroli di luar kategori di atas' },
+            ].map(j => (
+              <div key={j.label} className="flex items-center gap-1.5 px-2 py-1 rounded-sm"
+                style={{ background: 'rgba(0,255,136,0.06)', border: '1px solid rgba(0,255,136,0.18)' }}>
+                <span className="text-[9px] font-bold" style={{ color: 'rgba(0,255,136,0.8)' }}>{j.label}</span>
+                <span className="text-[8px]" style={{ color: 'rgba(200,214,229,0.35)' }}>— {j.desc}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="hud-panel" style={{ background: 'rgba(0,255,136,0.02)', borderColor: 'rgba(0,255,136,0.12)' }}>
+          <div className="hud-header">
+            <span className="hud-title">SOP Input Laporan Patroli</span>
+          </div>
+          <div className="p-3">
+            <StepList steps={[
+              'Patroli selesai, seluruh personel kembali ke pos',
+              'Danpos atau operator buka tab patroli di Google Sheets',
+              'Tambah baris baru, isi id lanjut dari nomor terakhir (PAT-XXX)',
+              'Isi pos_id dengan kode pos pelaksana (contoh: TA, BB, BK)',
+              'Isi tanggal, jenis patroli, rute yang ditempuh, dan jumlah personel',
+              'Isi hasil_patroli dengan temuan penting (kondisi patok, aktivitas mencurigakan, dll)',
+              'Jika tidak ada temuan, tulis: Nihil, kondisi aman',
+              'Upload foto ke Google Drive jika ada, salin link ke kolom foto_url',
+              'Simpan — data tampil di dashboard dalam 5 menit',
+            ]} />
+          </div>
+        </div>
+
+        <AlertBox type="info">
+          Kolom <code className="font-mono">hasil_patroli</code> wajib diisi meski tidak ada temuan — tulis <code className="font-mono">Nihil, kondisi aman</code> agar laporan tetap tercatat lengkap.
+        </AlertBox>
       </Section>
     </div>
   )

@@ -25,7 +25,7 @@ export function AppShell({ children }) {
       {/* Main: sidebar + content */}
       <div className="flex flex-1 overflow-hidden relative z-10">
         {!presentationMode && <Sidebar />}
-        <main className="flex-1 overflow-hidden bg-[#050810]">
+        <main className="flex-1 min-w-0 overflow-hidden bg-[#050810]">
           {children}
         </main>
       </div>
