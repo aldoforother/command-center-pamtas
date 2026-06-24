@@ -74,7 +74,7 @@ export default function LoginPage() {
             letterSpacing: '0.2em',
             margin: '0 0 4px',
           }}>
-            PAMTAS RI-MAL
+            PAMTAS RI-MLY
           </h1>
           <p style={{ color: 'rgba(200,214,229,0.35)', fontSize: '10px', letterSpacing: '0.15em', margin: 0 }}>
             YONKAV 8/NSW • KALIMANTAN UTARA
