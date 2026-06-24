@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { useAllKerawanan } from '../../hooks/useSupabase'
 import { formatDate } from '../../utils/formatDate'
-import { KERAWANAN_CATEGORIES } from '../../constants/kerawananCategories'
+import { KERAWANAN_CATEGORIES, getKategoriPoin } from '../../constants/kerawananCategories'
 
 // Mapping alias nama lama → nama kategori baru (konsisten dengan PamtasMap)
 const KATEGORI_ALIAS = {
@@ -23,8 +24,15 @@ const KATEGORI_COLOR = KERAWANAN_CATEGORIES.reduce((acc, c) => {
   return acc
 }, { 'Lainnya': '#8899aa' })
 
+// Mode ranking TOP POS
+const RANK_OPTIONS = [
+  { value: 'skor',   label: 'Skor Ancaman (Weighted)' },
+  { value: 'jumlah', label: 'Jumlah Insiden' },
+]
+
 export default function GrafikKerawananPage() {
   const { data: kerawanan, loading } = useAllKerawanan()
+  const [rankMode, setRankMode] = useState('skor')
 
   const all       = kerawanan || []
   const aktif     = all.filter(k => k.status?.toLowerCase() === 'aktif')
@@ -37,17 +45,29 @@ export default function GrafikKerawananPage() {
     return acc
   }, {})
 
-  // Hitung per pos
+  // Hitung per pos — dua metrik: jumlah insiden + skor ancaman
   const byPos = all.reduce((acc, k) => {
-    acc[k.pos_id] = (acc[k.pos_id] || 0) + 1
+    const pid = k.pos_id
+    if (!acc[pid]) acc[pid] = { count: 0, skor: 0 }
+    acc[pid].count += 1
+    // Skor hanya dari insiden aktif
+    if (k.status?.toLowerCase() === 'aktif') {
+      acc[pid].skor += getKategoriPoin(resolveKategori(k.kategori))
+    }
     return acc
   }, {})
 
+  // Sort berdasarkan mode yang dipilih
   const sortedByPos = Object.entries(byPos)
-    .sort((a, b) => b[1] - a[1])
+    .sort((a, b) => {
+      if (rankMode === 'skor')   return b[1].skor  - a[1].skor
+      return b[1].count - a[1].count
+    })
     .slice(0, 10)
 
-  const maxByPos = sortedByPos[0]?.[1] || 1
+  const maxVal = sortedByPos[0]
+    ? (rankMode === 'skor' ? sortedByPos[0][1].skor : sortedByPos[0][1].count)
+    : 1
 
   return (
     <div className="h-full overflow-y-auto bg-[#050810] p-4">
@@ -55,10 +75,10 @@ export default function GrafikKerawananPage() {
       <div className="mb-4">
         <h2 className="font-bold text-sm tracking-[0.15em] uppercase text-[#00ff88]"
           style={{ textShadow: '0 0 10px rgba(0,255,136,0.4)' }}>
-          ◈ GRAFIK KERAWANAN
+          ◈ GRAFIK INSIDEN
         </h2>
         <p className="text-[10px] text-[rgba(200,214,229,0.35)] tracking-wider mt-0.5 uppercase">
-          Analisis distribusi kerawanan semua pos satgas
+          Analisis distribusi insiden kerawanan semua pos satgas
         </p>
       </div>
 
@@ -73,14 +93,14 @@ export default function GrafikKerawananPage() {
 
           {/* Summary cards */}
           <div className="grid grid-cols-3 gap-3">
-            <StatCard label="Total Kerawanan" value={all.length}     color="#ffaa00" icon="◆" />
-            <StatCard label="Aktif"           value={aktif.length}   color="#ff3333" icon="⚠" danger={aktif.length > 0} />
-            <StatCard label="Ditangani"       value={selesai.length} color="#00ff88" icon="✓" />
+            <StatCard label="Total Insiden" value={all.length}     color="#ffaa00" icon="◆" />
+            <StatCard label="Aktif"          value={aktif.length}   color="#ff3333" icon="⚠" danger={aktif.length > 0} />
+            <StatCard label="Ditangani"      value={selesai.length} color="#00ff88" icon="✓" />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            {/* Distribusi per kategori */}
-            <Panel title="DISTRIBUSI PER KATEGORI">
+            {/* Insiden Per Kategori */}
+            <Panel title="INSIDEN PER KATEGORI">
               <div className="space-y-2 mt-1">
                 {Object.entries(byKategori).sort((a,b) => b[1]-a[1]).map(([kat, count]) => {
                   const color = KATEGORI_COLOR[kat] || '#8899aa'
@@ -105,11 +125,30 @@ export default function GrafikKerawananPage() {
               </div>
             </Panel>
 
-            {/* Top pos rawan */}
-            <Panel title="TOP POS RAWAN">
+            {/* Top Pos Rawan — dengan dropdown mode */}
+            <Panel
+              title="TOP POS RAWAN"
+              action={
+                <select
+                  className="hud-select text-[8px] py-0.5 px-1.5 h-5"
+                  value={rankMode}
+                  onChange={e => setRankMode(e.target.value)}
+                >
+                  {RANK_OPTIONS.map(o => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              }
+            >
               <div className="space-y-2 mt-1">
-                {sortedByPos.map(([posId, count], i) => {
-                  const pct = Math.round((count / maxByPos) * 100)
+                {sortedByPos.length === 0 ? (
+                  <p className="text-[9px] text-[rgba(200,214,229,0.3)] text-center py-4">Tidak ada data</p>
+                ) : sortedByPos.map(([posId, stats], i) => {
+                  const val = rankMode === 'skor' ? stats.skor : stats.count
+                  const pct = maxVal > 0 ? Math.round((val / maxVal) * 100) : 0
+                  const isHigh = rankMode === 'skor' ? stats.skor >= 10 : stats.count > 3
+                  const isMid  = rankMode === 'skor' ? stats.skor >= 5  : stats.count > 1
+                  const barColor = isHigh ? '#ff3333' : isMid ? '#ffaa00' : 'rgba(0,255,136,0.5)'
                   return (
                     <div key={posId} className="flex items-center gap-2">
                       <span className="font-mono text-[8px] w-4 text-right flex-shrink-0"
@@ -120,23 +159,40 @@ export default function GrafikKerawananPage() {
                       </span>
                       <div className="flex-1 h-1.5 rounded-full overflow-hidden"
                         style={{ background: 'rgba(255,255,255,0.06)' }}>
-                        <div className="h-full rounded-full"
-                          style={{ width: `${pct}%`, background: count > 3 ? '#ff3333' : '#ffaa00' }} />
+                        <div className="h-full rounded-full transition-all duration-500"
+                          style={{ width: `${pct}%`, background: barColor }} />
                       </div>
-                      <span className="font-mono text-[9px] font-bold flex-shrink-0"
-                        style={{ color: 'rgba(200,214,229,0.5)' }}>{count}</span>
+                      <span className="font-mono text-[9px] font-bold flex-shrink-0 w-8 text-right"
+                        style={{ color: barColor }}>
+                        {val}
+                        {rankMode === 'skor' && (
+                          <span className="text-[7px] opacity-50 ml-0.5">pt</span>
+                        )}
+                      </span>
                     </div>
                   )
                 })}
+              </div>
+              {/* Legend */}
+              <div className="mt-3 pt-2 border-t border-[rgba(0,255,136,0.06)]">
+                {rankMode === 'skor' ? (
+                  <p className="text-[8px] leading-relaxed" style={{ color: 'rgba(200,214,229,0.3)' }}>
+                    Skor = jumlah poin insiden aktif (Narkoba=6, Trafficking=5, PMI NP=4, Trading=3, Kriminal/Logging=2, Border=1)
+                  </p>
+                ) : (
+                  <p className="text-[8px] leading-relaxed" style={{ color: 'rgba(200,214,229,0.3)' }}>
+                    Jumlah = total insiden (aktif + selesai)
+                  </p>
+                )}
               </div>
             </Panel>
           </div>
 
           {/* Tabel detail */}
-          <Panel title="DETAIL KERAWANAN AKTIF">
+          <Panel title="DETAIL INSIDEN AKTIF">
             {aktif.length === 0 ? (
               <p className="text-[9px] text-[rgba(200,214,229,0.3)] py-3 text-center tracking-widest uppercase">
-                Tidak ada kerawanan aktif
+                Tidak ada insiden aktif
               </p>
             ) : (
               <div className="overflow-x-auto mt-1">
@@ -217,14 +273,16 @@ function StatCard({ label, value, color, icon, danger }) {
   )
 }
 
-function Panel({ title, children }) {
+function Panel({ title, children, action }) {
   return (
     <div className="rounded-sm overflow-hidden"
       style={{ background: 'rgba(5,8,10,0.8)', border: '1px solid rgba(0,255,136,0.12)' }}>
-      <div className="px-3 py-1.5" style={{ borderBottom: '1px solid rgba(0,255,136,0.08)', background: 'rgba(0,255,136,0.03)' }}>
+      <div className="px-3 py-1.5 flex items-center justify-between"
+        style={{ borderBottom: '1px solid rgba(0,255,136,0.08)', background: 'rgba(0,255,136,0.03)' }}>
         <span className="text-[8px] font-bold tracking-[0.2em] uppercase" style={{ color: 'rgba(0,255,136,0.7)' }}>
           {title}
         </span>
+        {action && <div>{action}</div>}
       </div>
       <div className="p-3">{children}</div>
     </div>

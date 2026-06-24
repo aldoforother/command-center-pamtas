@@ -7,6 +7,7 @@ import { useToast } from '../ui/Toast'
 import { useConfirm } from '../ui/ConfirmDialog'
 import { tokohService } from '../../services/tokoh.service'
 import { clearCache } from '../../hooks/useSupabase'
+import { isDriveUrl, driveToThumbnail } from '../../utils/driveUrl'
 
 // Mapping kategori dari Google Sheets ke display label + warna
 // Sheet bisa pakai: TOMAS/TODAT/TOGA atau Adat/Masyarakat/Agama
@@ -39,7 +40,7 @@ const KATEGORI_COLOR = {
   Agama:      { color: '#bb88ff', bg: 'rgba(187,136,255,0.08)', border: 'rgba(187,136,255,0.2)' },
 }
 
-export function TokohList({ tokohList, loading, posId, onRefresh }) {
+export function TokohList({ tokohList, loading, posId, posNama, onRefresh }) {
   const { showToast } = useToast()
   const { confirm } = useConfirm()
   const [showForm, setShowForm] = useState(false)
@@ -159,6 +160,7 @@ export function TokohList({ tokohList, loading, posId, onRefresh }) {
         <TokohForm
           initialData={editData}
           posId={posId}
+          posNama={posNama}
           onSave={handleSave}
           onCancel={() => { setShowForm(false); setEditData(null) }}
         />
@@ -169,40 +171,99 @@ export function TokohList({ tokohList, loading, posId, onRefresh }) {
 
 function TokohCard({ tokoh, kategori, onEdit, onDelete, deleting }) {
   const pal = KATEGORI_COLOR[kategori] || KATEGORI_COLOR.Adat
+  const [expanded, setExpanded] = useState(false)
+
+  const fotoUrl = tokoh.foto_url
+    ? (isDriveUrl(tokoh.foto_url) ? driveToThumbnail(tokoh.foto_url, 300) : tokoh.foto_url)
+    : null
+
   return (
     <div
-      className="hud-panel px-3 py-2.5 flex items-start justify-between gap-2 hover:border-[rgba(0,255,136,0.3)] transition-colors"
+      className="hud-panel hover:border-[rgba(0,255,136,0.3)] transition-colors"
       style={{ borderLeftColor: pal.color, borderLeftWidth: '2px' }}
     >
-      <div className="flex-1 min-w-0">
-        <p className="text-[rgba(200,214,229,0.85)] font-semibold text-xs leading-tight">{tokoh.nama}</p>
-        <p className="text-[10px] mt-0.5" style={{ color: `${pal.color}80` }}>{tokoh.jabatan}</p>
-        <div className="flex items-center flex-wrap gap-3 mt-1.5 text-[10px] text-[rgba(200,214,229,0.4)]">
-          {tokoh.alamat && <span>📍 {tokoh.alamat}</span>}
-          {tokoh.no_hp && (
-            <a href={`tel:${tokoh.no_hp}`} className="text-[rgba(0,255,136,0.6)] hover:text-[#00ff88] transition-colors">
-              📞 {tokoh.no_hp}
+      {/* Main row */}
+      <div
+        className="px-3 py-2.5 flex items-start justify-between gap-2 cursor-pointer"
+        onClick={() => setExpanded(e => !e)}
+      >
+        <div className="flex items-start gap-2.5 flex-1 min-w-0">
+          {/* Foto thumbnail — hanya jika ada */}
+          {fotoUrl && (
+            <div className="flex-shrink-0 w-9 h-9 rounded-sm overflow-hidden"
+              style={{ border: `1px solid ${pal.color}33` }}>
+              <img
+                src={fotoUrl}
+                alt={tokoh.nama}
+                className="w-full h-full object-cover opacity-80"
+                onError={e => { e.target.parentElement.style.display = 'none' }}
+              />
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-[rgba(200,214,229,0.85)] font-semibold text-xs leading-tight">{tokoh.nama}</p>
+            <p className="text-[10px] mt-0.5" style={{ color: `${pal.color}80` }}>{tokoh.jabatan}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
+          <IconBtn onClick={onEdit} title="Edit" color="green">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </IconBtn>
+          <IconBtn onClick={onDelete} disabled={deleting} title="Hapus" color="red">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </IconBtn>
+          <span className="text-[rgba(0,255,136,0.3)] text-xs pl-1">{expanded ? '▲' : '▼'}</span>
+        </div>
+      </div>
+
+      {/* Expanded detail */}
+      {expanded && (
+        <div className="px-3 pb-3 border-t border-[rgba(0,255,136,0.08)] pt-2 space-y-2">
+          {/* Foto besar jika ada */}
+          {fotoUrl && (
+            <a href={tokoh.foto_url} target="_blank" rel="noopener noreferrer"
+              className="block overflow-hidden rounded-sm group"
+              style={{ maxWidth: 160, border: '1px solid rgba(0,255,136,0.15)' }}>
+              <img
+                src={fotoUrl}
+                alt={tokoh.nama}
+                className="w-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                style={{ aspectRatio: '3/4' }}
+                onError={e => { e.target.parentElement.style.display = 'none' }}
+              />
             </a>
           )}
+          <div className="space-y-1">
+            {tokoh.alamat && (
+              <div className="flex gap-2 text-[10px]">
+                <span className="hud-label w-16 flex-shrink-0">Alamat</span>
+                <span className="text-[rgba(200,214,229,0.6)]">{tokoh.alamat}</span>
+              </div>
+            )}
+            {(tokoh.no_hp || tokoh.no_telp) && (
+              <div className="flex gap-2 text-[10px]">
+                <span className="hud-label w-16 flex-shrink-0">Telepon</span>
+                <a href={`tel:${tokoh.no_hp || tokoh.no_telp}`}
+                  className="text-[rgba(0,255,136,0.6)] hover:text-[#00ff88] transition-colors">
+                  {tokoh.no_hp || tokoh.no_telp}
+                </a>
+              </div>
+            )}
+            {tokoh.catatan && (
+              <div className="flex gap-2 text-[10px]">
+                <span className="hud-label w-16 flex-shrink-0">Catatan</span>
+                <span className="text-[rgba(200,214,229,0.4)] italic">{tokoh.catatan}</span>
+              </div>
+            )}
+          </div>
         </div>
-        {tokoh.catatan && (
-          <p className="text-[10px] mt-1 italic text-[rgba(200,214,229,0.3)]">{tokoh.catatan}</p>
-        )}
-      </div>
-      <div className="flex gap-1 flex-shrink-0">
-        <IconBtn onClick={onEdit} title="Edit" color="green">
-          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-        </IconBtn>
-        <IconBtn onClick={onDelete} disabled={deleting} title="Hapus" color="red">
-          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-        </IconBtn>
-      </div>
+      )}
     </div>
   )
 }

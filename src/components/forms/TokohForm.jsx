@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { isDriveUrl, driveToThumbnail } from '../../utils/driveUrl'
 
 // Kategori yang dikirim ke GAS — gunakan nilai yang konsisten
 const TOKOH_CATEGORIES_FORM = [
@@ -7,7 +8,7 @@ const TOKOH_CATEGORIES_FORM = [
   { value: 'TOGA',  label: 'TOGA (Tokoh Agama)' },
 ]
 
-export function TokohForm({ initialData, posId, onSave, onCancel }) {
+export function TokohForm({ initialData, posId, posNama, onSave, onCancel }) {
   const [form, setForm] = useState({
     nama:      initialData?.nama      || '',
     kategori:  initialData?.kategori  || 'TOMAS',
@@ -15,6 +16,7 @@ export function TokohForm({ initialData, posId, onSave, onCancel }) {
     alamat:    initialData?.alamat    || '',
     no_telp:   initialData?.no_telp   || '',
     catatan:   initialData?.catatan   || '',
+    foto_url:  initialData?.foto_url  || '',
   })
   const [saving, setSaving] = useState(false)
   const [fieldError, setFieldError] = useState('')
@@ -41,8 +43,27 @@ export function TokohForm({ initialData, posId, onSave, onCancel }) {
     }
   }
 
+  // Preview foto — hanya tampil jika ada URL valid
+  const fotoPreviewUrl = form.foto_url
+    ? (isDriveUrl(form.foto_url) ? driveToThumbnail(form.foto_url, 200) : form.foto_url)
+    : null
+
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
+      {/* Info pos — read-only context */}
+      {(posId || posNama) && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-sm"
+          style={{ background: 'rgba(0,255,136,0.04)', border: '1px solid rgba(0,255,136,0.12)' }}>
+          <span className="hud-label">Pos</span>
+          <span className="font-mono text-xs font-bold text-[rgba(0,255,136,0.7)]">
+            {posNama || posId}
+          </span>
+          {posNama && posId && posNama !== posId && (
+            <span className="text-[9px] text-[rgba(200,214,229,0.3)] font-mono">({posId})</span>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-3">
         <FormField label="Nama Lengkap *" colSpan={2}>
           <input
@@ -88,6 +109,31 @@ export function TokohForm({ initialData, posId, onSave, onCancel }) {
             placeholder="08xx-xxxx-xxxx"
             type="tel"
           />
+        </FormField>
+
+        {/* Foto URL — Google Drive link */}
+        <FormField label="Foto (Google Drive)" colSpan={2}>
+          <input
+            className="hud-input"
+            value={form.foto_url}
+            onChange={set('foto_url')}
+            placeholder="https://drive.google.com/file/d/..."
+            type="url"
+          />
+          {fotoPreviewUrl && (
+            <div className="mt-2 relative overflow-hidden rounded-sm"
+              style={{ aspectRatio: '3/2', maxWidth: 160, border: '1px solid rgba(0,255,136,0.2)' }}>
+              <img
+                src={fotoPreviewUrl}
+                alt="Preview foto"
+                className="w-full h-full object-cover opacity-80"
+                onError={e => { e.target.parentElement.style.display = 'none' }}
+              />
+            </div>
+          )}
+          <p className="text-[9px] mt-1" style={{ color: 'rgba(200,214,229,0.3)' }}>
+            Google Drive: klik kanan → "Dapatkan link" → akses publik → salin URL
+          </p>
         </FormField>
 
         <FormField label="Catatan" colSpan={2}>

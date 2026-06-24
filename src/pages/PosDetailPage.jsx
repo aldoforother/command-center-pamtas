@@ -9,9 +9,9 @@ import { GeoDemoKonsos } from '../components/pos/GeoDemoKonsos'
 import { TokohList } from '../components/pos/TokohList'
 import { BinterList } from '../components/pos/BinterList'
 import { KerawananList } from '../components/pos/KerawananList'
-import { PhotoGallery } from '../components/ui/PhotoGallery'
 import { formatNumber } from '../utils/formatDate'
 import { hitungKerawananPos } from '../constants/kerawananCategories'
+import { isDriveUrl, driveToThumbnail } from '../utils/driveUrl'
 
 const TABS = [
   { id: 'info',       label: 'Info Pos',      icon: '◆' },
@@ -201,6 +201,7 @@ export default function PosDetailPage() {
             tokohList={tokohList}
             loading={tokohLoading}
             posId={posId}
+            posNama={pos?.nama_pos}
             onRefresh={tokohRefresh}
           />
         )}
@@ -324,9 +325,38 @@ function InfoPosTab({ pos }) {
 }
 
 function DokumentasiTab({ pos }) {
-  const urls = pos?.foto_satelit_url
+  const [newUrl, setNewUrl] = useState('')
+  const [urlError, setUrlError] = useState('')
+  const [extraUrls, setExtraUrls] = useState([])
+
+  const savedUrls = pos?.foto_satelit_url
     ? pos.foto_satelit_url.split(',').map(s => s.trim()).filter(Boolean)
     : []
+
+  const allUrls = [...savedUrls, ...extraUrls]
+
+  function handleAddUrl() {
+    const trimmed = newUrl.trim()
+    if (!trimmed) return
+    // Validasi minimal: harus URL
+    try {
+      new URL(trimmed)
+    } catch {
+      setUrlError('URL tidak valid')
+      return
+    }
+    if (allUrls.includes(trimmed)) {
+      setUrlError('URL sudah ada')
+      return
+    }
+    setExtraUrls(prev => [...prev, trimmed])
+    setNewUrl('')
+    setUrlError('')
+  }
+
+  function handleRemoveExtra(url) {
+    setExtraUrls(prev => prev.filter(u => u !== url))
+  }
 
   return (
     <div className="space-y-4">
@@ -341,41 +371,140 @@ function DokumentasiTab({ pos }) {
         </div>
       )}
 
-      {/* Foto dari URL (foto satelit / dokumentasi lama) */}
-      {urls.length > 0 && (
-        <div>
-          <p className="hud-label mb-2">Dokumentasi Tersimpan ({urls.length})</p>
-          <PhotoGallery urls={urls} />
+      {/* Input tambah URL foto */}
+      <div className="rounded-sm overflow-hidden"
+        style={{ border: '1px solid rgba(0,255,136,0.12)' }}>
+        <div className="px-3 py-1.5"
+          style={{ background: 'rgba(0,255,136,0.03)', borderBottom: '1px solid rgba(0,255,136,0.08)' }}>
+          <span className="text-[8px] font-bold tracking-[0.2em] uppercase"
+            style={{ color: 'rgba(0,255,136,0.7)' }}>Tambah Foto</span>
         </div>
-      )}
+        <div className="p-3 space-y-2">
+          <div className="flex gap-2">
+            <input
+              className="hud-input flex-1 text-[10px]"
+              placeholder="https://drive.google.com/file/d/... atau URL foto langsung"
+              value={newUrl}
+              onChange={e => { setNewUrl(e.target.value); setUrlError('') }}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddUrl() } }}
+            />
+            <button
+              className="hud-btn text-[10px] px-3 flex-shrink-0"
+              onClick={handleAddUrl}
+              disabled={!newUrl.trim()}
+            >
+              + Tambah
+            </button>
+          </div>
+          {urlError && (
+            <p className="text-[10px] text-[rgba(255,80,80,0.8)]">✕ {urlError}</p>
+          )}
+          <p className="text-[9px] leading-relaxed" style={{ color: 'rgba(200,214,229,0.35)' }}>
+            Google Drive: klik kanan foto → "Dapatkan link" → akses "Siapa saja yang punya link" → salin URL.
+            Untuk menyimpan permanen, tambahkan URL ke kolom{' '}
+            <span className="font-mono text-[rgba(0,255,136,0.5)]">foto_satelit_url</span>{' '}
+            di sheet <span className="font-mono text-[rgba(0,255,136,0.5)]">pos</span> (pisah koma).
+          </p>
+        </div>
+      </div>
 
-      {urls.length === 0 && (
+      {/* Galeri foto */}
+      {allUrls.length > 0 ? (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <p className="hud-label">Dokumentasi ({allUrls.length})</p>
+            {extraUrls.length > 0 && (
+              <span className="text-[9px] text-[rgba(255,170,0,0.6)] italic">
+                {extraUrls.length} URL baru (belum disimpan ke sheet)
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {allUrls.map((url, i) => (
+              <GalleryItem
+                key={url + i}
+                url={url}
+                isExtra={extraUrls.includes(url)}
+                onRemove={() => handleRemoveExtra(url)}
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
         <div className="flex flex-col items-center justify-center py-10 text-center">
           <div className="text-3xl mb-3 text-[rgba(0,255,136,0.2)]">▣</div>
           <p className="text-[rgba(200,214,229,0.3)] text-xs uppercase tracking-widest mb-2">
             Belum ada dokumentasi
           </p>
           <p className="text-[rgba(200,214,229,0.2)] text-[10px] max-w-xs">
-            Upload foto pos, dokumentasi kegiatan, atau foto patok perbatasan.
+            Tambahkan URL foto di atas untuk melihat galeri dokumentasi pos ini.
           </p>
         </div>
       )}
+    </div>
+  )
+}
 
-      {/* Upload info */}
-      <div className="px-3 py-2.5 rounded-sm"
-        style={{ background: 'rgba(68,136,255,0.05)', border: '1px solid rgba(68,136,255,0.15)' }}>
-        <p className="text-[9px] font-bold uppercase tracking-wider mb-1"
-          style={{ color: 'rgba(68,136,255,0.7)' }}>
-          ℹ Cara Menambah Dokumentasi
-        </p>
-        <p className="text-[9px] leading-relaxed" style={{ color: 'rgba(200,214,229,0.45)' }}>
-          Upload foto ke Google Drive → klik kanan → "Dapatkan link" → pastikan akses
-          "Siapa saja yang punya link" → salin URL → isi di kolom{' '}
-          <span className="font-mono text-[rgba(0,255,136,0.5)]">foto_satelit_url</span>{' '}
-          di sheet <span className="font-mono text-[rgba(0,255,136,0.5)]">pos</span>.
-          Pisahkan beberapa URL dengan koma.
-        </p>
-      </div>
+function GalleryItem({ url, isExtra, onRemove }) {
+  const thumbUrl = isDriveUrl(url)
+    ? driveToThumbnail(url, 400)
+    : url
+  const fullUrl = url
+
+  return (
+    <div className="relative group rounded-sm overflow-hidden"
+      style={{
+        aspectRatio: '16/9',
+        background: 'rgba(0,255,136,0.03)',
+        border: isExtra ? '1px solid rgba(255,170,0,0.25)' : '1px solid rgba(0,255,136,0.15)',
+      }}>
+      {/* Corner brackets */}
+      <span className="absolute top-0 left-0 w-3 h-3 z-10 pointer-events-none"
+        style={{ borderTop: `1px solid ${isExtra ? 'rgba(255,170,0,0.5)' : 'rgba(0,255,136,0.5)'}`, borderLeft: `1px solid ${isExtra ? 'rgba(255,170,0,0.5)' : 'rgba(0,255,136,0.5)'}` }} />
+      <span className="absolute bottom-0 right-0 w-3 h-3 z-10 pointer-events-none"
+        style={{ borderBottom: `1px solid ${isExtra ? 'rgba(255,170,0,0.5)' : 'rgba(0,255,136,0.5)'}`, borderRight: `1px solid ${isExtra ? 'rgba(255,170,0,0.5)' : 'rgba(0,255,136,0.5)'}` }} />
+
+      <a href={fullUrl} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+        <img
+          src={thumbUrl}
+          alt="Dokumentasi"
+          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+          onError={e => {
+            e.target.style.display = 'none'
+            e.target.nextSibling && (e.target.nextSibling.style.display = 'flex')
+          }}
+        />
+        {/* Fallback saat gambar gagal load */}
+        <div className="hidden w-full h-full items-center justify-center absolute inset-0"
+          style={{ color: 'rgba(200,214,229,0.2)', fontSize: 11 }}>
+          ▣ Gagal load
+        </div>
+        {/* Hover overlay */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ background: 'rgba(0,255,136,0.08)' }}>
+          <span className="text-[rgba(0,255,136,0.8)] text-xs tracking-widest uppercase font-bold">
+            Buka →
+          </span>
+        </div>
+      </a>
+
+      {/* Badge "baru" + tombol hapus untuk URL yang baru ditambahkan */}
+      {isExtra && (
+        <div className="absolute top-1 right-1 flex items-center gap-1 z-20">
+          <span className="text-[8px] px-1 py-0.5 rounded-sm font-bold"
+            style={{ background: 'rgba(255,170,0,0.15)', color: 'rgba(255,170,0,0.8)', border: '1px solid rgba(255,170,0,0.25)' }}>
+            BARU
+          </span>
+          <button
+            onClick={e => { e.preventDefault(); e.stopPropagation(); onRemove() }}
+            className="w-4 h-4 rounded-sm flex items-center justify-center text-[8px] transition-colors"
+            style={{ background: 'rgba(255,51,51,0.2)', color: 'rgba(255,51,51,0.8)', border: '1px solid rgba(255,51,51,0.3)' }}
+            title="Hapus dari preview"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   )
 }
