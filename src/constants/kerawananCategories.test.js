@@ -113,3 +113,107 @@ describe('IBADAH_LIST', () => {
     }
   })
 })
+
+import { getKategoriPoin, hitungKerawananPos } from './kerawananCategories'
+
+describe('getKategoriPoin', () => {
+  it('returns correct poin for Narkoba', () => {
+    expect(getKategoriPoin('Narkoba')).toBe(6)
+  })
+
+  it('returns correct poin for Trafficking', () => {
+    expect(getKategoriPoin('Trafficking')).toBe(5)
+  })
+
+  it('returns 0 for unknown kategori', () => {
+    expect(getKategoriPoin('Unknown')).toBe(0)
+  })
+
+  it('returns 0 for empty string', () => {
+    expect(getKategoriPoin('')).toBe(0)
+  })
+
+  it('returns 0 for undefined', () => {
+    expect(getKategoriPoin(undefined)).toBe(0)
+  })
+
+  it('returns correct poin for all known categories', () => {
+    expect(getKategoriPoin('Kriminal')).toBe(2)
+    expect(getKategoriPoin('Logging')).toBe(2)
+    expect(getKategoriPoin('Trading')).toBe(3)
+    expect(getKategoriPoin('Border')).toBe(1)
+    expect(getKategoriPoin('PMI NP')).toBe(4)
+  })
+})
+
+describe('hitungKerawananPos', () => {
+  it('returns AMAN with 0 poin for empty list', () => {
+    const result = hitungKerawananPos([])
+    expect(result.totalPoin).toBe(0)
+    expect(result.level).toBe('AMAN')
+    expect(result.aktifCount).toBe(0)
+  })
+
+  it('returns AMAN for null input', () => {
+    const result = hitungKerawananPos(null)
+    expect(result.level).toBe('AMAN')
+    expect(result.totalPoin).toBe(0)
+  })
+
+  it('only counts aktif incidents', () => {
+    const kerawanan = [
+      { kategori: 'Narkoba', status: 'aktif' },   // 6 poin
+      { kategori: 'Narkoba', status: 'selesai' },  // tidak dihitung
+    ]
+    const result = hitungKerawananPos(kerawanan)
+    expect(result.totalPoin).toBe(6)
+    expect(result.aktifCount).toBe(1)
+  })
+
+  it('returns WASPADA for poin 5-9', () => {
+    const kerawanan = [
+      { kategori: 'Trafficking', status: 'aktif' }, // 5 poin
+    ]
+    const result = hitungKerawananPos(kerawanan)
+    expect(result.level).toBe('WASPADA')
+    expect(result.totalPoin).toBe(5)
+  })
+
+  it('returns SIAGA for poin >= 10', () => {
+    const kerawanan = [
+      { kategori: 'Narkoba',     status: 'aktif' }, // 6
+      { kategori: 'Trafficking', status: 'aktif' }, // 5 → total 11
+    ]
+    const result = hitungKerawananPos(kerawanan)
+    expect(result.level).toBe('SIAGA')
+    expect(result.totalPoin).toBe(11)
+  })
+
+  it('returns AMAN for poin < 5', () => {
+    const kerawanan = [
+      { kategori: 'Border',  status: 'aktif' }, // 1
+      { kategori: 'Kriminal', status: 'aktif' }, // 2 → total 3
+    ]
+    const result = hitungKerawananPos(kerawanan)
+    expect(result.level).toBe('AMAN')
+    expect(result.totalPoin).toBe(3)
+  })
+
+  it('handles case-insensitive status comparison', () => {
+    const kerawanan = [
+      { kategori: 'Narkoba', status: 'AKTIF' },
+    ]
+    const result = hitungKerawananPos(kerawanan)
+    expect(result.aktifCount).toBe(1)
+    expect(result.totalPoin).toBe(6)
+  })
+
+  it('unknown kategori contributes 0 poin', () => {
+    const kerawanan = [
+      { kategori: 'Tidak Dikenal', status: 'aktif' },
+    ]
+    const result = hitungKerawananPos(kerawanan)
+    expect(result.totalPoin).toBe(0)
+    expect(result.level).toBe('AMAN')
+  })
+})

@@ -1,19 +1,16 @@
 import { useAllBinter } from '../../hooks/useSupabase'
 import { formatDate } from '../../utils/formatDate'
-
-const JENIS_COLOR = {
-  'Penyuluhan':  '#00ff88',
-  'Baksos':      '#4488ff',
-  'Olahraga':    '#ffaa00',
-  'Kunjungan':   '#bb88ff',
-  'Patroli':     '#ff8844',
-  'Koordinasi':  '#00ccff',
-}
+import { BINTER_COLOR_MAP } from '../../constants/kerawananCategories'
 
 export default function TimelineBinterPage() {
   const { data: binter, loading } = useAllBinter()
 
-  const all = (binter || []).sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal))
+  // Gunakan perbandingan string ISO (YYYY-MM-DD) — aman dari ambiguitas timezone
+  const all = (binter || []).sort((a, b) => {
+    const ta = a.tanggal || ''
+    const tb = b.tanggal || ''
+    return tb.localeCompare(ta)
+  })
 
   // Hitung per jenis
   const byJenis = all.reduce((acc, b) => {
@@ -64,7 +61,7 @@ export default function TimelineBinterPage() {
             <Panel title="DISTRIBUSI PER JENIS">
               <div className="space-y-2 mt-1">
                 {Object.entries(byJenis).sort((a,b) => b[1]-a[1]).map(([jenis, count]) => {
-                  const color = JENIS_COLOR[jenis] || '#8899aa'
+                  const color = BINTER_COLOR_MAP[jenis] || '#8899aa'
                   const pct   = Math.round((count / all.length) * 100)
                   return (
                     <div key={jenis}>
@@ -122,7 +119,7 @@ export default function TimelineBinterPage() {
             ) : (
               <div className="space-y-0 mt-1">
                 {all.map((item, i) => {
-                  const color = JENIS_COLOR[item.jenis_kegiatan] || '#8899aa'
+                  const color = BINTER_COLOR_MAP[item.jenis_kegiatan] || '#8899aa'
                   return (
                     <div key={item.id || i} className="flex gap-3 relative">
                       {/* Timeline line */}
