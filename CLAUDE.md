@@ -69,3 +69,28 @@ Assume that:
 Prioritize operational continuity over visual enhancements.
 
 Treat all operational, personnel, incident, and monitoring data as mission-critical.
+
+## Git & Credential Safety (WAJIB — berlaku untuk semua model/sesi)
+
+Aturan ini bersifat permanen dan mengikat lintas sesi dan lintas model (Opus, Sonnet, atau lainnya).
+
+* JANGAN PERNAH menaruh token/password di dalam URL git (`https://user:TOKEN@github.com/...`).
+  Token di URL bocor ke shell history, `git config`, dan log. Ini kebocoran kredensial.
+* Cara push yang benar: gunakan `git push` polos dan biarkan Git Credential Manager
+  (`git config --global credential.helper manager`) yang menyimpan kredensial terenkripsi
+  di Windows Credential Manager.
+* Untuk autentikasi GitHub di Windows tanpa `gh`: aktifkan `credential.helper manager`,
+  lalu `git push` akan memunculkan login browser sekali; sesudah itu kredensial tersimpan.
+* JANGAN gunakan `credential.helper store` kecuali terpaksa — helper itu menulis token
+  plaintext ke `~/.git-credentials` (tidak terenkripsi).
+* Personal Access Token: minta scope seminimal mungkin (untuk push cukup `repo`),
+  set masa berlaku, dan perlakukan sebagai rahasia.
+* Jika sebuah token sempat ter-expose (di URL, screenshot, paste, log), perlakukan sebagai
+  COMPROMISED: segera ingatkan user untuk MENCABUT/REVOKE token tersebut di
+  https://github.com/settings/tokens, lalu buat token baru. Jangan tunda.
+* Jangan pernah meng-echo, mencetak ulang, atau mengulang nilai token/secret di respons.
+  Rujuk dengan nama (mis. "token PAT"), bukan nilainya.
+* Jangan commit file rahasia (.env, kredensial, kunci). Stage file spesifik, hindari `git add .`
+  yang membabi buta jika ada file sensitif di working tree.
+* Push ke branch baru, bukan langsung ke main/master, kecuali user secara eksplisit memintanya.
+* Operasi git destruktif (force push, reset --hard, clean -f, branch -D) butuh izin eksplisit user.

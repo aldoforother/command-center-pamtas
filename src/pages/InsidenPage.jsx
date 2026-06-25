@@ -205,14 +205,13 @@ export default function InsidenPage() {
           </div>
         </div>
 
-        {/* Filters row */}
-        <div className="flex flex-wrap gap-2 items-center">
+        {/* Filters row — semua kontrol seragam (w-40), sejajar dalam satu grid */}
+        <div className="flex flex-wrap items-center gap-2">
           {/* Timeline — dropdown */}
           <select
-            className="hud-select text-[10px]"
+            className="hud-select text-[10px] w-40"
             value={filterTimeline}
             onChange={e => setFilterTimeline(e.target.value)}
-            style={{ minWidth: '7rem' }}
           >
             {TIMELINE_OPTIONS.map(opt => (
               <option key={opt.id} value={opt.id}>{opt.label}</option>
@@ -220,14 +219,14 @@ export default function InsidenPage() {
           </select>
 
           {/* Status */}
-          <select className="hud-select text-[10px]" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+          <select className="hud-select text-[10px] w-40" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
             <option value="all">Semua Status</option>
             <option value="aktif">Aktif</option>
             <option value="selesai">Selesai</option>
           </select>
 
           {/* Kategori */}
-          <select className="hud-select text-[10px] w-36" value={filterKategori} onChange={e => setFilterKategori(e.target.value)}>
+          <select className="hud-select text-[10px] w-40" value={filterKategori} onChange={e => setFilterKategori(e.target.value)}>
             <option value="all">Semua Kategori</option>
             {KERAWANAN_CATEGORIES.map(c => (
               <option key={c.id} value={c.id}>{c.label}</option>
@@ -235,7 +234,7 @@ export default function InsidenPage() {
           </select>
 
           {/* Pos */}
-          <select className="hud-select text-[10px] w-36" value={filterPos} onChange={e => setFilterPos(e.target.value)}>
+          <select className="hud-select text-[10px] w-40" value={filterPos} onChange={e => setFilterPos(e.target.value)}>
             <option value="all">Semua Pos</option>
             {(posList || []).map(p => (
               <option key={p.pos_id} value={p.pos_id}>{p.nama_pos}</option>

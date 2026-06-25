@@ -190,14 +190,13 @@ export default function BinterPage() {
           </div>
         </div>
 
-        {/* Filters row — satu baris */}
-        <div className="flex gap-2 items-center flex-wrap">
+        {/* Filters row — semua kontrol seragam (w-40), sejajar dalam satu grid */}
+        <div className="flex flex-wrap items-center gap-2">
           {/* Timeline */}
           <select
-            className="hud-select text-[10px]"
+            className="hud-select text-[10px] w-40"
             value={filterTimeline}
             onChange={e => setFilterTimeline(e.target.value)}
-            style={{ minWidth: '7rem' }}
           >
             {TIMELINE_OPTIONS.map(o => (
               <option key={o.id} value={o.id}>{o.label}</option>
@@ -205,7 +204,7 @@ export default function BinterPage() {
           </select>
 
           {/* Jenis */}
-          <select className="hud-select text-[10px] w-36" value={filterJenis} onChange={e => setFilterJenis(e.target.value)}>
+          <select className="hud-select text-[10px] w-40" value={filterJenis} onChange={e => setFilterJenis(e.target.value)}>
             <option value="all">Semua Jenis</option>
             {BINTER_TYPES.map(t => (
               <option key={t} value={t}>{t}</option>
@@ -213,7 +212,7 @@ export default function BinterPage() {
           </select>
 
           {/* Pos */}
-          <select className="hud-select text-[10px] w-36" value={filterPos} onChange={e => setFilterPos(e.target.value)}>
+          <select className="hud-select text-[10px] w-40" value={filterPos} onChange={e => setFilterPos(e.target.value)}>
             <option value="all">Semua Pos</option>
             {(posList || []).map(p => (
               <option key={p.pos_id} value={p.pos_id}>{p.nama_pos}</option>
