@@ -663,8 +663,34 @@
 
   /* ── Page margins ────────────────────────────────────── */
   @page {
-    margin: 1.5cm 1cm;
-    size: A4;
+    margin: 2cm 1.5cm 2cm 1.5cm;
+    size: A4 portrait;
+
+    @top-center {
+      content: "SATGAS PAMTAS RI-MLY · YONKAV 8/NSW · TA 2026";
+      font-size: 8pt;
+      font-family: 'Courier New', monospace;
+      color: #666;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-bottom: 0.5pt solid #ccc;
+      padding-bottom: 4pt;
+    }
+
+    @bottom-left {
+      content: "DOKUMEN OPERASIONAL — RAHASIA";
+      font-size: 7pt;
+      font-family: 'Courier New', monospace;
+      color: #999;
+      letter-spacing: 0.08em;
+    }
+
+    @bottom-right {
+      content: "Hal. " counter(page) " / " counter(pages);
+      font-size: 7pt;
+      font-family: 'Courier New', monospace;
+      color: #666;
+    }
   }
 
   /* ── Pastikan konten tidak terpotong ─────────────────── */

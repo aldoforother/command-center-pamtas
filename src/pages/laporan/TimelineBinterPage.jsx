@@ -58,7 +58,7 @@ export default function TimelineBinterPage() {
 
           <div className="grid grid-cols-2 gap-3">
             {/* Distribusi per jenis */}
-            <Panel title="DISTRIBUSI PER JENIS">
+            <Panel title="PERSENTASE PER KEGIATAN">
               <div className="space-y-2 mt-1">
                 {Object.entries(byJenis).sort((a,b) => b[1]-a[1]).map(([jenis, count]) => {
                   const color = BINTER_COLOR_MAP[jenis] || '#8899aa'
@@ -84,7 +84,7 @@ export default function TimelineBinterPage() {
             </Panel>
 
             {/* Aktifitas per pos */}
-            <Panel title="AKTIFITAS PER POS">
+            <Panel title="AKTIVITAS PER POS">
               <div className="space-y-2 mt-1">
                 {sortedByPos.map(([posId, count], i) => {
                   const pct = Math.round((count / maxByPos) * 100)

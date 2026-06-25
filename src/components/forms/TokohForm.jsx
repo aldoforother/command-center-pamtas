@@ -1,12 +1,33 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { isDriveUrl, driveToThumbnail } from '../../utils/driveUrl'
 
-// Kategori yang dikirim ke GAS — gunakan nilai yang konsisten
+// Kategori yang dikirim ke DB — 6 kategori
 const TOKOH_CATEGORIES_FORM = [
-  { value: 'TOMAS', label: 'TOMAS (Tokoh Masyarakat)' },
-  { value: 'TODAT', label: 'TODAT (Tokoh Adat)' },
-  { value: 'TOGA',  label: 'TOGA (Tokoh Agama)' },
+  { value: 'TOMAS',   label: 'TOMAS (Tokoh Masyarakat)' },
+  { value: 'TODAT',   label: 'TODAT (Tokoh Adat)' },
+  { value: 'TOGA',    label: 'TOGA (Tokoh Agama)' },
+  { value: 'PEMDA',   label: 'PEMDA (Pemerintah Daerah)' },
+  { value: 'PEMUDA',  label: 'PEMUDA (Tokoh Pemuda)' },
+  { value: 'LAINNYA', label: 'Lainnya' },
 ]
+
+// Auto-infer kategori dari jabatan
+const JABATAN_KATEGORI_MAP = [
+  { keywords: ['kades', 'kepala desa', 'lurah', 'camat', 'bupati', 'rt ', 'rw ', 'ketua rt', 'ketua rw', 'kepala kampung', 'kepala adat desa', 'sekdes', 'sekretaris desa', 'kepala dusun'], kategori: 'PEMDA' },
+  { keywords: ['kepala adat', 'ketua adat', 'pemangku adat', 'temenggung', 'penghulu adat', 'datuk', 'tetua adat', 'tokoh adat', 'todat'], kategori: 'TODAT' },
+  { keywords: ['ustaz', 'ustadz', 'kyai', 'kiai', 'pendeta', 'pastor', 'imam', 'majelis', 'ulama', 'da\'i', 'dai', 'rohaniawan', 'tokoh agama', 'toga'], kategori: 'TOGA' },
+  { keywords: ['karang taruna', 'ketua pemuda', 'tokoh pemuda', 'ketua ormas', 'pemuda', 'aktivis'], kategori: 'PEMUDA' },
+  { keywords: ['ketua rt', 'ketua rw', 'tokoh masyarakat', 'tomas', 'warga', 'pengusaha', 'petani', 'nelayan', 'pedagang'], kategori: 'TOMAS' },
+]
+
+function inferKategoriFromJabatan(jabatan) {
+  if (!jabatan) return null
+  const lower = jabatan.toLowerCase()
+  for (const rule of JABATAN_KATEGORI_MAP) {
+    if (rule.keywords.some(kw => lower.includes(kw))) return rule.kategori
+  }
+  return null
+}
 
 export function TokohForm({ initialData, posId, posNama, onSave, onCancel }) {
   const [form, setForm] = useState({
@@ -20,11 +41,25 @@ export function TokohForm({ initialData, posId, posNama, onSave, onCancel }) {
   })
   const [saving, setSaving] = useState(false)
   const [fieldError, setFieldError] = useState('')
+  const [inferredKategori, setInferredKategori] = useState(null)
 
   const set = (key) => (e) => {
     setFieldError('')
-    setForm(f => ({ ...f, [key]: e.target.value }))
+    const val = e.target.value
+    setForm(f => ({ ...f, [key]: val }))
+    // Auto-infer kategori dari jabatan (hanya jika user belum mengubah kategori secara manual)
+    if (key === 'jabatan') {
+      const inferred = inferKategoriFromJabatan(val)
+      setInferredKategori(inferred)
+    }
   }
+
+  // Terapkan inferred kategori hanya jika user tidak sedang mengedit kategori secara aktif
+  useEffect(() => {
+    if (inferredKategori && !initialData) {
+      setForm(f => ({ ...f, kategori: inferredKategori }))
+    }
+  }, [inferredKategori]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -76,11 +111,19 @@ export function TokohForm({ initialData, posId, posNama, onSave, onCancel }) {
         </FormField>
 
         <FormField label="Kategori">
-          <select className="hud-select" value={form.kategori} onChange={set('kategori')}>
+          <select className="hud-select" value={form.kategori} onChange={e => {
+            setInferredKategori(null) // user override — stop auto-infer
+            setForm(f => ({ ...f, kategori: e.target.value }))
+          }}>
             {TOKOH_CATEGORIES_FORM.map(k => (
               <option key={k.value} value={k.value}>{k.label}</option>
             ))}
           </select>
+          {inferredKategori && (
+            <p className="text-[9px] mt-1" style={{ color: 'rgba(0,255,136,0.5)' }}>
+              ⚡ Terdeteksi otomatis dari jabatan · klik dropdown untuk ganti
+            </p>
+          )}
         </FormField>
 
         <FormField label="Jabatan">

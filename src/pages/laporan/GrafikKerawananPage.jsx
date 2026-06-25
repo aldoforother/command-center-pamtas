@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAllKerawanan } from '../../hooks/useSupabase'
 import { formatDate } from '../../utils/formatDate'
 import { KERAWANAN_CATEGORIES, getKategoriPoin } from '../../constants/kerawananCategories'
@@ -42,6 +43,7 @@ const SKOR_LEGEND = [
 ]
 
 export default function GrafikKerawananPage() {
+  const navigate = useNavigate()
   const { data: kerawanan, loading } = useAllKerawanan()
   const [rankMode, setRankMode] = useState('skor')
 
@@ -218,13 +220,14 @@ export default function GrafikKerawananPage() {
           </div>
 
           {/* Tabel detail */}
-          <Panel title="DETAIL INSIDEN AKTIF">
+          <Panel title="RIWAYAT INSIDEN AKTIF">
             {aktif.length === 0 ? (
               <p className="text-[9px] text-[rgba(200,214,229,0.3)] py-3 text-center tracking-widest uppercase">
                 Tidak ada insiden aktif
               </p>
             ) : (
               <div className="overflow-x-auto mt-1">
+                <p className="text-[8px] text-[rgba(200,214,229,0.25)] mb-1 italic">Klik baris untuk membuka detail insiden</p>
                 <table className="w-full text-[9px]">
                   <thead>
                     <tr style={{ borderBottom: '1px solid rgba(0,255,136,0.1)' }}>
@@ -237,10 +240,11 @@ export default function GrafikKerawananPage() {
                   <tbody>
                     {aktif.map((k, i) => (
                       <tr key={k.id || i}
-                        className="transition-colors"
+                        className="transition-colors cursor-pointer"
                         style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,51,51,0.04)'}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,51,51,0.06)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        onClick={() => navigate(`/insiden`, { state: { highlightId: k.id } })}
                       >
                         <td className="py-1.5 px-2 font-mono font-bold" style={{ color: 'rgba(0,255,136,0.6)' }}>
                           {k.pos_id}

@@ -5,7 +5,7 @@ const AppContext = createContext(null)
 export function AppProvider({ children }) {
   const [selectedPosId, setSelectedPosId]     = useState(null)
   const [mapView, setMapView]                 = useState('all')     // 'all' | 'kerawanan' | 'binter'
-  const [sidebarOpen, setSidebarOpen]         = useState(true)
+  const [sidebarOpen, setSidebarOpen]         = useState(false)
   const [presentationMode, setPresentationMode] = useState(false)
   const [mapLayer, setMapLayer]               = useState('street')  // 'street' | 'satellite'
 

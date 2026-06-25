@@ -79,7 +79,7 @@ export const BINTER_COLOR_MAP = {
   'Lainnya':               '#c8d6e5',
 }
 
-export const TOKOH_CATEGORIES = ['Adat', 'Masyarakat', 'Agama']
+export const TOKOH_CATEGORIES = ['Adat', 'Masyarakat', 'Agama', 'Pemda', 'Pemuda', 'Tokoh Lainnya']
 
 export const AGAMA_LIST = [
   { key: 'islam',     label: 'Islam' },

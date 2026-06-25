@@ -243,21 +243,25 @@ export default function OverviewPage() {
 function PersonelPanel({ posList, loading, navigate }) {
   const totalPersonel = (posList || []).reduce((s, p) => s + (Number(p.jumlah_personel) || 0), 0)
 
-  const top5 = [...(posList || [])]
-    .sort((a, b) => (Number(b.jumlah_personel) || 0) - (Number(a.jumlah_personel) || 0))
-    .slice(0, 5)
+  // KT selalu paling atas, sisanya sort by jumlah_personel desc, ambil top 6
+  const sorted = [...(posList || [])]
+    .sort((a, b) => {
+      if (a.pos_id === 'KT') return -1
+      if (b.pos_id === 'KT') return 1
+      return (Number(b.jumlah_personel) || 0) - (Number(a.jumlah_personel) || 0)
+    })
+    .slice(0, 6)
 
-  // Kelompokkan per kabupaten dari data aktual
-  const kabMap = {}
+  const maxPersonel = sorted[0] ? Math.max(...sorted.map(p => Number(p.jumlah_personel) || 0)) : 1
+
+  // Kelompokkan INDONESIA vs MALAYSIA
+  const wilayahMap = { 'INDONESIA': { count: 0, personel: 0 }, 'MALAYSIA': { count: 0, personel: 0 } }
   ;(posList || []).forEach(p => {
-    const kab = (p.kabupaten || 'Lainnya').replace('Kab. ', '')
-    if (!kabMap[kab]) kabMap[kab] = { count: 0, personel: 0 }
-    kabMap[kab].count++
-    kabMap[kab].personel += Number(p.jumlah_personel) || 0
+    const key = p.kabupaten === 'Malaysia' ? 'MALAYSIA' : 'INDONESIA'
+    wilayahMap[key].count++
+    wilayahMap[key].personel += Number(p.jumlah_personel) || 0
   })
-  const kabData = Object.entries(kabMap)
-    .sort((a, b) => b[1].personel - a[1].personel)
-    .slice(0, 2)
+  const wilayahData = Object.entries(wilayahMap).filter(([, v]) => v.count > 0)
 
   if (loading) {
     return (
@@ -284,41 +288,45 @@ function PersonelPanel({ posList, loading, navigate }) {
           </p>
           <p className="text-[8px] mt-0.5 tracking-wide"
             style={{ color: 'rgba(200,214,229,0.25)' }}>
-            personel · {(posList || []).length} pos
+            org · {(posList || []).length} pos
           </p>
         </div>
 
-        {/* Kabupaten pills — dari data aktual */}
+        {/* Wilayah pills — INDONESIA / MALAYSIA */}
         <div className="flex flex-col gap-1 items-end">
-          {kabData.map(([kab, { count, personel }]) => (
-            <div key={kab} className="flex items-center gap-1.5 px-2 py-1 rounded-sm"
-              style={{ background: 'rgba(68,136,255,0.07)', border: '1px solid rgba(68,136,255,0.18)' }}>
-              <div className="text-right">
-                <p className="font-mono text-[10px] font-bold leading-none" style={{ color: '#4488ff' }}>
-                  {personel}
-                </p>
-                <p className="text-[7px] uppercase tracking-wide leading-tight"
-                  style={{ color: 'rgba(200,214,229,0.3)' }}>
-                  {kab.slice(0, 3)} · {count} POS
-                </p>
+          {wilayahData.map(([wilayah, { count, personel }]) => {
+            const color = wilayah === 'MALAYSIA' ? '#ffaa00' : '#4488ff'
+            return (
+              <div key={wilayah} className="flex items-center gap-1.5 px-2 py-1 rounded-sm"
+                style={{ background: `${color}10`, border: `1px solid ${color}25` }}>
+                <div className="text-right">
+                  <p className="font-mono text-[10px] font-bold leading-none" style={{ color }}>
+                    {personel} <span className="text-[7px] font-normal opacity-60">org</span>
+                  </p>
+                  <p className="text-[7px] uppercase tracking-wide leading-tight"
+                    style={{ color: 'rgba(200,214,229,0.3)' }}>
+                    {wilayah} · {count} pos
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 
       {/* ── Divider ── */}
       <div className="h-px" style={{ background: 'rgba(0,255,136,0.08)' }} />
 
-      {/* ── Top 5 bar chart — % dari TOTAL personel, bukan dari max ── */}
+      {/* ── Bar chart — skala relatif ke max, min-width 4px ── */}
       <div className="space-y-1.5">
         <p className="text-[7px] uppercase tracking-[0.2em] px-0.5"
-          style={{ color: 'rgba(200,214,229,0.25)' }}>Kekuatan per Pos (% dari total)</p>
-        {top5.map((pos, i) => {
+          style={{ color: 'rgba(200,214,229,0.25)' }}>Kekuatan per Pos (org)</p>
+        {sorted.map((pos, i) => {
           const num    = Number(pos.jumlah_personel) || 0
-          const pct    = totalPersonel > 0 ? Math.round((num / totalPersonel) * 100) : 0
-          const posNo  = pos.pos_id === 'KOTIS' ? '★' : pos.pos_id.replace('POS-', '')
-          const accent = i === 0 ? '#ffd700' : i === 1 ? '#00ff88' : i === 2 ? 'rgba(0,255,136,0.65)' : 'rgba(0,255,136,0.4)'
+          const pct    = maxPersonel > 0 ? Math.max(Math.round((num / maxPersonel) * 100), num > 0 ? 4 : 0) : 0
+          const isKT   = pos.pos_id === 'KT'
+          const posNo  = isKT ? 'KT' : pos.pos_id.replace(/^POS-0?/, '')
+          const accent = isKT ? '#ffd700' : i === 1 ? '#00ff88' : i === 2 ? 'rgba(0,255,136,0.65)' : 'rgba(0,255,136,0.4)'
           return (
             <div key={pos.pos_id}
               className="flex items-center gap-2 cursor-pointer group"
@@ -327,7 +335,7 @@ function PersonelPanel({ posList, loading, navigate }) {
               <span className="font-mono text-[8px] w-3 text-right flex-shrink-0 opacity-40"
                 style={{ color: '#00ff88' }}>{i + 1}</span>
               {/* Pos label */}
-              <span className="font-mono text-[9px] font-bold w-5 text-center flex-shrink-0 rounded-sm py-px"
+              <span className="font-mono text-[9px] font-bold w-6 text-center flex-shrink-0 rounded-sm py-px"
                 style={{
                   color: accent,
                   background: `${accent}18`,
@@ -341,13 +349,16 @@ function PersonelPanel({ posList, loading, navigate }) {
                 <div className="h-full rounded-full transition-all duration-700"
                   style={{
                     width: `${pct}%`,
+                    minWidth: num > 0 ? '4px' : '0',
                     background: `linear-gradient(90deg, ${accent}, ${accent}88)`,
-                    boxShadow: i === 0 ? `0 0 6px ${accent}66` : 'none',
+                    boxShadow: isKT ? `0 0 6px ${accent}66` : 'none',
                   }} />
               </div>
-              {/* Value + pct */}
-              <span className="font-mono text-[9px] font-bold w-10 text-right flex-shrink-0"
-                style={{ color: 'rgba(200,214,229,0.45)' }}>{num} <span style={{ color: 'rgba(200,214,229,0.25)', fontSize: '7px' }}>{pct}%</span></span>
+              {/* Value */}
+              <span className="font-mono text-[9px] font-bold w-12 text-right flex-shrink-0"
+                style={{ color: 'rgba(200,214,229,0.45)' }}>
+                {num} <span style={{ color: 'rgba(200,214,229,0.2)', fontSize: '7px' }}>org</span>
+              </span>
             </div>
           )
         })}

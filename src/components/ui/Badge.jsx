@@ -30,7 +30,7 @@ export function KerawananBadge({ kategori }) {
         borderColor: `${color}35`,
       }}
     >
-      {label.split(' ')[0]}
+      {label}
     </span>
   )
 }

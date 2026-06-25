@@ -1,9 +1,10 @@
 // Default map config — Satgas Pamtas RI-MAL Yonkav 8/NSW
 // Wilayah: Kab. Nunukan, Kalimantan Utara
+// Center: Pulau Sebatik / Nunukan (AO utama Satgas)
 
 export const MAP_CONFIG = {
-  center: [4.0, 116.8],
-  zoom: 9,
+  center: [4.14, 117.65],
+  zoom: 10,
   minZoom: 6,
   maxZoom: 17,
   // Dark tile — CartoDB Dark Matter

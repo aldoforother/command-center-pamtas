@@ -221,11 +221,22 @@ export default function PosDetailPage() {
         )}
 
         {activeTab === 'demografi' && (
-          <DemografiTable demografi={demografi} loading={demLoading} />
+          <DemografiTable
+            demografi={demografi}
+            loading={demLoading}
+            posId={posId}
+            onRefresh={demRefresh}
+          />
         )}
 
         {activeTab === 'geodemo' && (
-          <GeoDemoKonsos demografi={demografiSummary} pos={pos} loading={demLoading} />
+          <GeoDemoKonsos
+            demografi={demografiSummary}
+            pos={pos}
+            loading={demLoading}
+            posId={posId}
+            onRefresh={demRefresh}
+          />
         )}
 
         {activeTab === 'tokoh' && (

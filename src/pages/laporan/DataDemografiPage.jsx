@@ -69,9 +69,15 @@ export default function DataDemografiPage() {
   const totalPenduduk = all.reduce((s, d) => s + d.total_penduduk, 0)
   const totalKK       = all.reduce((s, d) => s + d.total_kk, 0)
 
+  // Kelompokkan: Malaysia (pos GSL) vs Indonesia (semua lainnya)
+  const getWilayah = (pos) => {
+    if (!pos) return 'WILAYAH INDONESIA'
+    return pos.kabupaten === 'Malaysia' ? 'WILAYAH MALAYSIA' : 'WILAYAH INDONESIA'
+  }
+
   const byKabupaten = all.reduce((acc, d) => {
     const pos = posMap[d.pos_id]
-    const kab = pos?.kabupaten || 'Lainnya'
+    const kab = getWilayah(pos)
     if (!acc[kab]) acc[kab] = { pos: 0, penduduk: 0, kk: 0 }
     acc[kab].pos++
     acc[kab].penduduk += d.total_penduduk
@@ -115,7 +121,7 @@ export default function DataDemografiPage() {
           {Object.keys(byKabupaten).length > 0 && (
             <div className="grid grid-cols-2 gap-3">
               {Object.entries(byKabupaten).map(([kab, data]) => (
-                <Panel key={kab} title={`KABUPATEN ${kab.toUpperCase()}`}>
+                <Panel key={kab} title={kab}>
                   <div className="grid grid-cols-3 gap-2 mt-1">
                     <MiniStat label="Pos"      value={data.pos}                              color="#00ff88" />
                     <MiniStat label="Penduduk" value={data.penduduk.toLocaleString('id-ID')} color="#4488ff" />

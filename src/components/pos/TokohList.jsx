@@ -9,35 +9,57 @@ import { tokohService } from '../../services/tokoh.service'
 import { clearCache } from '../../hooks/useSupabase'
 import { isDriveUrl, driveToThumbnail } from '../../utils/driveUrl'
 
-// Mapping kategori dari Google Sheets ke display label + warna
-// Sheet bisa pakai: TOMAS/TODAT/TOGA atau Adat/Masyarakat/Agama
+// Mapping kategori dari DB ke display label
+// DB bisa pakai: TOMAS/TODAT/TOGA/PEMDA/PEMUDA/LAINNYA atau nama display langsung
 const KATEGORI_NORMALIZE = {
-  // Nilai dari sheet (uppercase)
-  'TOMAS':      'Masyarakat',
-  'TODAT':      'Adat',
-  'TOGA':       'Agama',
-  // Nilai lama (sudah benar)
+  // Kode DB (uppercase)
+  'TOMAS':    'Masyarakat',
+  'TODAT':    'Adat',
+  'TOGA':     'Agama',
+  'PEMDA':    'Pemda',
+  'PEMUDA':   'Pemuda',
+  'LAINNYA':  'Lainnya',
+  // Kode lama / alias
+  'TOPEM':    'Pemda',
+  'TOPEMUDA': 'Pemuda',
+  'TOLAIN':   'Lainnya',
+  // Display labels (pass-through)
   'Adat':       'Adat',
   'Masyarakat': 'Masyarakat',
   'Agama':      'Agama',
-  // Variasi case-insensitive fallback
+  'Pemda':      'Pemda',
+  'Pemuda':     'Pemuda',
+  'Lainnya':    'Lainnya',
+  // lowercase fallback
   'tomas':      'Masyarakat',
   'todat':      'Adat',
   'toga':       'Agama',
+  'pemda':      'Pemda',
+  'pemuda':     'Pemuda',
+  'lainnya':    'Lainnya',
   'adat':       'Adat',
   'masyarakat': 'Masyarakat',
   'agama':      'Agama',
 }
 
+// Urutan tampil di UI
+const KATEGORI_ORDER = ['Adat', 'Masyarakat', 'Agama', 'Pemda', 'Pemuda', 'Lainnya']
+
 function normalizeKategori(raw) {
   if (!raw) return 'Masyarakat'
-  return KATEGORI_NORMALIZE[raw] || KATEGORI_NORMALIZE[raw.trim()] || 'Masyarakat'
+  return KATEGORI_NORMALIZE[raw]
+    || KATEGORI_NORMALIZE[raw.trim()]
+    || KATEGORI_NORMALIZE[raw.trim().toUpperCase()]
+    || 'Masyarakat'
 }
 
 const KATEGORI_COLOR = {
   Adat:       { color: '#ffaa00', bg: 'rgba(255,170,0,0.08)',   border: 'rgba(255,170,0,0.2)'   },
   Masyarakat: { color: '#4488ff', bg: 'rgba(68,136,255,0.08)',  border: 'rgba(68,136,255,0.2)'  },
   Agama:      { color: '#bb88ff', bg: 'rgba(187,136,255,0.08)', border: 'rgba(187,136,255,0.2)' },
+  Pemda:      { color: '#00dd88', bg: 'rgba(0,221,136,0.08)',   border: 'rgba(0,221,136,0.2)'   },
+  Pemuda:     { color: '#ff8844', bg: 'rgba(255,136,68,0.08)',  border: 'rgba(255,136,68,0.2)'  },
+  Lainnya:    { color: '#88aacc', bg: 'rgba(136,170,204,0.08)', border: 'rgba(136,170,204,0.2)' },
 }
 
 export function TokohList({ tokohList, loading, posId, posNama, onRefresh }) {
@@ -91,11 +113,9 @@ export function TokohList({ tokohList, loading, posId, posNama, onRefresh }) {
     _kategoriDisplay: normalizeKategori(t.kategori),
   }))
 
-  const grouped = {
-    Adat:       normalizedList.filter(t => t._kategoriDisplay === 'Adat'),
-    Masyarakat: normalizedList.filter(t => t._kategoriDisplay === 'Masyarakat'),
-    Agama:      normalizedList.filter(t => t._kategoriDisplay === 'Agama'),
-  }
+  const grouped = Object.fromEntries(
+    KATEGORI_ORDER.map(k => [k, normalizedList.filter(t => t._kategoriDisplay === k)])
+  )
 
   return (
     <div className="space-y-4 fade-in">
@@ -113,7 +133,7 @@ export function TokohList({ tokohList, loading, posId, posNama, onRefresh }) {
         <EmptyState
           icon="◈"
           title="Belum ada data tokoh"
-          description="Tambahkan data Tokoh Adat, Masyarakat, dan Agama untuk pos ini."
+          description="Tambahkan data Tokoh Adat, Masyarakat, Agama, Pemda, Pemuda, atau Lainnya untuk pos ini."
           action={
             <button className="hud-btn" onClick={() => { setEditData(null); setShowForm(true) }}>
               + Tambah Tokoh
