@@ -1,10 +1,11 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAllBinter, usePos } from '../hooks/useSupabase'
 import { BINTER_TYPES, BINTER_COLOR_MAP } from '../constants/kerawananCategories'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 import { EmptyState } from '../components/ui/EmptyState'
 import { formatDate } from '../utils/formatDate'
+import { downloadBinterPDF, downloadBinterListPDF } from '../utils/generatePDF'
 
 /* ── Color helper ──────────────────────────────────────────── */
 function getColor(jenis) {
@@ -21,7 +22,7 @@ function getColor(jenis) {
 const TIMELINE_OPTIONS = [
   { id: 'all',   label: 'Semua' },
   { id: 'today', label: 'Hari Ini' },
-  { id: '7d',    label: '7 Hari' },
+  { id: '7d',   label: '7 Hari' },
   { id: '30d',   label: '30 Hari' },
   { id: '90d',   label: '3 Bulan' },
   { id: '180d',  label: '6 Bulan' },
@@ -40,55 +41,6 @@ function filterByTimeline(items, timelineId) {
   return items.filter(b => b.tanggal && new Date(b.tanggal) >= cutoff)
 }
 
-/* ── Print helpers ─────────────────────────────────────────── */
-function PrintHeader({ today }) {
-  return (
-    <div className="print-only text-center mb-6 border-b-2 border-black pb-4 px-6 pt-4">
-      <h1 className="text-xl font-bold text-black">LAPORAN KEGIATAN BINTER</h1>
-      <p className="text-sm text-gray-600 mt-1">Dicetak: {today}</p>
-    </div>
-  )
-}
-
-function PrintFooter() {
-  return (
-    <div className="print-only mt-6 pt-4 border-t border-gray-300 text-center text-[9px] text-gray-400 tracking-widest uppercase px-6 pb-4">
-      DOKUMEN ASLI COMMAND CENTER SATGAS PAMTAS RI - MLY YONAK 8/NSW TA 2026
-    </div>
-  )
-}
-
-function BinterPrintContent({ item, posName }) {
-  return (
-    <div className="print-only p-6 pt-0">
-      <table className="w-full text-[11px] border-collapse mb-4">
-        <tbody>
-          {[
-            ['Jenis Kegiatan',  item.jenis_kegiatan],
-            ['Tanggal',         formatDate(item.tanggal)],
-            ['Pos',             posName],
-            ['Lokasi',          item.lokasi || '—'],
-            ['Sasaran',         item.sasaran || '—'],
-            ['Jumlah Peserta',  item.jumlah_peserta || '—'],
-          ].map(([label, val]) => (
-            <tr key={label} className="border-b border-gray-200">
-              <td className="py-1.5 px-3 w-40 text-gray-500 uppercase tracking-wider">{label}</td>
-              <td className="py-1.5 px-3 font-medium">{val || '—'}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {item.keterangan && (
-        <div className="mb-4 p-3 border border-gray-300 rounded">
-          <p className="text-[9px] uppercase tracking-widest text-gray-500 mb-1">Keterangan</p>
-          <p className="text-[11px] leading-relaxed">{item.keterangan}</p>
-        </div>
-      )}
-    </div>
-  )
-}
-
-/* ── Main component ────────────────────────────────────────── */
 export default function BinterPage() {
   const navigate = useNavigate()
   const { data: binter,  loading } = useAllBinter()
@@ -127,85 +79,30 @@ export default function BinterPage() {
   const hasFilter = filterJenis !== 'all' || filterPos !== 'all' ||
                     filterTimeline !== 'all' || search
 
-  const today = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-
   const selectedPosName = selectedItem
     ? (posMap[selectedItem.pos_id] || selectedItem.pos_id)
     : null
 
-  // printMode: driven by handlePrint before window.print(), reset by afterprint
-  const [printMode, setPrintMode] = useState(null) // null | 'list' | 'single'
-
-  useEffect(() => {
-    const handler = () => setPrintMode(null)
-    window.addEventListener('afterprint', handler)
-    return () => window.removeEventListener('afterprint', handler)
-  }, [])
-
-  const handlePrint = () => {
-    if (selectedItem) setPrintMode('single')
-    else setPrintMode('list')
-    window.print()
-  }
-
+  // PDF filter summary
   const timelineLabel = TIMELINE_OPTIONS.find(o => o.id === filterTimeline)?.label || 'Semua'
   const jenisLabel    = filterJenis === 'all' ? 'Semua Jenis' : filterJenis
   const posLabel      = filterPos === 'all' ? 'Semua Pos' : (posMap[filterPos] || filterPos)
+  const filterSummary = [timelineLabel, jenisLabel, posLabel].join(' · ')
+
+  const handleDownloadPDF = () => {
+    if (selectedItem) {
+      downloadBinterPDF(selectedItem, selectedPosName)
+    } else {
+      downloadBinterListPDF(filtered, filterSummary, posMap)
+    }
+  }
 
   return (
     <div className="flex flex-col h-full fade-in">
 
-      {/* ── Print: single selected item ─────────────────────────── */}
-      {printMode === 'single' && selectedItem && (
-        <>
-          <PrintHeader today={today} />
-          <BinterPrintContent item={selectedItem} posName={selectedPosName} />
-          <PrintFooter />
-        </>
-      )}
-
-      {/* ── Print: full list ─────────────────────────────────── */}
-      {printMode === 'list' && (
-        <>
-          <PrintHeader today={today} />
-          <div className="print-only p-6 pt-0">
-            <div className="mb-4 text-[10px] text-gray-500 flex flex-wrap gap-4">
-              <span>Periode: <b className="text-black">{timelineLabel}</b></span>
-              <span>Jenis: <b className="text-black">{jenisLabel}</b></span>
-              <span>Pos: <b className="text-black">{posLabel}</b></span>
-              <span>Total ditampilkan: <b className="text-black">{filtered.length} kegiatan</b></span>
-            </div>
-            <table className="w-full text-[10px] border-collapse">
-              <thead>
-                <tr className="border-b-2 border-black">
-                  {['No','Tanggal','Pos','Jenis Kegiatan','Lokasi / Sasaran','Peserta'].map(h => (
-                    <th key={h} className="text-left py-1.5 px-2 uppercase tracking-wider font-bold text-gray-600">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((b, i) => (
-                  <tr key={b.id || i} className="border-b border-gray-200">
-                    <td className="py-1.5 px-2 text-gray-400">{i + 1}</td>
-                    <td className="py-1.5 px-2">{formatDate(b.tanggal)}</td>
-                    <td className="py-1.5 px-2 font-bold">{posMap[b.pos_id] || b.pos_id}</td>
-                    <td className="py-1.5 px-2">{b.jenis_kegiatan || '—'}</td>
-                    <td className="py-1.5 px-2 max-w-[200px]">{b.lokasi || '—'}{b.sasaran ? ` · ${b.sasaran}` : ''}</td>
-                    <td className="py-1.5 px-2">{b.jumlah_peserta || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <PrintFooter />
-        </>
-      )}
-
-      {/* ── Header (hidden during print) ───────────────────── */}
-      <div
-        className={`flex-shrink-0 px-4 py-3${printMode ? ' hidden-print' : ''}`}
-        style={{ background: 'rgba(4,11,6,0.9)', borderBottom: '1px solid rgba(0,255,136,0.15)' }}
-      >
+      {/* ── Header ──────────────────────────────────────── */}
+      <div className="flex-shrink-0 px-4 py-3"
+        style={{ background: 'rgba(4,11,6,0.9)', borderBottom: '1px solid rgba(0,255,136,0.15)' }}>
         <div className="flex items-center justify-between mb-3">
           <div>
             <h2 className="text-[rgba(200,214,229,0.85)] font-bold text-sm uppercase tracking-widest">
@@ -216,8 +113,8 @@ export default function BinterPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <StatChip label="Total" value={(binter || []).length} color="#4488ff" />
-            <StatChip label="Filter" value={filtered.length} color="#00ff88" />
+            <StatChip label="Total"   value={(binter || []).length}  color="#4488ff" />
+            <StatChip label="Filter"   value={filtered.length}       color="#00ff88" />
           </div>
         </div>
 
@@ -266,23 +163,23 @@ export default function BinterPage() {
             </button>
           )}
 
-          {/* Print button */}
+          {/* Download PDF button */}
           <button
             className="hud-btn text-[9px] px-2 ml-auto flex items-center gap-1.5"
-            onClick={handlePrint}
-            title={selectedItem ? 'Print laporan kegiatan ini' : 'Print daftar kegiatan'}
+            onClick={handleDownloadPDF}
+            title={selectedItem ? 'Unduh PDF kegiatan ini' : 'Unduh PDF daftar kegiatan'}
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            {selectedItem ? 'Print Kegiatan' : 'Print Daftar'}
+            {selectedItem ? 'Unduh PDF' : 'Unduh Daftar'}
           </button>
         </div>
       </div>
 
-      {/* ── Main content (hidden during print) ─────────────── */}
-      <div className={`flex flex-1 overflow-hidden${printMode ? ' hidden-print' : ''}`}>
+      {/* ── Main content ─────────────────────────────────── */}
+      <div className="flex flex-1 overflow-hidden">
 
         {/* List */}
         <div className={`overflow-y-auto p-4 transition-all ${selectedItem ? 'w-1/2' : 'w-full'}`}>
@@ -363,9 +260,9 @@ function BinterDetail({ item, posName, onClose, onNavigate }) {
   const color = getColor(item.jenis_kegiatan)
 
   const rows = [
-    { label: 'Jenis Kegiatan', value: item.jenis_kegiatan },
+    { label: 'Jenis Kegiatan',   value: item.jenis_kegiatan },
     { label: 'Tanggal',        value: formatDate(item.tanggal) },
-    { label: 'Pos',            value: posName },
+    { label: 'Pos',             value: posName },
     { label: 'Lokasi',         value: item.lokasi || '—' },
     { label: 'Sasaran',        value: item.sasaran || '—' },
     { label: 'Jumlah Peserta', value: item.jumlah_peserta ? `${item.jumlah_peserta} orang` : '—' },

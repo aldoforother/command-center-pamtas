@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAllKerawanan, usePos } from '../hooks/useSupabase'
 import { KERAWANAN_CATEGORIES } from '../constants/kerawananCategories'
@@ -6,12 +6,13 @@ import { KerawananBadge } from '../components/ui/Badge'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 import { EmptyState } from '../components/ui/EmptyState'
 import { formatDate } from '../utils/formatDate'
+import { downloadKerawananPDF, downloadKerawananListPDF } from '../utils/generatePDF'
 
 /* ── Timeline filter options ──────────────────────────────── */
 const TIMELINE_OPTIONS = [
   { id: 'all',   label: 'Semua' },
   { id: 'today', label: 'Hari Ini' },
-  { id: '7d',    label: '7 Hari' },
+  { id: '7d',   label: '7 Hari' },
   { id: '30d',   label: '30 Hari' },
   { id: '90d',   label: '3 Bulan' },
   { id: '180d',  label: '6 Bulan' },
@@ -25,71 +26,9 @@ function filterByTimeline(items, timelineId) {
   if (timelineId === 'today') {
     cutoff.setHours(0, 0, 0, 0)
   } else {
-    const days = parseInt(timelineId)
-    cutoff.setDate(now.getDate() - days)
+    cutoff.setDate(now.getDate() - parseInt(timelineId))
   }
   return items.filter(k => k.tanggal && new Date(k.tanggal) >= cutoff)
-}
-
-/* ── Print helpers ─────────────────────────────────────────── */
-function PrintHeader({ today }) {
-  return (
-    <div className="print-only text-center mb-6 border-b-2 border-black pb-4 px-6 pt-4">
-      <h1 className="text-xl font-bold text-black">LAPORAN INSIDEN</h1>
-      <p className="text-sm text-gray-600 mt-1">Dicetak: {today}</p>
-    </div>
-  )
-}
-
-function PrintFooter() {
-  return (
-    <div className="print-only mt-6 pt-4 border-t border-gray-300 text-center text-[9px] text-gray-400 tracking-widest uppercase px-6 pb-4">
-      DOKUMEN ASLI COMMAND CENTER SATGAS PAMTAS RI - MLY YONAK 8/NSW TA 2026
-    </div>
-  )
-}
-
-function InsidenPrintContent({ item, posName }) {
-  return (
-    <div className="print-only p-6 pt-0">
-      <table className="w-full text-[11px] border-collapse mb-4">
-        <tbody>
-          {[
-            ['Jenis Insiden',   item.kategori],
-            ['Status',         item.status?.toUpperCase()],
-            ['Tanggal',        formatDate(item.tanggal)],
-            ['Waktu',          item.waktu || '—'],
-            ['Pos',            posName],
-            ['Lokasi Insiden', item.lokasi || item.pos_id],
-            ['Jumlah Pelaku',  item.jumlah_pelaku || item.pelaku || '—'],
-          ].map(([label, val]) => (
-            <tr key={label} className="border-b border-gray-200">
-              <td className="py-1.5 px-3 w-40 text-gray-500 uppercase tracking-wider">{label}</td>
-              <td className="py-1.5 px-3 font-medium">{val || '—'}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {item.deskripsi && (
-        <div className="mb-4 p-3 border border-gray-300 rounded">
-          <p className="text-[9px] uppercase tracking-widest text-gray-500 mb-1">Uraian Insiden</p>
-          <p className="text-[11px] leading-relaxed">{item.deskripsi}</p>
-        </div>
-      )}
-      {item.tindak_lanjut && (
-        <div className="mb-4 p-3 border border-gray-300 rounded">
-          <p className="text-[9px] uppercase tracking-widest text-gray-500 mb-1">Penanganan / Tindak Lanjut</p>
-          <p className="text-[11px] leading-relaxed">{item.tindak_lanjut}</p>
-        </div>
-      )}
-      {(item.lat && item.lng) && (
-        <div className="mb-4 p-3 border border-gray-300 rounded">
-          <p className="text-[9px] uppercase tracking-widest text-gray-500 mb-1">Koordinat TKP</p>
-          <p className="text-[11px] font-mono">{item.lat}, {item.lng}</p>
-        </div>
-      )}
-    </div>
-  )
 }
 
 export default function InsidenPage() {
@@ -103,24 +42,6 @@ export default function InsidenPage() {
   const [filterTimeline, setFilterTimeline] = useState('all')
   const [search,         setSearch]         = useState('')
   const [selectedItem,   setSelectedItem]   = useState(null)
-  const [printMode,      setPrintMode]       = useState(null) // null | 'list' | 'single'
-
-  // beforeprint/afterprint — swap content JS-side, bukan CSS
-  // afterprint — reset printMode after printing finishes
-  useEffect(() => {
-    const handler = () => setPrintMode(null)
-    window.addEventListener('afterprint', handler)
-    return () => window.removeEventListener('afterprint', handler)
-  }, [])
-
-  const handlePrint = () => {
-    if (selectedItem) {
-      setPrintMode('single')
-    } else {
-      setPrintMode('list')
-    }
-    window.print()
-  }
 
   const posMap = useMemo(() => (posList || []).reduce((acc, p) => {
     acc[p.pos_id] = p.nama_pos || p.pos_id
@@ -134,8 +55,9 @@ export default function InsidenPage() {
       if (filterStatus !== 'all' && k.status?.toLowerCase() !== filterStatus) return false
       if (filterKategori !== 'all' && k.kategori !== filterKategori) return false
       if (filterPos !== 'all' && k.pos_id !== filterPos) return false
-      if (search && !k.deskripsi?.toLowerCase().includes(search.toLowerCase()) &&
-          !k.pos_id?.toLowerCase().includes(search.toLowerCase())) return false
+      if (search &&
+        !k.deskripsi?.toLowerCase().includes(search.toLowerCase()) &&
+        !k.pos_id?.toLowerCase().includes(search.toLowerCase())) return false
       return true
     }).sort((a, b) => {
       const aAktif = a.status?.toLowerCase() === 'aktif'
@@ -159,70 +81,29 @@ export default function InsidenPage() {
   const timelineLabel = TIMELINE_OPTIONS.find(o => o.id === filterTimeline)?.label || 'Semua'
   const statusLabel   = filterStatus === 'all' ? 'Semua Status' : filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)
   const kategoriLabel = filterKategori === 'all' ? 'Semua Kategori' : filterKategori
-  const posLabel      = filterPos === 'all' ? 'Semua Pos' : (posMap[filterPos] || filterPos)
-  const today = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  const posLabel     = filterPos === 'all' ? 'Semua Pos' : (posMap[filterPos] || filterPos)
 
-  /* ── Print: only the selected item ─────────────────────────── */
   const selectedPosName = selectedItem
     ? (posMap[selectedItem.pos_id] || selectedItem.pos_id)
     : null
 
+  // PDF filter string for download
+  const filterSummary = [timelineLabel, statusLabel, kategoriLabel, posLabel].join(' · ')
+
+  const handleDownloadPDF = () => {
+    if (selectedItem) {
+      downloadKerawananPDF(selectedItem, selectedPosName)
+    } else {
+      downloadKerawananListPDF(filtered, filterSummary, posMap)
+    }
+  }
+
   return (
     <div className="flex flex-col h-full fade-in">
 
-      {/* ── Print content — driven by printMode state, NOT selectedItem ── */}
-      {/* printMode is set BEFORE window.print() and reset AFTER via afterprint */}
-      {printMode === 'single' && selectedItem && (
-        <>
-          <PrintHeader today={today} />
-          <InsidenPrintContent item={selectedItem} posName={selectedPosName} />
-          <PrintFooter />
-        </>
-      )}
-      {printMode === 'list' && (
-        <>
-          <PrintHeader today={today} />
-          <div className="print-only p-6 pt-0">
-            <div className="mb-4 text-[10px] text-gray-500 flex flex-wrap gap-4">
-              <span>Periode: <b className="text-black">{timelineLabel}</b></span>
-              <span>Status: <b className="text-black">{statusLabel}</b></span>
-              <span>Kategori: <b className="text-black">{kategoriLabel}</b></span>
-              <span>Pos: <b className="text-black">{posLabel}</b></span>
-              <span>Total ditampilkan: <b className="text-black">{filtered.length} insiden</b></span>
-            </div>
-            <table className="w-full text-[10px] border-collapse">
-              <thead>
-                <tr className="border-b-2 border-black">
-                  {['No','Tanggal','Pos','Kategori','Deskripsi','Status'].map(h => (
-                    <th key={h} className="text-left py-1.5 px-2 uppercase tracking-wider font-bold text-gray-600">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((k, i) => (
-                  <tr key={k.id || i} className="border-b border-gray-200">
-                    <td className="py-1.5 px-2 text-gray-400">{i + 1}</td>
-                    <td className="py-1.5 px-2">{formatDate(k.tanggal)}</td>
-                    <td className="py-1.5 px-2 font-bold">{posMap[k.pos_id] || k.pos_id}</td>
-                    <td className="py-1.5 px-2">{k.kategori}</td>
-                    <td className="py-1.5 px-2 max-w-[220px]">{k.deskripsi || '—'}</td>
-                    <td className="py-1.5 px-2 font-bold uppercase" style={{ color: k.status?.toLowerCase() === 'aktif' ? '#cc0000' : '#006600' }}>
-                      {k.status}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <PrintFooter />
-        </>
-      )}
-
-      {/* ── Header (hidden during print) ─────────────────── */}
-      <div
-        className={`flex-shrink-0 px-4 py-3${printMode ? ' hidden-print' : ''}`}
-        style={{ background: 'rgba(4,11,6,0.9)', borderBottom: '1px solid rgba(0,255,136,0.15)' }}
-      >
+      {/* ── Header ──────────────────────────────────────── */}
+      <div className="flex-shrink-0 px-4 py-3"
+        style={{ background: 'rgba(4,11,6,0.9)', borderBottom: '1px solid rgba(0,255,136,0.15)' }}>
         <div className="flex items-center justify-between mb-3">
           <div>
             <h2 className="text-[rgba(200,214,229,0.85)] font-bold text-sm uppercase tracking-widest">
@@ -289,23 +170,23 @@ export default function InsidenPage() {
             </button>
           )}
 
-          {/* Print button */}
+          {/* Download PDF button */}
           <button
             className="hud-btn text-[9px] px-2 ml-auto flex items-center gap-1.5"
-            onClick={handlePrint}
-            title={selectedItem ? 'Print laporan insiden ini' : 'Print daftar insiden'}
+            onClick={handleDownloadPDF}
+            title={selectedItem ? 'Unduh PDF insiden ini' : 'Unduh PDF daftar insiden'}
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            {selectedItem ? 'Print Insiden' : 'Print Daftar'}
+            {selectedItem ? 'Unduh PDF' : 'Unduh Daftar'}
           </button>
         </div>
       </div>
 
-      {/* ── Main content (hidden during print) ─────────────── */}
-      <div className={`flex flex-1 overflow-hidden${printMode ? ' hidden-print' : ''}`}>
+      {/* ── Main content ─────────────────────────────────── */}
+      <div className="flex flex-1 overflow-hidden">
 
         {/* List */}
         <div className={`overflow-y-auto p-4 transition-all ${selectedItem ? 'w-1/2' : 'w-full'}`}>
@@ -394,7 +275,7 @@ function InsidenDetail({ item, posName, onClose, onNavigate }) {
     { label: 'Lokasi Insiden',  value: item.lokasi || item.pos_id },
     { label: 'Jumlah Pelaku',   value: item.jumlah_pelaku || item.pelaku || '—' },
     { label: 'Uraian Insiden',  value: item.deskripsi, fullRow: true },
-    { label: 'Penanganan',      value: item.tindak_lanjut || '—', fullRow: true },
+    { label: 'Penanganan',       value: item.tindak_lanjut || '—', fullRow: true },
   ]
 
   return (
