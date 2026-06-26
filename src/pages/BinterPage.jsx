@@ -5,7 +5,6 @@ import { BINTER_TYPES, BINTER_COLOR_MAP } from '../constants/kerawananCategories
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 import { EmptyState } from '../components/ui/EmptyState'
 import { formatDate } from '../utils/formatDate'
-import { APP_CONFIG } from '../constants/config'
 
 /* ── Color helper ──────────────────────────────────────────── */
 function getColor(jenis) {
@@ -39,6 +38,54 @@ function filterByTimeline(items, timelineId) {
     cutoff.setDate(now.getDate() - parseInt(timelineId))
   }
   return items.filter(b => b.tanggal && new Date(b.tanggal) >= cutoff)
+}
+
+/* ── Print helpers ─────────────────────────────────────────── */
+function PrintHeader({ today }) {
+  return (
+    <div className="print-only text-center mb-6 border-b-2 border-black pb-4 px-6 pt-4">
+      <h1 className="text-xl font-bold text-black">LAPORAN KEGIATAN BINTER</h1>
+      <p className="text-sm text-gray-600 mt-1">Dicetak: {today}</p>
+    </div>
+  )
+}
+
+function PrintFooter() {
+  return (
+    <div className="print-only mt-6 pt-4 border-t border-gray-300 text-center text-[9px] text-gray-400 tracking-widest uppercase px-6 pb-4">
+      DOKUMEN ASLI COMMAND CENTER SATGAS PAMTAS RI - MLY YONAK 8/NSW TA 2026
+    </div>
+  )
+}
+
+function BinterPrintContent({ item, posName }) {
+  return (
+    <div className="print-only p-6 pt-0">
+      <table className="w-full text-[11px] border-collapse mb-4">
+        <tbody>
+          {[
+            ['Jenis Kegiatan',  item.jenis_kegiatan],
+            ['Tanggal',         formatDate(item.tanggal)],
+            ['Pos',             posName],
+            ['Lokasi',          item.lokasi || '—'],
+            ['Sasaran',         item.sasaran || '—'],
+            ['Jumlah Peserta',  item.jumlah_peserta || '—'],
+          ].map(([label, val]) => (
+            <tr key={label} className="border-b border-gray-200">
+              <td className="py-1.5 px-3 w-40 text-gray-500 uppercase tracking-wider">{label}</td>
+              <td className="py-1.5 px-3 font-medium">{val || '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {item.keterangan && (
+        <div className="mb-4 p-3 border border-gray-300 rounded">
+          <p className="text-[9px] uppercase tracking-widest text-gray-500 mb-1">Keterangan</p>
+          <p className="text-[11px] leading-relaxed">{item.keterangan}</p>
+        </div>
+      )}
+    </div>
+  )
 }
 
 /* ── Main component ────────────────────────────────────────── */
@@ -80,100 +127,26 @@ export default function BinterPage() {
   const hasFilter = filterJenis !== 'all' || filterPos !== 'all' ||
                     filterTimeline !== 'all' || search
 
-  // Label untuk print header
-  const timelineLabel = TIMELINE_OPTIONS.find(o => o.id === filterTimeline)?.label || 'Semua'
-  const jenisLabel    = filterJenis === 'all' ? 'Semua Jenis' : filterJenis
-  const posLabel      = filterPos === 'all' ? 'Semua Pos' : (posMap[filterPos] || filterPos)
-  const today         = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  const today = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+
+  const selectedPosName = selectedItem
+    ? (posMap[selectedItem.pos_id] || selectedItem.pos_id)
+    : null
 
   return (
     <div className="flex flex-col h-full fade-in">
 
-      {/* ── Print: list format ─────────────────────────────── */}
-      {!selectedItem && (
-        <div className="hidden print:block p-6 font-mono">
-          <div className="text-center mb-6 border-b-2 border-black pb-4">
-            <p className="text-[10px] tracking-widest uppercase text-gray-500 mb-1">
-              {APP_CONFIG.SATGAS_NAME} · {APP_CONFIG.YONKAV} · {APP_CONFIG.TAHUN_ANGGARAN}
-            </p>
-            <h1 className="text-xl font-bold text-black">LAPORAN PROGRAM BINTER</h1>
-            <p className="text-sm text-gray-600 mt-1">Dicetak: {today}</p>
-          </div>
-          <div className="mb-4 text-[10px] text-gray-500 flex flex-wrap gap-4">
-            <span>Periode: <b className="text-black">{timelineLabel}</b></span>
-            <span>Jenis: <b className="text-black">{jenisLabel}</b></span>
-            <span>Pos: <b className="text-black">{posLabel}</b></span>
-            <span>Total ditampilkan: <b className="text-black">{filtered.length} kegiatan</b></span>
-          </div>
-          <table className="w-full text-[10px] border-collapse">
-            <thead>
-              <tr className="border-b-2 border-black">
-                {['No','Tanggal','Pos','Jenis Kegiatan','Lokasi / Sasaran','Peserta'].map(h => (
-                  <th key={h} className="text-left py-1.5 px-2 uppercase tracking-wider font-bold text-gray-600">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((b, i) => (
-                <tr key={b.id || i} className="border-b border-gray-200">
-                  <td className="py-1.5 px-2 text-gray-400">{i + 1}</td>
-                  <td className="py-1.5 px-2">{formatDate(b.tanggal)}</td>
-                  <td className="py-1.5 px-2 font-bold">{posMap[b.pos_id] || b.pos_id}</td>
-                  <td className="py-1.5 px-2">{b.jenis_kegiatan || '—'}</td>
-                  <td className="py-1.5 px-2 max-w-[200px]">{b.lokasi || '—'}{b.sasaran ? ` · ${b.sasaran}` : ''}</td>
-                  <td className="py-1.5 px-2">{b.jumlah_peserta || '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="mt-6 pt-4 border-t border-gray-300 text-center text-[9px] text-gray-400 tracking-widest uppercase">
-            {APP_CONFIG.SATGAS_NAME} · {APP_CONFIG.YONKAV} · {APP_CONFIG.WILAYAH} · {APP_CONFIG.TAHUN_ANGGARAN}
-          </div>
-        </div>
-      )}
-
-      {/* ── Print: single binter format ────────────────────── */}
+      {/* ── Print content (only selected item) — OUTSIDE overflow container ── */}
       {selectedItem && (
-        <div className="hidden print:block p-6 font-mono">
-          <div className="text-center mb-6 border-b-2 border-black pb-4">
-            <p className="text-[10px] tracking-widest uppercase text-gray-500 mb-1">
-              {APP_CONFIG.SATGAS_NAME} · {APP_CONFIG.YONKAV} · {APP_CONFIG.TAHUN_ANGGARAN}
-            </p>
-            <h1 className="text-xl font-bold text-black">LAPORAN KEGIATAN BINTER</h1>
-            <h2 className="text-base font-bold text-gray-700 mt-0.5">{selectedItem.jenis_kegiatan?.toUpperCase()}</h2>
-            <p className="text-sm text-gray-600 mt-1">Dicetak: {today}</p>
-          </div>
-          <table className="w-full text-[11px] border-collapse mb-4">
-            <tbody>
-              {[
-                ['Jenis Kegiatan', selectedItem.jenis_kegiatan],
-                ['Tanggal',        formatDate(selectedItem.tanggal)],
-                ['Pos',            posMap[selectedItem.pos_id] || selectedItem.pos_id],
-                ['Lokasi',         selectedItem.lokasi || '—'],
-                ['Sasaran',        selectedItem.sasaran || '—'],
-                ['Jumlah Peserta', selectedItem.jumlah_peserta || '—'],
-              ].map(([label, val]) => (
-                <tr key={label} className="border-b border-gray-200">
-                  <td className="py-1.5 px-3 w-40 text-gray-500 uppercase tracking-wider">{label}</td>
-                  <td className="py-1.5 px-3 font-medium">{val || '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {selectedItem.keterangan && (
-            <div className="mb-4 p-3 border border-gray-300 rounded">
-              <p className="text-[9px] uppercase tracking-widest text-gray-500 mb-1">Keterangan</p>
-              <p className="text-[11px] leading-relaxed">{selectedItem.keterangan}</p>
-            </div>
-          )}
-          <div className="mt-6 pt-4 border-t border-gray-300 text-center text-[9px] text-gray-400 tracking-widest uppercase">
-            {APP_CONFIG.SATGAS_NAME} · {APP_CONFIG.YONKAV} · {APP_CONFIG.WILAYAH} · {APP_CONFIG.TAHUN_ANGGARAN}
-          </div>
-        </div>
+        <>
+          <PrintHeader today={today} />
+          <BinterPrintContent item={selectedItem} posName={selectedPosName} />
+          <PrintFooter />
+        </>
       )}
 
       {/* ── Header (screen only) ────────────────────────────── */}
-      <div className="flex-shrink-0 px-4 py-3 print:hidden"
+      <div className="flex-shrink-0 px-4 py-3 screen-only"
         style={{ background: 'rgba(4,11,6,0.9)', borderBottom: '1px solid rgba(0,255,136,0.15)' }}>
         <div className="flex items-center justify-between mb-3">
           <div>
@@ -190,9 +163,8 @@ export default function BinterPage() {
           </div>
         </div>
 
-        {/* Filters row — semua kontrol seragam (w-40), sejajar dalam satu grid */}
+        {/* Filters row */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Timeline */}
           <select
             className="hud-select text-[10px] w-40"
             value={filterTimeline}
@@ -203,7 +175,6 @@ export default function BinterPage() {
             ))}
           </select>
 
-          {/* Jenis */}
           <select className="hud-select text-[10px] w-40" value={filterJenis} onChange={e => setFilterJenis(e.target.value)}>
             <option value="all">Semua Jenis</option>
             {BINTER_TYPES.map(t => (
@@ -211,7 +182,6 @@ export default function BinterPage() {
             ))}
           </select>
 
-          {/* Pos */}
           <select className="hud-select text-[10px] w-40" value={filterPos} onChange={e => setFilterPos(e.target.value)}>
             <option value="all">Semua Pos</option>
             {(posList || []).map(p => (
@@ -219,7 +189,6 @@ export default function BinterPage() {
             ))}
           </select>
 
-          {/* Search */}
           <input
             className="hud-input text-[10px] w-40"
             placeholder="Cari kegiatan / lokasi..."
@@ -254,8 +223,8 @@ export default function BinterPage() {
         </div>
       </div>
 
-      {/* ── Main content (screen only) ──────────────────────── */}
-      <div className="flex flex-1 overflow-hidden print:hidden">
+      {/* ── Main content (screen only) ────────────────────── */}
+      <div className="flex flex-1 overflow-hidden screen-only">
 
         {/* List */}
         <div className={`overflow-y-auto p-4 transition-all ${selectedItem ? 'w-1/2' : 'w-full'}`}>
@@ -320,7 +289,7 @@ export default function BinterPage() {
           <div className="w-1/2 border-l border-[rgba(68,136,255,0.15)] overflow-y-auto">
             <BinterDetail
               item={selectedItem}
-              posName={posMap[selectedItem.pos_id] || selectedItem.pos_id}
+              posName={selectedPosName}
               onClose={() => setSelectedItem(null)}
               onNavigate={() => navigate(`/pos/${selectedItem.pos_id}/binter`)}
             />

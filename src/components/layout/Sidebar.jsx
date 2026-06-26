@@ -56,7 +56,10 @@ export function Sidebar() {
             </div>
           ) : (
             <div className="px-2 pb-3 pt-1 space-y-px">
-              {(posList || []).map((pos) => (
+              {/* KOTIS/KT selalu di atas */}
+              {[(posList || []).filter(p => p.pos_id === 'KOTIS' || p.pos_id === 'KT'),
+                (posList || []).filter(p => p.pos_id !== 'KOTIS' && p.pos_id !== 'KT')
+              ].flat().map((pos) => (
                 <PosNavItem key={pos.pos_id} pos={pos} kerawanan={kerawanan || []} />
               ))}
             </div>

@@ -6,7 +6,6 @@ import { KerawananBadge } from '../components/ui/Badge'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 import { EmptyState } from '../components/ui/EmptyState'
 import { formatDate } from '../utils/formatDate'
-import { APP_CONFIG } from '../constants/config'
 
 /* ── Timeline filter options ──────────────────────────────── */
 const TIMELINE_OPTIONS = [
@@ -30,6 +29,67 @@ function filterByTimeline(items, timelineId) {
     cutoff.setDate(now.getDate() - days)
   }
   return items.filter(k => k.tanggal && new Date(k.tanggal) >= cutoff)
+}
+
+/* ── Print helpers ─────────────────────────────────────────── */
+function PrintHeader({ today }) {
+  return (
+    <div className="print-only text-center mb-6 border-b-2 border-black pb-4 px-6 pt-4">
+      <h1 className="text-xl font-bold text-black">LAPORAN INSIDEN</h1>
+      <p className="text-sm text-gray-600 mt-1">Dicetak: {today}</p>
+    </div>
+  )
+}
+
+function PrintFooter() {
+  return (
+    <div className="print-only mt-6 pt-4 border-t border-gray-300 text-center text-[9px] text-gray-400 tracking-widest uppercase px-6 pb-4">
+      DOKUMEN ASLI COMMAND CENTER SATGAS PAMTAS RI - MLY YONAK 8/NSW TA 2026
+    </div>
+  )
+}
+
+function InsidenPrintContent({ item, posName }) {
+  return (
+    <div className="print-only p-6 pt-0">
+      <table className="w-full text-[11px] border-collapse mb-4">
+        <tbody>
+          {[
+            ['Jenis Insiden',   item.kategori],
+            ['Status',         item.status?.toUpperCase()],
+            ['Tanggal',        formatDate(item.tanggal)],
+            ['Waktu',          item.waktu || '—'],
+            ['Pos',            posName],
+            ['Lokasi Insiden', item.lokasi || item.pos_id],
+            ['Jumlah Pelaku',  item.jumlah_pelaku || item.pelaku || '—'],
+          ].map(([label, val]) => (
+            <tr key={label} className="border-b border-gray-200">
+              <td className="py-1.5 px-3 w-40 text-gray-500 uppercase tracking-wider">{label}</td>
+              <td className="py-1.5 px-3 font-medium">{val || '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {item.deskripsi && (
+        <div className="mb-4 p-3 border border-gray-300 rounded">
+          <p className="text-[9px] uppercase tracking-widest text-gray-500 mb-1">Uraian Insiden</p>
+          <p className="text-[11px] leading-relaxed">{item.deskripsi}</p>
+        </div>
+      )}
+      {item.tindak_lanjut && (
+        <div className="mb-4 p-3 border border-gray-300 rounded">
+          <p className="text-[9px] uppercase tracking-widest text-gray-500 mb-1">Penanganan / Tindak Lanjut</p>
+          <p className="text-[11px] leading-relaxed">{item.tindak_lanjut}</p>
+        </div>
+      )}
+      {(item.lat && item.lng) && (
+        <div className="mb-4 p-3 border border-gray-300 rounded">
+          <p className="text-[9px] uppercase tracking-widest text-gray-500 mb-1">Koordinat TKP</p>
+          <p className="text-[11px] font-mono">{item.lat}, {item.lng}</p>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function InsidenPage() {
@@ -78,117 +138,31 @@ export default function InsidenPage() {
   const hasFilter = filterStatus !== 'all' || filterKategori !== 'all' ||
                     filterPos !== 'all' || filterTimeline !== 'all' || search
 
-  // Label filter aktif untuk print header
   const timelineLabel = TIMELINE_OPTIONS.find(o => o.id === filterTimeline)?.label || 'Semua'
   const statusLabel   = filterStatus === 'all' ? 'Semua Status' : filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)
   const kategoriLabel = filterKategori === 'all' ? 'Semua Kategori' : filterKategori
   const posLabel      = filterPos === 'all' ? 'Semua Pos' : (posMap[filterPos] || filterPos)
   const today = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
+  /* ── Print: only the selected item ─────────────────────────── */
+  const selectedPosName = selectedItem
+    ? (posMap[selectedItem.pos_id] || selectedItem.pos_id)
+    : null
+
   return (
     <div className="flex flex-col h-full fade-in">
 
-      {/* ── Print: list format ────────────────────────────── */}
-      {!selectedItem && (
-        <div className="hidden print:block p-6 font-mono">
-          <div className="text-center mb-6 border-b-2 border-black pb-4">
-            <p className="text-[10px] tracking-widest uppercase text-gray-500 mb-1">
-              {APP_CONFIG.SATGAS_NAME} · {APP_CONFIG.YONKAV} · {APP_CONFIG.TAHUN_ANGGARAN}
-            </p>
-            <h1 className="text-xl font-bold text-black">LAPORAN DATA INSIDEN</h1>
-            <p className="text-sm text-gray-600 mt-1">Dicetak: {today}</p>
-          </div>
-          <div className="mb-4 text-[10px] text-gray-500 flex flex-wrap gap-4">
-            <span>Periode: <b className="text-black">{timelineLabel}</b></span>
-            <span>Status: <b className="text-black">{statusLabel}</b></span>
-            <span>Kategori: <b className="text-black">{kategoriLabel}</b></span>
-            <span>Pos: <b className="text-black">{posLabel}</b></span>
-            <span>Total ditampilkan: <b className="text-black">{filtered.length} insiden</b></span>
-          </div>
-          <table className="w-full text-[10px] border-collapse">
-            <thead>
-              <tr className="border-b-2 border-black">
-                {['No','Tanggal','Pos','Kategori','Deskripsi','Status'].map(h => (
-                  <th key={h} className="text-left py-1.5 px-2 uppercase tracking-wider font-bold text-gray-600">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((k, i) => (
-                <tr key={k.id || i} className="border-b border-gray-200">
-                  <td className="py-1.5 px-2 text-gray-400">{i + 1}</td>
-                  <td className="py-1.5 px-2">{formatDate(k.tanggal)}</td>
-                  <td className="py-1.5 px-2 font-bold">{posMap[k.pos_id] || k.pos_id}</td>
-                  <td className="py-1.5 px-2">{k.kategori}</td>
-                  <td className="py-1.5 px-2 max-w-[220px]">{k.deskripsi || '—'}</td>
-                  <td className="py-1.5 px-2 font-bold uppercase" style={{ color: k.status?.toLowerCase() === 'aktif' ? '#cc0000' : '#006600' }}>
-                    {k.status}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="mt-6 pt-4 border-t border-gray-300 text-center text-[9px] text-gray-400 tracking-widest uppercase">
-            {APP_CONFIG.SATGAS_NAME} · {APP_CONFIG.YONKAV} · {APP_CONFIG.WILAYAH} · {APP_CONFIG.TAHUN_ANGGARAN}
-          </div>
-        </div>
-      )}
-
-      {/* ── Print: single insiden format ──────────────────── */}
+      {/* ── Print content (only selected item) — OUTSIDE overflow container ── */}
       {selectedItem && (
-        <div className="hidden print:block p-6 font-mono">
-          <div className="text-center mb-6 border-b-2 border-black pb-4">
-            <p className="text-[10px] tracking-widest uppercase text-gray-500 mb-1">
-              {APP_CONFIG.SATGAS_NAME} · {APP_CONFIG.YONKAV} · {APP_CONFIG.TAHUN_ANGGARAN}
-            </p>
-            <h1 className="text-xl font-bold text-black">LAPORAN INSIDEN</h1>
-            <h2 className="text-base font-bold text-gray-700 mt-0.5">{selectedItem.kategori?.toUpperCase()}</h2>
-            <p className="text-sm text-gray-600 mt-1">Dicetak: {today}</p>
-          </div>
-          <table className="w-full text-[11px] border-collapse mb-4">
-            <tbody>
-              {[
-                ['Jenis Insiden',   selectedItem.kategori],
-                ['Status',         selectedItem.status?.toUpperCase()],
-                ['Tanggal',        formatDate(selectedItem.tanggal)],
-                ['Waktu',          selectedItem.waktu || '—'],
-                ['Pos',            posMap[selectedItem.pos_id] || selectedItem.pos_id],
-                ['Lokasi Insiden', selectedItem.lokasi || selectedItem.pos_id],
-                ['Jumlah Pelaku',  selectedItem.jumlah_pelaku || selectedItem.pelaku || '—'],
-              ].map(([label, val]) => (
-                <tr key={label} className="border-b border-gray-200">
-                  <td className="py-1.5 px-3 w-40 text-gray-500 uppercase tracking-wider">{label}</td>
-                  <td className="py-1.5 px-3 font-medium">{val || '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {selectedItem.deskripsi && (
-            <div className="mb-4 p-3 border border-gray-300 rounded">
-              <p className="text-[9px] uppercase tracking-widest text-gray-500 mb-1">Uraian Insiden</p>
-              <p className="text-[11px] leading-relaxed">{selectedItem.deskripsi}</p>
-            </div>
-          )}
-          {selectedItem.tindak_lanjut && (
-            <div className="mb-4 p-3 border border-gray-300 rounded">
-              <p className="text-[9px] uppercase tracking-widest text-gray-500 mb-1">Penanganan / Tindak Lanjut</p>
-              <p className="text-[11px] leading-relaxed">{selectedItem.tindak_lanjut}</p>
-            </div>
-          )}
-          {(selectedItem.lat && selectedItem.lng) && (
-            <div className="mb-4 p-3 border border-gray-300 rounded">
-              <p className="text-[9px] uppercase tracking-widest text-gray-500 mb-1">Koordinat TKP</p>
-              <p className="text-[11px] font-mono">{selectedItem.lat}, {selectedItem.lng}</p>
-            </div>
-          )}
-          <div className="mt-6 pt-4 border-t border-gray-300 text-center text-[9px] text-gray-400 tracking-widest uppercase">
-            {APP_CONFIG.SATGAS_NAME} · {APP_CONFIG.YONKAV} · {APP_CONFIG.WILAYAH} · {APP_CONFIG.TAHUN_ANGGARAN}
-          </div>
-        </div>
+        <>
+          <PrintHeader today={today} />
+          <InsidenPrintContent item={selectedItem} posName={selectedPosName} />
+          <PrintFooter />
+        </>
       )}
 
       {/* ── Header (screen only) ────────────────────────────── */}
-      <div className="flex-shrink-0 px-4 py-3 print:hidden"
+      <div className="flex-shrink-0 px-4 py-3 screen-only"
         style={{ background: 'rgba(4,11,6,0.9)', borderBottom: '1px solid rgba(0,255,136,0.15)' }}>
         <div className="flex items-center justify-between mb-3">
           <div>
@@ -205,9 +179,8 @@ export default function InsidenPage() {
           </div>
         </div>
 
-        {/* Filters row — semua kontrol seragam (w-40), sejajar dalam satu grid */}
+        {/* Filters row */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Timeline — dropdown */}
           <select
             className="hud-select text-[10px] w-40"
             value={filterTimeline}
@@ -218,14 +191,12 @@ export default function InsidenPage() {
             ))}
           </select>
 
-          {/* Status */}
           <select className="hud-select text-[10px] w-40" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
             <option value="all">Semua Status</option>
             <option value="aktif">Aktif</option>
             <option value="selesai">Selesai</option>
           </select>
 
-          {/* Kategori */}
           <select className="hud-select text-[10px] w-40" value={filterKategori} onChange={e => setFilterKategori(e.target.value)}>
             <option value="all">Semua Kategori</option>
             {KERAWANAN_CATEGORIES.map(c => (
@@ -233,7 +204,6 @@ export default function InsidenPage() {
             ))}
           </select>
 
-          {/* Pos */}
           <select className="hud-select text-[10px] w-40" value={filterPos} onChange={e => setFilterPos(e.target.value)}>
             <option value="all">Semua Pos</option>
             {(posList || []).map(p => (
@@ -241,7 +211,6 @@ export default function InsidenPage() {
             ))}
           </select>
 
-          {/* Search */}
           <input
             className="hud-input text-[10px] w-40"
             placeholder="Cari deskripsi / pos..."
@@ -277,7 +246,7 @@ export default function InsidenPage() {
       </div>
 
       {/* ── Main content (screen only) ─────────────────────── */}
-      <div className="flex flex-1 overflow-hidden print:hidden">
+      <div className="flex flex-1 overflow-hidden screen-only">
 
         {/* List */}
         <div className={`overflow-y-auto p-4 transition-all ${selectedItem ? 'w-1/2' : 'w-full'}`}>
@@ -340,7 +309,7 @@ export default function InsidenPage() {
           <div className="w-1/2 border-l border-[rgba(0,255,136,0.15)] overflow-y-auto">
             <InsidenDetail
               item={selectedItem}
-              posName={posMap[selectedItem.pos_id] || selectedItem.pos_id}
+              posName={selectedPosName}
               onClose={() => setSelectedItem(null)}
               onNavigate={() => handleNavigateToPos(selectedItem)}
             />

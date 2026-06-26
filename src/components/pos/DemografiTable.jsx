@@ -74,7 +74,23 @@ export function DemografiTable({ demografi, loading, posId, onRefresh }) {
       {/* ── Toolbar ────────────────────────────────────────── */}
       {posId && (
         <div className="flex justify-end">
-          <button className="hud-btn text-[10px]" onClick={() => setEditOpen(true)}>
+          <button
+            className="text-[10px] px-3 py-1.5 rounded-sm transition-all duration-150 flex items-center gap-1.5"
+            style={{
+              background: 'rgba(68,136,255,0.08)',
+              border: '1px solid rgba(68,136,255,0.3)',
+              color: 'rgba(68,136,255,0.8)',
+            }}
+            onClick={() => setEditOpen(true)}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = 'rgba(68,136,255,0.15)'
+              e.currentTarget.style.color = '#4488ff'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = 'rgba(68,136,255,0.08)'
+              e.currentTarget.style.color = 'rgba(68,136,255,0.8)'
+            }}
+          >
             ✎ Edit Data Demografi
           </button>
         </div>

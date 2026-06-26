@@ -243,11 +243,13 @@ export default function OverviewPage() {
 function PersonelPanel({ posList, loading, navigate }) {
   const totalPersonel = (posList || []).reduce((s, p) => s + (Number(p.jumlah_personel) || 0), 0)
 
-  // KT selalu paling atas, sisanya sort by jumlah_personel desc, ambil top 6
+  // KOTIS/KT selalu paling atas, sisanya sort by jumlah_personel desc, ambil top 6
   const sorted = [...(posList || [])]
     .sort((a, b) => {
-      if (a.pos_id === 'KT') return -1
-      if (b.pos_id === 'KT') return 1
+      const aIsKotis = a.pos_id === 'KT' || a.pos_id === 'KOTIS'
+      const bIsKotis = b.pos_id === 'KT' || b.pos_id === 'KOTIS'
+      if (aIsKotis && !bIsKotis) return -1
+      if (!aIsKotis && bIsKotis) return 1
       return (Number(b.jumlah_personel) || 0) - (Number(a.jumlah_personel) || 0)
     })
     .slice(0, 6)
@@ -324,7 +326,7 @@ function PersonelPanel({ posList, loading, navigate }) {
         {sorted.map((pos, i) => {
           const num    = Number(pos.jumlah_personel) || 0
           const pct    = maxPersonel > 0 ? Math.max(Math.round((num / maxPersonel) * 100), num > 0 ? 4 : 0) : 0
-          const isKT   = pos.pos_id === 'KT'
+          const isKT   = pos.pos_id === 'KT' || pos.pos_id === 'KOTIS'
           const posNo  = isKT ? 'KT' : pos.pos_id.replace(/^POS-0?/, '')
           const accent = isKT ? '#ffd700' : i === 1 ? '#00ff88' : i === 2 ? 'rgba(0,255,136,0.65)' : 'rgba(0,255,136,0.4)'
           return (

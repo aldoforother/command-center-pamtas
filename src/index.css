@@ -520,7 +520,17 @@
    @media print — Mode Cetak / Export PDF
    Override semua warna gelap → putih + teks hitam
    ════════════════════════════════════════════════════════ */
+
+/* Print-only: tersembunyi di layar, muncul hanya saat print */
+.print-only { display: none; }
+
 @media print {
+
+  /* ── Print-only utility (visible in print) ── */
+  .print-only { display: block !important; }
+
+  /* ── Screen-only: hide screen content in print ── */
+  .screen-only { display: none !important; }
 
   /* ── Reset warna global ─────────────────────────────── */
   *, *::before, *::after {
