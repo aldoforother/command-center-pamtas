@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAllBinter, usePos } from '../hooks/useSupabase'
 import { BINTER_TYPES, BINTER_COLOR_MAP } from '../constants/kerawananCategories'
@@ -133,11 +133,30 @@ export default function BinterPage() {
     ? (posMap[selectedItem.pos_id] || selectedItem.pos_id)
     : null
 
+  // printMode: driven by handlePrint before window.print(), reset by afterprint
+  const [printMode, setPrintMode] = useState(null) // null | 'list' | 'single'
+
+  useEffect(() => {
+    const handler = () => setPrintMode(null)
+    window.addEventListener('afterprint', handler)
+    return () => window.removeEventListener('afterprint', handler)
+  }, [])
+
+  const handlePrint = () => {
+    if (selectedItem) setPrintMode('single')
+    else setPrintMode('list')
+    window.print()
+  }
+
+  const timelineLabel = TIMELINE_OPTIONS.find(o => o.id === filterTimeline)?.label || 'Semua'
+  const jenisLabel    = filterJenis === 'all' ? 'Semua Jenis' : filterJenis
+  const posLabel      = filterPos === 'all' ? 'Semua Pos' : (posMap[filterPos] || filterPos)
+
   return (
     <div className="flex flex-col h-full fade-in">
 
-      {/* ── Print content (only selected item) — OUTSIDE overflow container ── */}
-      {selectedItem && (
+      {/* ── Print: single selected item ─────────────────────────── */}
+      {printMode === 'single' && selectedItem && (
         <>
           <PrintHeader today={today} />
           <BinterPrintContent item={selectedItem} posName={selectedPosName} />
@@ -145,9 +164,48 @@ export default function BinterPage() {
         </>
       )}
 
-      {/* ── Header (screen only) ────────────────────────────── */}
-      <div className="flex-shrink-0 px-4 py-3 screen-only"
-        style={{ background: 'rgba(4,11,6,0.9)', borderBottom: '1px solid rgba(0,255,136,0.15)' }}>
+      {/* ── Print: full list ─────────────────────────────────── */}
+      {printMode === 'list' && (
+        <>
+          <PrintHeader today={today} />
+          <div className="print-only p-6 pt-0">
+            <div className="mb-4 text-[10px] text-gray-500 flex flex-wrap gap-4">
+              <span>Periode: <b className="text-black">{timelineLabel}</b></span>
+              <span>Jenis: <b className="text-black">{jenisLabel}</b></span>
+              <span>Pos: <b className="text-black">{posLabel}</b></span>
+              <span>Total ditampilkan: <b className="text-black">{filtered.length} kegiatan</b></span>
+            </div>
+            <table className="w-full text-[10px] border-collapse">
+              <thead>
+                <tr className="border-b-2 border-black">
+                  {['No','Tanggal','Pos','Jenis Kegiatan','Lokasi / Sasaran','Peserta'].map(h => (
+                    <th key={h} className="text-left py-1.5 px-2 uppercase tracking-wider font-bold text-gray-600">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((b, i) => (
+                  <tr key={b.id || i} className="border-b border-gray-200">
+                    <td className="py-1.5 px-2 text-gray-400">{i + 1}</td>
+                    <td className="py-1.5 px-2">{formatDate(b.tanggal)}</td>
+                    <td className="py-1.5 px-2 font-bold">{posMap[b.pos_id] || b.pos_id}</td>
+                    <td className="py-1.5 px-2">{b.jenis_kegiatan || '—'}</td>
+                    <td className="py-1.5 px-2 max-w-[200px]">{b.lokasi || '—'}{b.sasaran ? ` · ${b.sasaran}` : ''}</td>
+                    <td className="py-1.5 px-2">{b.jumlah_peserta || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <PrintFooter />
+        </>
+      )}
+
+      {/* ── Header (hidden during print) ───────────────────── */}
+      <div
+        className={`flex-shrink-0 px-4 py-3${printMode ? ' hidden-print' : ''}`}
+        style={{ background: 'rgba(4,11,6,0.9)', borderBottom: '1px solid rgba(0,255,136,0.15)' }}
+      >
         <div className="flex items-center justify-between mb-3">
           <div>
             <h2 className="text-[rgba(200,214,229,0.85)] font-bold text-sm uppercase tracking-widest">
@@ -211,7 +269,7 @@ export default function BinterPage() {
           {/* Print button */}
           <button
             className="hud-btn text-[9px] px-2 ml-auto flex items-center gap-1.5"
-            onClick={() => window.print()}
+            onClick={handlePrint}
             title={selectedItem ? 'Print laporan kegiatan ini' : 'Print daftar kegiatan'}
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -223,8 +281,8 @@ export default function BinterPage() {
         </div>
       </div>
 
-      {/* ── Main content (screen only) ────────────────────── */}
-      <div className="flex flex-1 overflow-hidden screen-only">
+      {/* ── Main content (hidden during print) ─────────────── */}
+      <div className={`flex flex-1 overflow-hidden${printMode ? ' hidden-print' : ''}`}>
 
         {/* List */}
         <div className={`overflow-y-auto p-4 transition-all ${selectedItem ? 'w-1/2' : 'w-full'}`}>

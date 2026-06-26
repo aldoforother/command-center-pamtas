@@ -521,16 +521,22 @@
    Override semua warna gelap → putih + teks hitam
    ════════════════════════════════════════════════════════ */
 
-/* Print-only: tersembunyi di layar, muncul hanya saat print */
+/* ── Print vs Screen utilities ────────────────────────────── */
+/* Print-only: tersembunyi di layar (screen), muncul hanya saat print */
 .print-only { display: none; }
+
+/* Hidden-print: tersembunyi saat print, terlihat di layar */
+.hidden-print { }
+
+/* Hapus semua .screen-only dari codebase — ganti dengan .hidden-print */
 
 @media print {
 
-  /* ── Print-only utility (visible in print) ── */
+  /* Print-only: tampil saat print */
   .print-only { display: block !important; }
 
-  /* ── Screen-only: hide screen content in print ── */
-  .screen-only { display: none !important; }
+  /* Hidden-print: sembunyikan konten layar saat print */
+  .hidden-print { display: none !important; }
 
   /* ── Reset warna global ─────────────────────────────── */
   *, *::before, *::after {

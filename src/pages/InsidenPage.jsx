@@ -103,6 +103,24 @@ export default function InsidenPage() {
   const [filterTimeline, setFilterTimeline] = useState('all')
   const [search,         setSearch]         = useState('')
   const [selectedItem,   setSelectedItem]   = useState(null)
+  const [printMode,      setPrintMode]       = useState(null) // null | 'list' | 'single'
+
+  // beforeprint/afterprint — swap content JS-side, bukan CSS
+  // afterprint — reset printMode after printing finishes
+  useEffect(() => {
+    const handler = () => setPrintMode(null)
+    window.addEventListener('afterprint', handler)
+    return () => window.removeEventListener('afterprint', handler)
+  }, [])
+
+  const handlePrint = () => {
+    if (selectedItem) {
+      setPrintMode('single')
+    } else {
+      setPrintMode('list')
+    }
+    window.print()
+  }
 
   const posMap = useMemo(() => (posList || []).reduce((acc, p) => {
     acc[p.pos_id] = p.nama_pos || p.pos_id
@@ -152,18 +170,59 @@ export default function InsidenPage() {
   return (
     <div className="flex flex-col h-full fade-in">
 
-      {/* ── Print content (only selected item) — OUTSIDE overflow container ── */}
-      {selectedItem && (
+      {/* ── Print content — driven by printMode state, NOT selectedItem ── */}
+      {/* printMode is set BEFORE window.print() and reset AFTER via afterprint */}
+      {printMode === 'single' && selectedItem && (
         <>
           <PrintHeader today={today} />
           <InsidenPrintContent item={selectedItem} posName={selectedPosName} />
           <PrintFooter />
         </>
       )}
+      {printMode === 'list' && (
+        <>
+          <PrintHeader today={today} />
+          <div className="print-only p-6 pt-0">
+            <div className="mb-4 text-[10px] text-gray-500 flex flex-wrap gap-4">
+              <span>Periode: <b className="text-black">{timelineLabel}</b></span>
+              <span>Status: <b className="text-black">{statusLabel}</b></span>
+              <span>Kategori: <b className="text-black">{kategoriLabel}</b></span>
+              <span>Pos: <b className="text-black">{posLabel}</b></span>
+              <span>Total ditampilkan: <b className="text-black">{filtered.length} insiden</b></span>
+            </div>
+            <table className="w-full text-[10px] border-collapse">
+              <thead>
+                <tr className="border-b-2 border-black">
+                  {['No','Tanggal','Pos','Kategori','Deskripsi','Status'].map(h => (
+                    <th key={h} className="text-left py-1.5 px-2 uppercase tracking-wider font-bold text-gray-600">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((k, i) => (
+                  <tr key={k.id || i} className="border-b border-gray-200">
+                    <td className="py-1.5 px-2 text-gray-400">{i + 1}</td>
+                    <td className="py-1.5 px-2">{formatDate(k.tanggal)}</td>
+                    <td className="py-1.5 px-2 font-bold">{posMap[k.pos_id] || k.pos_id}</td>
+                    <td className="py-1.5 px-2">{k.kategori}</td>
+                    <td className="py-1.5 px-2 max-w-[220px]">{k.deskripsi || '—'}</td>
+                    <td className="py-1.5 px-2 font-bold uppercase" style={{ color: k.status?.toLowerCase() === 'aktif' ? '#cc0000' : '#006600' }}>
+                      {k.status}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <PrintFooter />
+        </>
+      )}
 
-      {/* ── Header (screen only) ────────────────────────────── */}
-      <div className="flex-shrink-0 px-4 py-3 screen-only"
-        style={{ background: 'rgba(4,11,6,0.9)', borderBottom: '1px solid rgba(0,255,136,0.15)' }}>
+      {/* ── Header (hidden during print) ─────────────────── */}
+      <div
+        className={`flex-shrink-0 px-4 py-3${printMode ? ' hidden-print' : ''}`}
+        style={{ background: 'rgba(4,11,6,0.9)', borderBottom: '1px solid rgba(0,255,136,0.15)' }}
+      >
         <div className="flex items-center justify-between mb-3">
           <div>
             <h2 className="text-[rgba(200,214,229,0.85)] font-bold text-sm uppercase tracking-widest">
@@ -233,7 +292,7 @@ export default function InsidenPage() {
           {/* Print button */}
           <button
             className="hud-btn text-[9px] px-2 ml-auto flex items-center gap-1.5"
-            onClick={() => window.print()}
+            onClick={handlePrint}
             title={selectedItem ? 'Print laporan insiden ini' : 'Print daftar insiden'}
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -245,8 +304,8 @@ export default function InsidenPage() {
         </div>
       </div>
 
-      {/* ── Main content (screen only) ─────────────────────── */}
-      <div className="flex flex-1 overflow-hidden screen-only">
+      {/* ── Main content (hidden during print) ─────────────── */}
+      <div className={`flex flex-1 overflow-hidden${printMode ? ' hidden-print' : ''}`}>
 
         {/* List */}
         <div className={`overflow-y-auto p-4 transition-all ${selectedItem ? 'w-1/2' : 'w-full'}`}>
