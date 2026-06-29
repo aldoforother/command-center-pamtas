@@ -20,51 +20,72 @@ export function StatusBar() {
   const hhmm = lastUpdate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
 
   return (
-    <footer className="flex items-center justify-between px-4 h-7 flex-shrink-0
-      bg-[#030807] border-t border-[rgba(0,255,136,0.1)]">
-
-      {/* ── KIRI: status info ── */}
+    <footer
+      className="flex items-center justify-between px-4 h-7 flex-shrink-0"
+      style={{
+        backgroundColor: '#030807',
+        borderTop: '1px solid var(--border-subtle)',
+      }}
+    >
+      {/* ── LEFT: status info ── */}
       <div className="flex items-center gap-4">
-        {/* Koneksi */}
+        {/* Connection status */}
         <div className="flex items-center gap-1.5">
-          <div className={`w-1.5 h-1.5 rounded-full ${
-            isOnline
-              ? 'bg-[#00ff88] animate-pulse'
-              : 'bg-[#ff3333]'
-          }`}
-            style={isOnline ? { boxShadow: '0 0 4px rgba(0,255,136,0.8)' } : {}}
+          <div
+            className="w-1.5 h-1.5 rounded-full transition-all duration-150"
+            style={{
+              backgroundColor: isOnline ? 'var(--accent-primary)' : 'var(--color-danger)',
+              boxShadow: isOnline ? '0 0 4px rgba(0,255,136,0.8)' : '0 0 4px rgba(255,59,59,0.8)',
+              animation: isOnline ? 'statusPulse 2s ease-in-out infinite' : 'none',
+            }}
           />
-          <span className={`text-[9px] font-bold tracking-[0.12em] uppercase ${
-            isOnline ? 'text-[rgba(0,255,136,0.7)]' : 'text-[#ff3333]'
-          }`}>
+          <span
+            className="text-[9px] font-bold tracking-[0.12em] uppercase transition-colors duration-150"
+            style={{
+              color: isOnline ? 'rgba(0,255,136,0.7)' : 'var(--color-danger)',
+            }}
+          >
             {isOnline ? 'ONLINE' : 'OFFLINE'}
           </span>
         </div>
 
-        <span className="text-[rgba(0,255,136,0.15)] text-xs">|</span>
+        <span style={{ color: 'var(--accent-muted)' }}>|</span>
 
-        <span className="text-[9px] tracking-[0.08em] text-[rgba(200,214,229,0.3)] uppercase">
-          SYNC <span className="font-mono text-[rgba(200,214,229,0.5)]">{hhmm}</span>
+        <span
+          className="text-[9px] tracking-[0.08em] uppercase"
+          style={{ color: 'var(--text-tertiary)' }}
+        >
+          SYNC <span className="font-mono" style={{ color: 'var(--text-secondary)' }}>{hhmm}</span>
         </span>
 
-        <span className="text-[rgba(0,255,136,0.15)] text-xs">|</span>
+        <span style={{ color: 'var(--accent-muted)' }}>|</span>
 
-        <span className="text-[9px] tracking-[0.08em] text-[rgba(200,214,229,0.3)] uppercase">
-          DATA <span className="font-mono text-[rgba(0,255,136,0.5)]">SUPABASE</span>
+        <span
+          className="text-[9px] tracking-[0.08em] uppercase"
+          style={{ color: 'var(--text-tertiary)' }}
+        >
+          DATA <span className="font-mono" style={{ color: 'var(--accent-primary)' }}>SUPABASE</span>
         </span>
 
-        <span className="text-[rgba(0,255,136,0.15)] text-xs">|</span>
+        <span style={{ color: 'var(--accent-muted)' }}>|</span>
 
         {/* Telemetry pills */}
         <div className="flex items-center gap-2">
-          <TelePill label="SYS" value={isOnline ? 'ONLINE' : 'OFFLINE'} color={isOnline ? 'green' : 'red'} />
+          <TelePill
+            label="SYS"
+            value={isOnline ? 'ONLINE' : 'OFFLINE'}
+            color={isOnline ? 'green' : 'red'}
+          />
           <TelePill label="SYNC" value="AUTO" color="blue" />
           <TelePill label="LAST" value={hhmm} color="amber" />
         </div>
       </div>
 
-      {/* ── KANAN: unit ── */}
-      <div className="text-[8px] tracking-[0.15em] text-[rgba(200,214,229,0.18)] uppercase">
+      {/* ── RIGHT: unit ── */}
+      <div
+        className="text-[8px] tracking-[0.15em] uppercase"
+        style={{ color: 'var(--text-disabled)' }}
+      >
         NARASINGA - 35
       </div>
     </footer>
@@ -72,16 +93,51 @@ export function StatusBar() {
 }
 
 function TelePill({ label, value, color }) {
-  const colors = {
-    green: 'text-[#00ff88] border-[rgba(0,255,136,0.25)]',
-    red:   'text-[#ff3333] border-[rgba(255,51,51,0.25)]',
-    blue:  'text-[#4488ff] border-[rgba(68,136,255,0.25)]',
-    amber: 'text-[#ffaa00] border-[rgba(255,170,0,0.25)]',
+  const colorMap = {
+    green: {
+      text: 'var(--accent-primary)',
+      border: 'var(--accent-muted)',
+      bg: 'rgba(0,0,0,0.3)',
+    },
+    red: {
+      text: 'var(--color-danger)',
+      border: 'var(--color-danger-subtle)',
+      bg: 'rgba(0,0,0,0.3)',
+    },
+    blue: {
+      text: 'var(--color-info)',
+      border: 'var(--color-info-subtle)',
+      bg: 'rgba(0,0,0,0.3)',
+    },
+    amber: {
+      text: 'var(--color-warning)',
+      border: 'var(--color-warning-subtle)',
+      bg: 'rgba(0,0,0,0.3)',
+    },
   }
+
+  const styles = colorMap[color] || colorMap.green
+
   return (
-    <div className={`flex items-center gap-1 px-2 py-0.5 border rounded-sm bg-[rgba(0,0,0,0.3)] ${colors[color]}`}>
-      <span className="text-[8px] tracking-[0.1em] text-[rgba(200,214,229,0.35)]">{label}</span>
-      <span className="text-[9px] font-mono font-bold tracking-wider">{value}</span>
+    <div
+      className="flex items-center gap-1 px-2 py-0.5 rounded-sm transition-colors duration-150"
+      style={{
+        background: styles.bg,
+        border: `1px solid ${styles.border}`,
+      }}
+    >
+      <span
+        className="text-[8px] tracking-[0.1em]"
+        style={{ color: 'var(--text-tertiary)' }}
+      >
+        {label}
+      </span>
+      <span
+        className="text-[9px] font-mono font-bold tracking-wider"
+        style={{ color: styles.text }}
+      >
+        {value}
+      </span>
     </div>
   )
 }

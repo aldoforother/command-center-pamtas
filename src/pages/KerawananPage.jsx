@@ -2,9 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAllKerawanan, usePos } from '../hooks/useSupabase'
 import { KERAWANAN_CATEGORIES, getKategoriPoin } from '../constants/kerawananCategories'
-import { KerawananBadge } from '../components/ui/Badge'
-import { LoadingSpinner } from '../components/ui/LoadingSpinner'
-import { EmptyState } from '../components/ui/EmptyState'
+import { KerawananBadge, LoadingSpinner, EmptyState } from '../components/ui'
 import { formatDate } from '../utils/formatDate'
 
 // Sort options
@@ -14,6 +12,9 @@ const SORT_OPTIONS = [
   { value: 'ancaman_tinggi', label: 'Ancaman Tertinggi' },
   { value: 'ancaman_rendah', label: 'Ancaman Terendah' },
 ]
+
+/* ── Animation stagger helper ───────────────────────────── */
+const getStaggerDelay = (index) => Math.min(index * 20, 200)
 
 export default function KerawananPage() {
   const navigate = useNavigate()
@@ -73,23 +74,23 @@ export default function KerawananPage() {
   const hasFilter = filterStatus !== 'all' || filterKategori !== 'all' || filterPos !== 'all' || search || rentang !== 'all'
 
   return (
-    <div className="flex flex-col h-full fade-in">
+    <div className="flex flex-col h-full animate-fade-in">
 
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="flex-shrink-0 px-4 py-3"
-        style={{ background: 'rgba(4,11,6,0.9)', borderBottom: '1px solid rgba(0,255,136,0.15)' }}>
+        style={{ background: 'var(--surface-primary)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 className="text-[rgba(200,214,229,0.85)] font-bold text-sm uppercase tracking-widest">
+            <h2 className="font-bold text-sm uppercase tracking-widest" style={{ color: 'var(--color-danger)' }}>
               ⚠ Data Insiden
             </h2>
-            <p className="text-[rgba(200,214,229,0.3)] text-[10px] mt-0.5">
+            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
               Agregasi seluruh laporan insiden — semua pos
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <StatChip label="Total" value={(kerawanan || []).length} color="#00ff88" />
-            <StatChip label="Aktif" value={aktifCount} color={aktifCount > 0 ? '#ff3333' : '#00ff88'} pulse={aktifCount > 0} />
+            <StatChip label="Total" value={(kerawanan || []).length} color="var(--accent-primary)" />
+            <StatChip label="Aktif" value={aktifCount} color={aktifCount > 0 ? 'var(--color-danger)' : 'var(--accent-primary)'} pulse={aktifCount > 0} />
           </div>
         </div>
 
@@ -156,47 +157,60 @@ export default function KerawananPage() {
             <p className="hud-label mb-2">{filtered.length} laporan ditampilkan</p>
             {filtered.map((item, i) => {
               const cat = KERAWANAN_CATEGORIES.find(c => c.id === item.kategori)
-              const color = cat?.color || '#888'
+              const color = cat?.color || 'var(--accent-primary)'
               const poin = cat?.poin || 0
               const isAktif = item.status?.toLowerCase() === 'aktif'
               return (
                 <div
                   key={item.id || i}
-                  className="hud-panel px-3 py-2.5 flex items-start gap-3 cursor-pointer hover:border-[rgba(0,255,136,0.3)] transition-colors"
-                  style={{ borderLeftColor: isAktif ? '#ff3333' : 'rgba(0,255,136,0.2)', borderLeftWidth: '2px' }}
+                  className="hud-panel px-3 py-2.5 flex items-start gap-3 cursor-pointer transition-all animate-fade-in"
+                  style={{
+                    borderLeftColor: isAktif ? 'var(--color-danger)' : 'var(--accent-primary)',
+                    borderLeftWidth: '2px',
+                    animationDelay: `${getStaggerDelay(i)}ms`,
+                  }}
                   onClick={() => navigate(`/pos/${item.pos_id}/kerawanan`)}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = 'var(--surface-secondary)'
+                    e.currentTarget.style.borderColor = 'var(--border-default)'
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = 'var(--surface-primary)'
+                    e.currentTarget.style.borderColor = 'var(--border-subtle)'
+                  }}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center flex-wrap gap-2 mb-1">
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm border tracking-wider uppercase ${
-                        isAktif
-                          ? 'text-[#ff3333] border-[rgba(255,51,51,0.3)] bg-[rgba(255,51,51,0.08)]'
-                          : 'text-[rgba(0,255,136,0.5)] border-[rgba(0,255,136,0.2)] bg-[rgba(0,255,136,0.05)]'
-                      }`}>
-                        {isAktif && <span className="inline-block w-1 h-1 rounded-full bg-[#ff3333] animate-pulse mr-1" />}
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-sm border tracking-wider uppercase"
+                        style={isAktif
+                          ? { color: 'var(--color-danger)', borderColor: 'var(--color-danger-subtle)', backgroundColor: 'var(--color-danger-subtle)' }
+                          : { color: 'var(--accent-primary)', borderColor: 'var(--accent-muted)', backgroundColor: 'rgba(0,255,136,0.05)' }}>
+                        {isAktif && <span className="inline-block w-1 h-1 rounded-full animate-pulse mr-1" style={{ background: 'var(--color-danger)', boxShadow: '0 0 4px var(--color-danger)' }} />}
                         {item.status}
                       </span>
                       <KerawananBadge kategori={item.kategori} />
                       {/* Threat score badge */}
                       {poin > 0 && (
                         <span className="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded-sm border"
-                          style={{ color: poin >= 5 ? '#ff3333' : poin >= 3 ? '#ffaa00' : 'rgba(200,214,229,0.4)',
-                            borderColor: poin >= 5 ? 'rgba(255,51,51,0.25)' : poin >= 3 ? 'rgba(255,170,0,0.25)' : 'rgba(200,214,229,0.1)',
-                            background: poin >= 5 ? 'rgba(255,51,51,0.06)' : poin >= 3 ? 'rgba(255,170,0,0.06)' : 'transparent' }}>
+                          style={{
+                            color: poin >= 5 ? 'var(--color-danger)' : poin >= 3 ? 'var(--color-warning)' : 'var(--text-tertiary)',
+                            borderColor: poin >= 5 ? 'var(--color-danger-subtle)' : poin >= 3 ? 'var(--color-warning-subtle)' : 'var(--border-subtle)',
+                            background: poin >= 5 ? 'var(--color-danger-subtle)' : poin >= 3 ? 'var(--color-warning-subtle)' : 'transparent'
+                          }}>
                           ▲{poin}
                         </span>
                       )}
-                      <span className="text-[rgba(0,255,136,0.6)] text-[10px] font-mono font-bold">{posMap[item.pos_id] || item.pos_id}</span>
-                      <span className="text-[rgba(200,214,229,0.3)] text-[10px] font-mono">{formatDate(item.tanggal)}</span>
+                      <span className="text-[10px] font-mono font-bold" style={{ color: 'var(--accent-primary)' }}>{posMap[item.pos_id] || item.pos_id}</span>
+                      <span className="text-[10px] font-mono" style={{ color: 'var(--text-tertiary)' }}>{formatDate(item.tanggal)}</span>
                     </div>
-                    <p className="text-[rgba(200,214,229,0.6)] text-xs truncate">{item.deskripsi}</p>
+                    <p className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>{item.deskripsi}</p>
                     {item.tindak_lanjut && (
-                      <p className="text-[rgba(200,214,229,0.3)] text-[10px] mt-0.5 truncate">
+                      <p className="text-[10px] mt-0.5 truncate" style={{ color: 'var(--text-tertiary)' }}>
                         TL: {item.tindak_lanjut}
                       </p>
                     )}
                   </div>
-                  <span className="text-[rgba(0,255,136,0.3)] text-[10px] flex-shrink-0">→</span>
+                  <span className="text-[10px] flex-shrink-0" style={{ color: 'var(--accent-primary)' }}>→</span>
                 </div>
               )
             })}

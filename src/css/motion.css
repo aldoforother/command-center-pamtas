@@ -1,0 +1,509 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOTION UTILITIES — Command Center PAMTAS
+   Comprehensive motion system following Motion Bible
+   Version: 1.0 | Based on: MOTION-BIBLE.md
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MOTION TOKENS (already defined in index.css)
+   These are referenced here for documentation:
+
+   --duration-instant: 50ms   (toggles, checkboxes)
+   --duration-fast: 100ms     (micro-interactions)
+   --duration-normal: 150ms    (standard transitions)
+   --duration-smooth: 200ms   (component transitions)
+   --duration-slow: 300ms     (dramatic reveals)
+   --duration-page: 400ms      (navigation transitions)
+
+   --ease-out: cubic-bezier(0.16, 1, 0.3, 1)      (enter, hover)
+   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1)   (breathing, pulse)
+   --ease-linear: linear                           (loaders, progress)
+   --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1) (celebration)
+   --ease-sharp: cubic-bezier(0.7, 0, 0.84, 0)     (exit, close)
+   --ease-elastic: cubic-bezier(0.68, -0.6, 0.32, 1.6) (attention)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   1. ENTRANCE ANIMATIONS
+   Purpose: Elements appearing on screen
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Fade in — universal entrance */
+@keyframes motion-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Slide up — elements entering from below */
+@keyframes motion-slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Slide down — elements entering from above */
+@keyframes motion-slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Slide left — elements entering from right */
+@keyframes motion-slide-left {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Slide right — elements entering from left */
+@keyframes motion-slide-right {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Scale in — modal, dropdown, popover */
+@keyframes motion-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Scale out — modal, dropdown closing */
+@keyframes motion-scale-out {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.95); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   2. EXIT ANIMATIONS
+   Purpose: Elements leaving screen
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Fade out — universal exit */
+@keyframes motion-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* Slide out up — elements leaving upward */
+@keyframes motion-slide-out-up {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-8px); }
+}
+
+/* Slide out down — elements leaving downward */
+@keyframes motion-slide-out-down {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(8px); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   3. CONTINUOUS ANIMATIONS
+   Purpose: Looping animations for status indicators
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Pulse — status indicators */
+@keyframes motion-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(0.92); }
+}
+
+/* Pulse danger — active threats */
+@keyframes motion-pulse-danger {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 59, 59, 0.4); }
+  50%       { opacity: 0.8; box-shadow: 0 0 0 6px rgba(255, 59, 59, 0); }
+}
+
+/* Spin — loading spinners */
+@keyframes motion-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Shimmer — skeleton loaders */
+@keyframes motion-shimmer {
+  0%   { opacity: 0.4; }
+  50%  { opacity: 0.7; }
+  100% { opacity: 0.4; }
+}
+
+/* Breathe — subtle ambient effect */
+@keyframes motion-breathe {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; }
+}
+
+/* Scanline — HUD effect */
+@keyframes motion-scanline {
+  0%   { top: -2%; }
+  100% { top: 102%; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   4. INTERACTION ANIMATIONS
+   Purpose: Hover, focus, press states
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Press feedback — button press */
+@keyframes motion-press {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+
+/* Hover lift — cards, panels */
+@keyframes motion-hover-lift {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-2px); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   5. ATTENTION ANIMATIONS
+   Purpose: Drawing user attention
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Bounce — celebration, success */
+@keyframes motion-bounce {
+  0%, 100% { transform: translateY(0); }
+  25%       { transform: translateY(-4px); }
+  75%       { transform: translateY(0); }
+}
+
+/* Shake — error, warning */
+@keyframes motion-shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-4px); }
+  40%       { transform: translateX(4px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+
+/* Flash — success confirmation */
+@keyframes motion-flash {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   6. UTILITY CLASSES
+   Purpose: Ready-to-use animation classes
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Entrance utilities ── */
+.motion-fade-in        { animation: motion-fade-in var(--duration-smooth) var(--ease-out) both; }
+.motion-slide-up       { animation: motion-slide-up var(--duration-smooth) var(--ease-out) both; }
+.motion-slide-down     { animation: motion-slide-down var(--duration-smooth) var(--ease-out) both; }
+.motion-slide-left     { animation: motion-slide-left var(--duration-slow) var(--ease-out) both; }
+.motion-slide-right    { animation: motion-slide-right var(--duration-slow) var(--ease-out) both; }
+.motion-scale-in       { animation: motion-scale-in var(--duration-normal) var(--ease-out) both; }
+.motion-scale-out      { animation: motion-scale-out var(--duration-fast) var(--ease-sharp) both; }
+
+/* ── Continuous utilities ── */
+.motion-pulse          { animation: motion-pulse 2s var(--ease-in-out) infinite; }
+.motion-pulse-danger   { animation: motion-pulse-danger 1.5s var(--ease-in-out) infinite; }
+.motion-spin           { animation: motion-spin 600ms var(--ease-linear) infinite; }
+.motion-shimmer        { animation: motion-shimmer 1.5s var(--ease-in-out) infinite; }
+.motion-breathe        { animation: motion-breathe 3s var(--ease-in-out) infinite; }
+.motion-scanline       { animation: motion-scanline 4s var(--ease-linear) infinite; }
+
+/* ── Interaction utilities ── */
+.motion-press          { animation: motion-press 150ms var(--ease-out); }
+.motion-hover-lift     { transition: transform var(--duration-fast) var(--ease-out); }
+.motion-hover-lift:hover { transform: translateY(-2px); }
+
+/* ── Attention utilities ── */
+.motion-bounce         { animation: motion-bounce 400ms var(--ease-bounce); }
+.motion-shake          { animation: motion-shake 300ms var(--ease-out); }
+.motion-flash          { animation: motion-flash 300ms var(--ease-out); }
+
+/* ── Duration modifiers ── */
+.motion-duration-instant { animation-duration: var(--duration-instant); }
+.motion-duration-fast     { animation-duration: var(--duration-fast); }
+.motion-duration-normal   { animation-duration: var(--duration-normal); }
+.motion-duration-smooth   { animation-duration: var(--duration-smooth); }
+.motion-duration-slow     { animation-duration: var(--duration-slow); }
+.motion-duration-page     { animation-duration: var(--duration-page); }
+
+/* ── Easing modifiers ── */
+.motion-ease-out       { animation-timing-function: var(--ease-out); }
+.motion-ease-in-out    { animation-timing-function: var(--ease-in-out); }
+.motion-ease-linear    { animation-timing-function: var(--ease-linear); }
+.motion-ease-bounce    { animation-timing-function: var(--ease-bounce); }
+.motion-ease-sharp     { animation-timing-function: var(--ease-sharp); }
+
+/* ── Stagger delay utilities ── */
+.motion-delay-0   { animation-delay: 0ms; }
+.motion-delay-1   { animation-delay: 50ms; }
+.motion-delay-2   { animation-delay: 100ms; }
+.motion-delay-3   { animation-delay: 150ms; }
+.motion-delay-4   { animation-delay: 200ms; }
+.motion-delay-5   { animation-delay: 250ms; }
+.motion-delay-6   { animation-delay: 300ms; }
+.motion-delay-7   { animation-delay: 350ms; }
+.motion-delay-8   { animation-delay: 400ms; }
+
+/* ── Fill mode ── */
+.motion-fill-backwards { animation-fill-mode: backwards; }
+.motion-fill-forwards  { animation-fill-mode: forwards; }
+.motion-fill-both      { animation-fill-mode: both; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   7. TRANSITION UTILITIES
+   Purpose: CSS transition shortcuts for hover/focus states
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Standard transitions ── */
+.motion-transition-all    { transition: all var(--duration-fast) var(--ease-out); }
+.motion-transition-colors { transition: background-color var(--duration-fast) var(--ease-out),
+                                       border-color var(--duration-fast) var(--ease-out),
+                                       color var(--duration-fast) var(--ease-out); }
+.motion-transition-opacity { transition: opacity var(--duration-fast) var(--ease-out); }
+.motion-transition-transform { transition: transform var(--duration-fast) var(--ease-out); }
+.motion-transition-shadow { transition: box-shadow var(--duration-fast) var(--ease-out); }
+
+/* ── Extended transitions ── */
+.motion-transition-smooth { transition: all var(--duration-smooth) var(--ease-out); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   8. COMPONENT-SPECIFIC MOTION
+   Purpose: Pre-defined motion for common components
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Button motion ── */
+.motion-btn {
+  transition: all var(--duration-fast) var(--ease-out);
+}
+.motion-btn:hover {
+  background: rgba(0, 255, 136, 0.18);
+  border-color: rgba(0, 255, 136, 0.7);
+  box-shadow: var(--accent-glow);
+}
+.motion-btn:active {
+  transform: scale(0.98);
+  background: rgba(0, 255, 136, 0.25);
+}
+.motion-btn:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* ── Card motion ── */
+.motion-card {
+  transition: all var(--duration-fast) var(--ease-out);
+}
+.motion-card:hover {
+  background: var(--surface-secondary);
+  border-color: var(--border-default);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+/* ── Table row motion ── */
+.motion-table-row {
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+.motion-table-row:hover {
+  background: var(--surface-secondary);
+}
+
+/* ── Input motion ── */
+.motion-input {
+  transition: border-color var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
+}
+.motion-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.1);
+}
+
+/* ── Link motion ── */
+.motion-link {
+  transition: color var(--duration-fast) var(--ease-out);
+}
+.motion-link:hover {
+  color: var(--accent-primary);
+}
+
+/* ── Nav item motion ── */
+.motion-nav-item {
+  transition: all var(--duration-fast) var(--ease-out);
+}
+.motion-nav-item:hover {
+  background: var(--hover-surface);
+  color: var(--text-primary);
+}
+.motion-nav-item.active {
+  background: var(--accent-muted);
+  color: var(--accent-primary);
+  border-left: 2px solid var(--accent-primary);
+}
+
+/* ── Modal overlay ── */
+.motion-modal-overlay {
+  animation: motion-fade-in var(--duration-smooth) var(--ease-out) both;
+}
+.motion-modal-content {
+  animation: motion-scale-in var(--duration-normal) var(--ease-out) both;
+}
+
+/* ── Toast ── */
+.motion-toast-enter {
+  animation: motion-slide-up var(--duration-smooth) var(--ease-out) both;
+}
+.motion-toast-exit {
+  animation: motion-fade-out var(--duration-fast) var(--ease-sharp) both;
+}
+
+/* ── Dropdown ── */
+.motion-dropdown-menu {
+  animation: motion-scale-in var(--duration-fast) var(--ease-out) both;
+  transform-origin: top center;
+}
+
+/* ── Tooltip ── */
+.motion-tooltip {
+  animation: motion-fade-in var(--duration-fast) var(--ease-out) both;
+}
+
+/* ── Skeleton shimmer ── */
+.motion-skeleton {
+  animation: motion-shimmer 1.5s var(--ease-in-out) infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   9. REDUCED MOTION
+   Respect user preference for reduced motion
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Keep essential indicators that don't cause motion sickness */
+  .motion-pulse,
+  .motion-spin,
+  .motion-shimmer {
+    animation: none !important;
+  }
+
+  /* Keep focus indicators visible */
+  :focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+  }
+
+  /* Keep status indicators visible */
+  .status-dot {
+    animation: none !important;
+  }
+
+  /* Keep loading spinners (but not animation) */
+  .motion-spin {
+    opacity: 0.7;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   10. PERFORMANCE OPTIMIZATION
+   Use transform and opacity only for GPU acceleration
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* GPU-accelerated properties only in animations */
+.motion-gpu {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Reduce paint areas */
+.motion-reduce-paint {
+  transform: translateZ(0);
+  contain: layout style paint;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   11. LEGACY COMPATIBILITY
+   Map existing classes to new motion system
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Existing animate classes → motion classes */
+.animate-fade-in      { animation: motion-fade-in var(--duration-smooth) var(--ease-out) both; }
+.animate-slide-in-left  { animation: motion-slide-left var(--duration-slow) var(--ease-out) both; }
+.animate-slide-in-right { animation: motion-slide-right var(--duration-slow) var(--ease-out) both; }
+.animate-slide-up      { animation: motion-slide-up var(--duration-smooth) var(--ease-out) both; }
+.animate-scale-in      { animation: motion-scale-in var(--duration-normal) var(--ease-out) both; }
+.fade-in              { animation: motion-fade-in var(--duration-smooth) var(--ease-out) both; }
+
+/* Existing animation keyframes (kept for backward compatibility) */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.85); }
+}
+
+@keyframes markerPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(0.9); }
+}
+
+@keyframes markerPulseDanger {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 59, 59, 0.4); }
+  50%       { opacity: 0.8; box-shadow: 0 0 0 6px rgba(255, 59, 59, 0); }
+}
+
+@keyframes dangerPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0.3); }
+  50%       { box-shadow: 0 0 0 5px rgba(255, 51, 51, 0); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes scanline {
+  0%   { top: -2%; }
+  100% { top: 102%; }
+}
+
+/* Map legacy classes */
+.map-popup-enter { animation: scaleIn var(--duration-smooth) var(--ease-out) both; }
+.map-marker-pulse { animation: markerPulse 2s var(--ease-in-out) infinite; }
+.map-marker-pulse-danger { animation: markerPulseDanger 1.5s var(--ease-in-out) infinite; }
+.danger-pulse { animation: dangerPulse 1.5s var(--ease-in-out) infinite; }
+.animate-spin { animation: spin 600ms var(--ease-linear) infinite; }
+.animate-pulse { animation: statusPulse 2s var(--ease-in-out) infinite; }
+.hud-scanline::after { animation: scanline 4s var(--ease-linear) infinite; }
+
+/* Existing stagger classes */
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+.stagger-5 { animation-delay: 250ms; }

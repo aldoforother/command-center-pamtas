@@ -2,8 +2,7 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAllBinter, usePos } from '../hooks/useSupabase'
 import { BINTER_TYPES, BINTER_COLOR_MAP } from '../constants/kerawananCategories'
-import { LoadingSpinner } from '../components/ui/LoadingSpinner'
-import { EmptyState } from '../components/ui/EmptyState'
+import { LoadingSpinner, EmptyState } from '../components/ui'
 import { formatDate } from '../utils/formatDate'
 import { downloadBinterPDF, downloadBinterListPDF } from '../utils/generatePDF'
 
@@ -17,6 +16,9 @@ function getColor(jenis) {
   }
   return 'rgba(200,214,229,0.5)'
 }
+
+/* ── Stagger helper ─────────────────────────────────────── */
+const getStaggerDelay = (index) => Math.min(index * 50, 300)
 
 /* ── Timeline filter options ───────────────────────────────── */
 const TIMELINE_OPTIONS = [
@@ -98,23 +100,23 @@ export default function BinterPage() {
   }
 
   return (
-    <div className="flex flex-col h-full fade-in">
+    <div className="flex flex-col h-full animate-fade-in">
 
       {/* ── Header ──────────────────────────────────────── */}
       <div className="flex-shrink-0 px-4 py-3"
-        style={{ background: 'rgba(4,11,6,0.9)', borderBottom: '1px solid rgba(0,255,136,0.15)' }}>
+        style={{ background: 'var(--surface-primary)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 className="text-[rgba(200,214,229,0.85)] font-bold text-sm uppercase tracking-widest">
+            <h2 className="font-bold text-sm uppercase tracking-widest" style={{ color: 'var(--color-info)' }}>
               ◫ Program Binter
             </h2>
-            <p className="text-[rgba(200,214,229,0.3)] text-[10px] mt-0.5">
+            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
               Pembinaan Teritorial — aggregasi semua pos
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <StatChip label="Total"   value={(binter || []).length}  color="#4488ff" />
-            <StatChip label="Filter"   value={filtered.length}       color="#00ff88" />
+            <StatChip label="Total"   value={(binter || []).length}  color="var(--color-info)" />
+            <StatChip label="Filter"   value={filtered.length}       color="var(--accent-primary)" />
           </div>
         </div>
 
@@ -196,14 +198,27 @@ export default function BinterPage() {
                 return (
                   <div
                     key={item.id || i}
-                    className="hud-panel px-3 py-2.5 flex items-start gap-3 cursor-pointer transition-all"
+                    className="hud-panel px-3 py-2.5 flex items-start gap-3 cursor-pointer transition-all animate-fade-in"
                     style={{
                       borderLeftColor: color,
                       borderLeftWidth: '2px',
-                      background: isSelected ? 'rgba(68,136,255,0.08)' : undefined,
-                      borderColor:  isSelected ? 'rgba(68,136,255,0.4)' : undefined,
+                      background: isSelected ? 'var(--accent-muted)' : 'var(--surface-primary)',
+                      borderColor:  isSelected ? 'var(--accent-primary)' : 'var(--border-subtle)',
+                      animationDelay: `${getStaggerDelay(i)}ms`,
                     }}
                     onClick={() => setSelectedItem(item)}
+                    onMouseEnter={e => {
+                      if (!isSelected) {
+                        e.currentTarget.style.background = 'var(--surface-secondary)'
+                        e.currentTarget.style.borderColor = 'var(--border-default)'
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (!isSelected) {
+                        e.currentTarget.style.background = 'var(--surface-primary)'
+                        e.currentTarget.style.borderColor = 'var(--border-subtle)'
+                      }
+                    }}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center flex-wrap gap-2 mb-1">
@@ -213,23 +228,23 @@ export default function BinterPage() {
                         >
                           {item.jenis_kegiatan || 'Kegiatan'}
                         </span>
-                        <span className="text-[rgba(0,255,136,0.6)] text-[10px] font-mono font-bold">
+                        <span className="text-[10px] font-mono font-bold" style={{ color: 'var(--accent-primary)' }}>
                           {posMap[item.pos_id] || item.pos_id}
                         </span>
-                        <span className="text-[rgba(200,214,229,0.3)] text-[10px] font-mono">
+                        <span className="text-[10px] font-mono" style={{ color: 'var(--text-tertiary)' }}>
                           {formatDate(item.tanggal)}
                         </span>
                         {item.jumlah_peserta && (
-                          <span className="text-[rgba(200,214,229,0.35)] text-[10px]">
+                          <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
                             {item.jumlah_peserta} peserta
                           </span>
                         )}
                       </div>
-                      <p className="text-[rgba(200,214,229,0.55)] text-xs truncate">
+                      <p className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>
                         {item.lokasi || '—'}{item.sasaran ? ` · ${item.sasaran}` : ''}
                       </p>
                     </div>
-                    <span className="text-[rgba(0,255,136,0.3)] text-[10px] flex-shrink-0">
+                    <span className="text-[10px] flex-shrink-0 transition-all" style={{ color: 'var(--accent-primary)' }}>
                       {isSelected ? '◀' : '▶'}
                     </span>
                   </div>
@@ -241,7 +256,8 @@ export default function BinterPage() {
 
         {/* Detail panel */}
         {selectedItem && (
-          <div className="w-1/2 border-l border-[rgba(68,136,255,0.15)] overflow-y-auto">
+          <div className="w-1/2 border-l overflow-y-auto animate-slide-in-right"
+            style={{ borderColor: 'var(--border-subtle)', background: 'var(--surface-base)' }}>
             <BinterDetail
               item={selectedItem}
               posName={selectedPosName}
@@ -270,42 +286,53 @@ function BinterDetail({ item, posName, onClose, onNavigate }) {
   ]
 
   return (
-    <div className="flex flex-col h-full fade-in">
+    <div className="flex flex-col h-full animate-fade-in">
       {/* Header */}
-      <div className="flex-shrink-0 px-4 py-3 flex items-center justify-between"
-        style={{ background: `${color}08`, borderBottom: `1px solid ${color}25` }}>
+      <div className="flex-shrink-0 px-4 py-3 flex items-center justify-between animate-scale-in"
+        style={{ background: 'var(--accent-muted)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div>
           <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-sm border"
-              style={{ color, borderColor: `${color}40`, background: `${color}10` }}>
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-sm border animate-fade-in"
+              style={{ color: 'var(--color-info)', borderColor: 'var(--color-info-subtle)', background: 'var(--color-info-subtle)', animationDelay: '50ms' }}>
               {item.jenis_kegiatan || 'Kegiatan'}
             </span>
           </div>
-          <p className="text-[rgba(200,214,229,0.7)] text-[11px] font-bold">Detail Kegiatan Binter</p>
+          <p className="text-[11px] font-bold animate-fade-in" style={{ color: 'var(--text-secondary)', animationDelay: '100ms' }}>Detail Kegiatan Binter</p>
         </div>
         <button
           onClick={onClose}
-          className="text-[rgba(200,214,229,0.3)] hover:text-[rgba(200,214,229,0.7)] text-lg leading-none transition-colors"
+          className="text-[10px] leading-none transition-all duration-100 p-1 rounded-sm"
+          style={{ color: 'var(--text-tertiary)', background: 'transparent' }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'var(--surface-secondary)'
+            e.currentTarget.style.color = 'var(--text-primary)'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'transparent'
+            e.currentTarget.style.color = 'var(--text-tertiary)'
+          }}
+          aria-label="Tutup panel"
         >×</button>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        <div className="rounded-sm overflow-hidden"
-          style={{ border: '1px solid rgba(68,136,255,0.15)' }}>
+        <div className="rounded-sm overflow-hidden animate-scale-in"
+          style={{ border: '1px solid var(--border-subtle)', background: 'var(--surface-primary)', animationDelay: '100ms' }}>
           <div className="px-3 py-1.5"
-            style={{ background: 'rgba(68,136,255,0.04)', borderBottom: '1px solid rgba(68,136,255,0.1)' }}>
-            <span className="text-[9px] font-bold tracking-[0.2em] uppercase text-[rgba(68,136,255,0.7)]">
+            style={{ background: 'var(--surface-secondary)', borderBottom: '1px solid var(--border-subtle)' }}>
+            <span className="text-[9px] font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--color-info)' }}>
               INFORMASI KEGIATAN
             </span>
           </div>
-          <div className="divide-y divide-[rgba(68,136,255,0.06)]">
-            {rows.map(row => (
-              <div key={row.label} className={`px-3 py-2 ${row.fullRow ? 'block' : 'flex items-start gap-3'}`}>
+          <div className="divide-y" style={{ borderColor: 'var(--border-subtle)' }}>
+            {rows.map((row, idx) => (
+              <div key={row.label} className={`px-3 py-2 animate-fade-in ${row.fullRow ? 'block' : 'flex items-start gap-3'}`}
+                style={{ animationDelay: `${150 + idx * 30}ms` }}>
                 <span className="text-[9px] uppercase tracking-wider flex-shrink-0 w-28"
-                  style={{ color: 'rgba(200,214,229,0.35)' }}>{row.label}</span>
-                <span className={`text-[11px] font-medium text-[rgba(200,214,229,0.8)]
-                  ${row.fullRow ? 'block mt-1 leading-relaxed' : 'flex-1'}`}>
+                  style={{ color: 'var(--text-tertiary)' }}>{row.label}</span>
+                <span className={`text-[11px] font-medium ${row.fullRow ? 'block mt-1 leading-relaxed' : 'flex-1'}`}
+                  style={{ color: 'var(--text-secondary)' }}>
                   {row.value || '—'}
                 </span>
               </div>
@@ -316,7 +343,8 @@ function BinterDetail({ item, posName, onClose, onNavigate }) {
         {/* Navigate to pos */}
         <button
           onClick={onNavigate}
-          className="w-full hud-btn text-[10px] flex items-center justify-center gap-2"
+          className="w-full hud-btn text-[10px] flex items-center justify-center gap-2 animate-scale-in"
+          style={{ animationDelay: '300ms' }}
         >
           <span>Buka Tab Binter Pos {posName}</span>
           <span>→</span>

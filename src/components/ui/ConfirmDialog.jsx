@@ -1,27 +1,34 @@
+import { createContext, useCallback, useContext, useRef, useState, useEffect } from 'react'
+
 /**
- * ConfirmDialog — pengganti window.confirm() yang proper.
- * Non-blocking, stylish sesuai tema militer, bisa di-test.
+ * ConfirmDialog — Confirmation dialog with promise-based API
  *
- * Cara pakai:
- *   const { confirm } = useConfirm()
- *   const ok = await confirm('Hapus tokoh ini?', { type: 'danger' })
- *   if (ok) { ... lakukan aksi ... }
+ * Design System Foundation v2.0
+ * Motion Bible Compliance:
+ * - Enter: scale-in 150ms ease-out
+ * - Overlay: fade-in 200ms ease-out
+ * - Exit: fade-out 150ms ease-sharp
+ *
+ * Features:
+ * - Promise-based API
+ * - 3 types: danger, warning, default
+ * - ESC to cancel, Enter to confirm
+ * - Focus management
+ * - Full ARIA support
  */
 
-import { createContext, useCallback, useContext, useRef, useState } from 'react'
-
-// ─── Context ──────────────────────────────────────────────────────────────────
-
+// Context
 const ConfirmContext = createContext(null)
 
 export function ConfirmProvider({ children }) {
   const [dialog, setDialog] = useState(null) // { message, type, title, resolve }
   const resolveRef = useRef(null)
 
-  const confirm = useCallback((message, { title, type = 'default' } = {}) => {
+  const confirm = useCallback((message, options = {}) => {
+    const { title, type = 'default', cancelLabel = 'Batal', confirmLabel } = options
     return new Promise((resolve) => {
       resolveRef.current = resolve
-      setDialog({ message, title, type })
+      setDialog({ message, title, type, cancelLabel, confirmLabel })
     })
   }, [])
 
@@ -51,41 +58,82 @@ export function useConfirm() {
   return ctx
 }
 
-// ─── Styles per tipe ─────────────────────────────────────────────────────────
-
+// Dialog styles per type
 const TYPE_STYLES = {
   danger: {
-    accent: '#ff4444',
+    accent: 'var(--color-danger)',
+    bg: 'var(--color-danger-subtle)',
     confirmLabel: 'Hapus',
-    confirmBg: 'rgba(255,60,60,0.15)',
-    confirmBorder: 'rgba(255,60,60,0.5)',
-    icon: '⚠',
+    icon: 'danger',
   },
   warning: {
-    accent: '#ffaa00',
+    accent: 'var(--color-warning)',
+    bg: 'var(--color-warning-subtle)',
     confirmLabel: 'Lanjutkan',
-    confirmBg: 'rgba(255,170,0,0.12)',
-    confirmBorder: 'rgba(255,170,0,0.45)',
-    icon: '⚠',
+    icon: 'warning',
   },
   default: {
-    accent: '#00ff88',
+    accent: 'var(--accent-primary)',
+    bg: 'var(--accent-muted)',
     confirmLabel: 'Konfirmasi',
-    confirmBg: 'rgba(0,255,136,0.1)',
-    confirmBorder: 'rgba(0,255,136,0.4)',
-    icon: '?',
+    icon: 'question',
   },
 }
 
-// ─── Dialog UI ────────────────────────────────────────────────────────────────
+// Icons
+const Icons = {
+  danger: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+  ),
+  warning: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+  ),
+  question: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 3 1.343-1 3-1.343-1-3-1.343-2.21 0-3.772-2-3.772-2M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" />
+    </svg>
+  ),
+}
 
+// Dialog UI
 function ConfirmDialogUI({ dialog, onConfirm, onCancel }) {
+  const [isExiting, setIsExiting] = useState(false)
+  const contentRef = useRef(null)
+  const cancelButtonRef = useRef(null)
+
   const s = TYPE_STYLES[dialog.type] || TYPE_STYLES.default
 
-  // Tutup dengan ESC
-  const handleKey = (e) => {
-    if (e.key === 'Escape') onCancel()
-    if (e.key === 'Enter') onConfirm()
+  // Handle keyboard
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === 'Escape') {
+        handleCancel()
+      }
+      if (e.key === 'Enter' && dialog.type !== 'danger') {
+        // Don't auto-confirm on Enter for dangerous actions
+        handleConfirm()
+      }
+    }
+
+    document.addEventListener('keydown', handleKey)
+    // Focus cancel button by default for safety
+    setTimeout(() => cancelButtonRef.current?.focus(), 50)
+
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [])
+
+  const handleCancel = () => {
+    setIsExiting(true)
+    setTimeout(onCancel, 150)
+  }
+
+  const handleConfirm = () => {
+    setIsExiting(true)
+    setTimeout(onConfirm, 150)
   }
 
   return (
@@ -93,108 +141,98 @@ function ConfirmDialogUI({ dialog, onConfirm, onCancel }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-title"
-      onKeyDown={handleKey}
+      className={`
+        fixed inset-0 z-[calc(var(--z-modal)+1)] flex items-center justify-center
+        transition-opacity duration-150
+        ${isExiting ? 'opacity-0' : 'opacity-100'}
+      `}
       style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 10000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'rgba(5,8,16,0.75)',
+        backgroundColor: 'var(--overlay-scrim)',
         backdropFilter: 'blur(4px)',
+        transitionTimingFunction: isExiting ? 'var(--ease-sharp)' : 'var(--ease-out)',
       }}
-      onClick={(e) => { if (e.target === e.currentTarget) onCancel() }}
+      onClick={(e) => { if (e.target === e.currentTarget) handleCancel() }}
     >
       <div
+        ref={contentRef}
+        className={`
+          w-full max-w-sm mx-4 p-5 rounded-sm
+          transition-all duration-150
+          ${isExiting ? 'scale-95 opacity-0' : 'scale-100 opacity-100 animate-scale-in'}
+        `}
         style={{
-          background: 'rgba(10,14,26,0.97)',
-          border: `1px solid ${s.accent}44`,
-          borderRadius: '4px',
-          padding: '1.5rem',
-          maxWidth: '340px',
-          width: '90%',
-          boxShadow: `0 0 40px rgba(0,0,0,0.6), 0 0 0 1px ${s.accent}22`,
-          animation: 'confirm-in 0.15s ease-out',
+          backgroundColor: 'var(--surface-tertiary)',
+          border: `1px solid ${s.accent}`,
+          boxShadow: 'var(--shadow-xl)',
+          transitionTimingFunction: isExiting ? 'var(--ease-sharp)' : 'var(--ease-out)',
         }}
       >
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-          <span style={{ color: s.accent, fontSize: '16px' }}>{s.icon}</span>
-          <span
+        <div
+          className="flex items-center gap-3 mb-4"
+          style={{ color: s.accent }}
+        >
+          <span className="flex-shrink-0">{Icons[s.icon]}</span>
+          <h3
             id="confirm-title"
-            style={{
-              color: s.accent,
-              fontSize: '10px',
-              fontWeight: 'bold',
-              letterSpacing: '0.15em',
-              textTransform: 'uppercase',
-              textShadow: `0 0 8px ${s.accent}66`,
-            }}
+            className="text-label-sm font-bold tracking-wider uppercase"
           >
             {dialog.title || 'Konfirmasi'}
-          </span>
+          </h3>
         </div>
 
         {/* Message */}
         <p
-          style={{
-            color: 'rgba(200,214,229,0.8)',
-            fontSize: '11px',
-            lineHeight: '1.6',
-            marginBottom: '1.25rem',
-          }}
+          className="text-body-sm leading-relaxed mb-5"
+          style={{ color: 'var(--text-secondary)' }}
         >
           {dialog.message}
         </p>
 
-        {/* Buttons */}
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+        {/* Actions */}
+        <div className="flex items-center justify-end gap-2">
           <button
-            onClick={onCancel}
-            autoFocus
+            ref={cancelButtonRef}
+            onClick={handleCancel}
+            className="px-4 py-2 rounded-sm text-label-sm font-semibold uppercase tracking-wider transition-all duration-100"
             style={{
-              padding: '0.4rem 0.9rem',
-              fontSize: '9px',
-              fontWeight: 'bold',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '3px',
-              color: 'rgba(200,214,229,0.55)',
-              cursor: 'pointer',
+              backgroundColor: 'var(--surface-secondary)',
+              border: '1px solid var(--border-default)',
+              color: 'var(--text-secondary)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--surface-tertiary)'
+              e.currentTarget.style.borderColor = 'var(--border-strong)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--surface-secondary)'
+              e.currentTarget.style.borderColor = 'var(--border-default)'
             }}
           >
-            Batal
+            {dialog.cancelLabel}
           </button>
+
           <button
-            onClick={onConfirm}
+            onClick={handleConfirm}
+            className="px-4 py-2 rounded-sm text-label-sm font-semibold uppercase tracking-wider transition-all duration-100"
             style={{
-              padding: '0.4rem 0.9rem',
-              fontSize: '9px',
-              fontWeight: 'bold',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              background: s.confirmBg,
-              border: `1px solid ${s.confirmBorder}`,
-              borderRadius: '3px',
+              backgroundColor: s.bg,
+              border: `1px solid ${s.accent}`,
               color: s.accent,
-              cursor: 'pointer',
-              textShadow: `0 0 6px ${s.accent}55`,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.opacity = '0.9'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.opacity = '1'
             }}
           >
-            {s.confirmLabel}
+            {dialog.confirmLabel || s.confirmLabel}
           </button>
         </div>
       </div>
-
-      <style>{`
-        @keyframes confirm-in {
-          from { opacity: 0; transform: scale(0.95); }
-          to   { opacity: 1; transform: scale(1); }
-        }
-      `}</style>
     </div>
   )
 }
+
+export default ConfirmProvider

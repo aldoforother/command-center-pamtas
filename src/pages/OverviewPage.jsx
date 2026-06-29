@@ -1,17 +1,34 @@
 import { useNavigate } from 'react-router-dom'
 import { PamtasMap } from '../components/map/PamtasMap'
-import { KerawananBadge } from '../components/ui/Badge'
+import { KerawananBadge } from '../components/ui'
 import { usePos, useSummary, useAllKerawanan, useAllBinter, useAutoRefresh } from '../hooks/useSupabase'
 import { formatDate } from '../utils/formatDate'
 import { useApp } from '../context/AppContext'
 import { BINTER_COLOR_MAP } from '../constants/kerawananCategories'
 
+/**
+ * OverviewPage — Premium Tactical Command Dashboard
+ *
+ * Design System Foundation v2.0
+ * Motion Bible Compliance:
+ * - Panel entrance: 300ms ease-out, staggered
+ * - Metric card: 200ms hover lift
+ * - Overlay panels: 150ms fade-in
+ *
+ * Features:
+ * - Fullscreen tactical map background
+ * - HUD-style metric cards
+ * - Threat panel with pulse alerts
+ * - Personnel status visualization
+ * - Intel situation summary
+ */
+
 function getBinterColor(jenis) {
-  if (!jenis) return '#4488ff'
+  if (!jenis) return 'var(--color-info)'
   for (const [key, val] of Object.entries(BINTER_COLOR_MAP)) {
     if (jenis.toLowerCase().includes(key.toLowerCase())) return val
   }
-  return '#4488ff'
+  return 'var(--color-info)'
 }
 
 export default function OverviewPage() {
@@ -22,7 +39,6 @@ export default function OverviewPage() {
   const { data: kerawanan, loading: kerawananLoading, refetch: refetchKerawanan } = useAllKerawanan()
   const { data: binter,    loading: binterLoading,    refetch: refetchBinter }    = useAllBinter()
 
-  // Auto-refresh setiap 5 menit
   useAutoRefresh([refetchPos, refetchSummary, refetchKerawanan, refetchBinter])
 
   const activeKerawanan = (kerawanan || []).filter(k => k.status?.toLowerCase() === 'aktif')
@@ -30,13 +46,11 @@ export default function OverviewPage() {
     .sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal))
     .slice(0, 5)
 
-  // Lookup pos_id → nama_pos dari posList GAS
   const posNameMap = (posList || []).reduce((acc, p) => {
     acc[p.pos_id] = p.nama_pos || p.pos_id
     return acc
   }, {})
 
-  // Ambil 1 ancaman per pos (pos berbeda), max 6
   const ancamanPerPos = []
   const seenPos = new Set()
   for (const item of activeKerawanan) {
@@ -50,11 +64,10 @@ export default function OverviewPage() {
   const posRawan     = [...new Set(activeKerawanan.map(k => k.pos_id))].length
   const totalPos     = (posList || []).length || 17
   const posAman      = totalPos - posRawan
-  // Hitung total personel dari posList (field jumlah_personel sudah dinormalisasi dari kuat_pers)
   const totalPersonel = (posList || []).reduce((s, p) => s + (Number(p.jumlah_personel) || 0), 0)
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-[#050810]">
+    <div className="relative w-full h-full overflow-hidden" style={{ background: 'var(--surface-base)' }}>
 
       {/* ══ MAP — fullscreen background ══ */}
       <div className="absolute inset-0 z-0">
@@ -66,114 +79,114 @@ export default function OverviewPage() {
       </div>
 
       {/* Grid texture overlay */}
-      <div className="absolute inset-0 z-[1] pointer-events-none"
+      <div className="absolute inset-0 z-[1] pointer-events-none animate-fade-in"
         style={{
           backgroundImage: `
-            linear-gradient(rgba(0,255,136,0.025) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0,255,136,0.025) 1px, transparent 1px)
+            linear-gradient(var(--border-subtle) 1px, transparent 1px),
+            linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px)
           `,
           backgroundSize: '60px 60px',
         }}
       />
 
-      {/* ══ TOP ROW — metric cards aligned with panel outer boundaries ══ */}
+      {/* ══ TOP ROW — Premium metric cards ══ */}
       <div className="absolute left-2 right-2 z-[10] flex gap-2 pointer-events-none" style={{ top: '8px' }}>
         <MetricCard
           label="TOTAL PERSONEL"
           value={posLoading ? '—' : totalPersonel}
           unit="pax"
-          color="#00ff88"
-          icon="◫"
+          color="var(--accent-primary)"
+          icon="users"
         />
         <MetricCard
           label="TOTAL POS"
           value={posLoading ? '—' : (posList || []).length}
           unit="pos aktif"
-          color="#4488ff"
-          icon="◈"
+          color="var(--color-info)"
+          icon="map-pin"
         />
         <MetricCard
           label="TOTAL PENDUDUK"
           value={summaryLoading ? '—' : ((summary?.total_penduduk || 0)).toLocaleString('id-ID')}
           unit="jiwa"
-          color="#4488ff"
-          icon="◉"
+          color="var(--color-info)"
+          icon="population"
         />
         <MetricCard
           label="KEPALA KELUARGA"
           value={summaryLoading ? '—' : ((summary?.total_kk || 0)).toLocaleString('id-ID')}
           unit="KK"
-          color="#ffaa00"
-          icon="◈"
+          color="var(--color-warning)"
+          icon="family"
         />
         <MetricCard
           label="KERAWANAN AKTIF"
           value={kerawananLoading ? '—' : activeKerawanan.length}
           unit="kasus"
-          color={activeKerawanan.length > 0 ? '#ff3333' : '#00ff88'}
-          icon="⚠"
+          color={activeKerawanan.length > 0 ? 'var(--color-danger)' : 'var(--accent-primary)'}
+          icon="warning"
           danger={activeKerawanan.length > 0}
         />
         <MetricCard
           label="POS RAWAN"
           value={posRawan}
           unit={`dari ${totalPos} pos`}
-          color={posRawan > 0 ? '#ff8844' : '#00ff88'}
-          icon="◆"
+          color={posRawan > 0 ? 'var(--color-warning)' : 'var(--accent-primary)'}
+          icon="alert"
           danger={posRawan > 3}
         />
         <MetricCard
           label="KEGIATAN BINTER"
           value={(binter || []).length}
           unit="total kegiatan"
-          color="#bb88ff"
-          icon="★"
+          color="var(--color-purple)"
+          icon="binter"
         />
       </div>
 
       {/* ══ LEFT PANEL ══ */}
-      <div className="absolute left-2 z-[10] w-60 flex flex-col gap-2" style={{ top: 'calc(8px + 72px + 20px)', bottom: '36px' }}>
+      <div className="absolute left-2 z-[10] w-60 flex flex-col gap-2 animate-slide-in-left" style={{ top: 'calc(8px + 72px + 20px)', bottom: '36px' }}>
 
         {/* Ancaman aktif */}
-        <OverlayPanel title="⚠ ANCAMAN AKTIF" badge={activeKerawanan.length} badgeDanger>
-          <div className="space-y-1.5 max-h-48 overflow-y-auto pr-0.5">
+        <OverlayPanel
+          title="⚠ ANCAMAN AKTIF"
+          badge={activeKerawanan.length}
+          badgeDanger
+          onMore={() => navigate('/kerawanan')}
+        >
+          <div className="space-y-2 max-h-48 overflow-y-auto pr-0.5 scrollbar-thin">
             {activeKerawanan.length === 0 ? (
-              <div className="flex items-center gap-2 py-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#00ff88]"
-                  style={{ boxShadow: '0 0 6px rgba(0,255,136,0.8)' }} />
-                <span className="text-[10px] text-[rgba(0,255,136,0.7)] tracking-widest uppercase">
+              <div className="flex items-center gap-2 py-3">
+                <div className="w-2 h-2 rounded-full"
+                  style={{ background: 'var(--accent-primary)', boxShadow: '0 0 8px var(--accent-primary)' }} />
+                <span className="text-[10px] tracking-widest uppercase font-semibold"
+                  style={{ color: 'var(--accent-primary)' }}>
                   Kondisi Aman
                 </span>
               </div>
             ) : (
               ancamanPerPos.map(item => (
-                <div key={item.id}
-                  className="flex items-start gap-2 p-2 cursor-pointer transition-all rounded-sm"
-                  style={{ background: 'rgba(255,51,51,0.06)', border: '1px solid rgba(255,51,51,0.2)' }}
+                <ThreatCard
+                  key={item.id}
+                  item={item}
+                  posName={posNameMap[item.pos_id]}
                   onClick={() => navigate('/kerawanan')}
-                >
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#ff3333] mt-1.5 flex-shrink-0 animate-pulse"
-                    style={{ boxShadow: '0 0 5px rgba(255,51,51,0.9)' }} />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-1 mb-0.5">
-                      <KerawananBadge kategori={item.kategori} />
-                      <span className="text-[8px] font-bold tracking-wide flex-shrink-0"
-                        style={{ color: 'rgba(255,100,100,0.75)' }}>
-                        {posNameMap[item.pos_id]
-                          ? posNameMap[item.pos_id].replace(/^Pos /i, 'POS ').toUpperCase()
-                          : item.pos_id}
-                      </span>
-                    </div>
-                    <p className="text-[9px] text-[rgba(200,214,229,0.45)] truncate">
-                      {item.deskripsi ? item.deskripsi.slice(0, 35) : '—'}
-                    </p>
-                  </div>
-                </div>
+                />
               ))
             )}
             {activeKerawanan.length > 6 && (
               <button onClick={() => navigate('/kerawanan')}
-                className="w-full text-[9px] text-[rgba(255,51,51,0.6)] hover:text-[#ff3333] py-1 tracking-wider uppercase transition-colors">
+                className="w-full text-[9px] py-1.5 tracking-wider uppercase font-semibold transition-all"
+                style={{ color: 'var(--color-danger)' }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.color = 'var(--color-danger)'
+                  e.currentTarget.style.textShadow = '0 0 8px var(--color-danger)'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.color = 'var(--color-danger)'
+                  e.currentTarget.style.textShadow = 'none'
+                }}
+              >
                 +{activeKerawanan.length - 6} lainnya →
               </button>
             )}
@@ -182,28 +195,18 @@ export default function OverviewPage() {
 
         {/* Kegiatan Binter */}
         <OverlayPanel title="◈ KEGIATAN BINTER" onMore={() => navigate('/binter')}>
-          <div className="space-y-1.5 max-h-48 overflow-y-auto pr-0.5">
+          <div className="space-y-2 max-h-48 overflow-y-auto pr-0.5 scrollbar-thin">
             {recentBinter.length === 0 ? (
-              <p className="text-[9px] text-[rgba(200,214,229,0.3)] py-2 text-center tracking-widest uppercase">
+              <p className="text-[9px] py-3 text-center tracking-widest uppercase"
+                style={{ color: 'var(--text-tertiary)' }}>
                 Belum ada data
               </p>
             ) : (
               recentBinter.map((item, i) => (
-                <div key={item.id || i} className="flex items-start gap-2">
-                  <div className="w-1 h-1 rounded-full mt-1.5 flex-shrink-0"
-                    style={{
-                      background: getBinterColor(item.jenis_kegiatan),
-                      boxShadow: `0 0 4px ${getBinterColor(item.jenis_kegiatan)}`,
-                    }} />
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-medium text-[rgba(200,214,229,0.8)] truncate leading-tight">
-                      {item.jenis_kegiatan || 'Kegiatan'}
-                    </p>
-                    <p className="text-[9px] text-[rgba(200,214,229,0.35)] truncate">
-                      {item.pos_id} · {item.tanggal ? formatDate(item.tanggal) : '—'}
-                    </p>
-                  </div>
-                </div>
+                <BinterItem
+                  key={item.id || i}
+                  item={item}
+                />
               ))
             )}
           </div>
@@ -211,9 +214,9 @@ export default function OverviewPage() {
       </div>
 
       {/* ══ RIGHT PANEL ══ */}
-      <div className="absolute right-2 z-[10] w-52 flex flex-col gap-2" style={{ top: 'calc(8px + 72px + 20px)' }}>
+      <div className="absolute right-2 z-[10] w-52 flex flex-col gap-2 animate-slide-in-right" style={{ top: 'calc(8px + 72px + 20px)' }}>
 
-        {/* Status Personel — redesigned */}
+        {/* Status Personel */}
         <OverlayPanel title="◆ STATUS PERSONEL" onMore={() => navigate('/laporan/demografi')}>
           <PersonelPanel posList={posList} loading={posLoading} navigate={navigate} />
         </OverlayPanel>
@@ -221,20 +224,164 @@ export default function OverviewPage() {
         {/* Situasi Intelijen */}
         <OverlayPanel title="◉ SITUASI INTELIJEN">
           <div className="space-y-3">
-            <IntelRow label="Pos Aman"          value={posAman}                total={totalPos}  color="#00ff88" />
-            <IntelRow label="Pos Rawan"         value={posRawan}               total={totalPos}  color="#ff3333" />
-            <IntelRow label="Kegiatan Binter"   value={(binter||[]).length}    unit="kegiatan" color="#4488ff" />
-            <IntelRow label="Tindak Pelanggaran" value={activeKerawanan.length} unit="kasus"   color="#ffaa00" />
+            <IntelRow label="Pos Aman"          value={posAman}                total={totalPos}  color="var(--accent-primary)" />
+            <IntelRow label="Pos Rawan"         value={posRawan}               total={totalPos}  color="var(--color-danger)" />
+            <IntelRow label="Kegiatan Binter"   value={(binter||[]).length}    unit="kegiatan" color="var(--color-info)" />
+            <IntelRow label="Tindak Pelanggaran" value={activeKerawanan.length} unit="kasus"   color="var(--color-warning)" />
           </div>
         </OverlayPanel>
 
       </div>
 
       {/* ══ BOTTOM — layer toggles ══ */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[10] flex flex-col items-center">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[10] flex flex-col items-center animate-slide-up">
         <MapLayerBar />
       </div>
 
+    </div>
+  )
+}
+
+/* ── MetricCard Component ──────────────────────────────── */
+function MetricCard({ label, value, unit, color, icon, danger }) {
+  const icons = {
+    users: (
+      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+      </svg>
+    ),
+    'map-pin': (
+      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+      </svg>
+    ),
+    population: (
+      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5c2.5 0 4.5.5 4.5 4.5s-2 4.5-4.5 4.5-4.5-2-4.5-4.5 2-4.5 4.5-4.5M12 4.5V2m0 18v-2.5m9-12.5h-2.5m2.5 0H22m-7.5 0v2.5M12 13.5V16m-5.5-2.5H2m4.5 0H12m0 0v2.5m0-7.5V2" />
+      </svg>
+    ),
+    family: (
+      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21v-4.5m0 0h16.5m-16.5 0v4.5m16.5 0v-4.5m0 4.5h-16.5M12 3v3m0 0a3 3 0 013 3m-3-3a3 3 0 00-3 3m0 0v3m0 0h6m-6 0a3 3 0 01-3-3m3 3a3 3 0 003 3m0 0v3m0 0H6m12 0h-6" />
+      </svg>
+    ),
+    warning: (
+      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+      </svg>
+    ),
+    alert: (
+      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+      </svg>
+    ),
+    binter: (
+      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+      </svg>
+    ),
+  }
+
+  return (
+    <div
+      className={`
+        flex-1 min-w-0 px-3 py-2 rounded-sm pointer-events-auto
+        transition-all duration-200 ease-out
+        hover:translate-y-[-2px] hover:shadow-lg
+      `}
+      style={{
+        background: 'var(--surface-primary)',
+        border: `1px solid ${danger ? 'var(--color-danger)' : 'var(--border-subtle)'}`,
+        backdropFilter: 'blur(10px)',
+        boxShadow: danger ? 'var(--shadow-glow-danger)' : 'var(--shadow-md)',
+      }}
+    >
+      <div className="flex items-center gap-1.5 mb-1">
+        <span className="opacity-60" style={{ color }}>{icons[icon]}</span>
+        <span className="text-[8px] tracking-[0.15em] uppercase font-semibold" style={{ color: 'var(--text-tertiary)' }}>
+          {label}
+        </span>
+      </div>
+      <div
+        className="font-mono font-bold leading-none"
+        style={{
+          fontSize: '22px',
+          color,
+          textShadow: `0 0 16px ${color}50`,
+        }}
+      >
+        {value}
+      </div>
+      <div className="text-[8px] mt-0.5 tracking-wider uppercase" style={{ color: 'var(--text-disabled)' }}>
+        {unit}
+      </div>
+    </div>
+  )
+}
+
+/* ── ThreatCard Component ──────────────────────────────── */
+function ThreatCard({ item, posName, onClick }) {
+  return (
+    <div
+      className="flex items-start gap-2 p-2 rounded-sm cursor-pointer transition-all duration-150"
+      style={{
+        background: 'var(--color-danger-subtle)',
+        border: '1px solid var(--color-danger)',
+      }}
+      onClick={onClick}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = 'rgba(255,59,59,0.15)'
+        e.currentTarget.style.boxShadow = '0 0 12px var(--color-danger-subtle)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'var(--color-danger-subtle)'
+        e.currentTarget.style.boxShadow = 'none'
+      }}
+    >
+      <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 animate-pulse"
+        style={{ background: 'var(--color-danger)', boxShadow: '0 0 6px var(--color-danger)' }} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-1 mb-0.5">
+          <KerawananBadge kategori={item.kategori} />
+          <span className="text-[8px] font-bold tracking-wide flex-shrink-0 px-1.5 py-0.5 rounded-sm"
+            style={{
+              color: 'var(--color-danger-text)',
+              background: 'var(--color-danger)',
+              opacity: 0.9,
+            }}>
+            {posName
+              ? posName.replace(/^Pos /i, 'POS ').toUpperCase()
+              : item.pos_id}
+          </span>
+        </div>
+        <p className="text-[9px] truncate" style={{ color: 'var(--text-tertiary)' }}>
+          {item.deskripsi ? item.deskripsi.slice(0, 35) : '—'}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+/* ── BinterItem Component ─────────────────────────────── */
+function BinterItem({ item }) {
+  const binterColor = getBinterColor(item.jenis_kegiatan)
+  return (
+    <div className="flex items-start gap-2">
+      <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
+        style={{
+          background: binterColor,
+          boxShadow: `0 0 6px ${binterColor}`,
+        }} />
+      <div className="min-w-0">
+        <p className="text-[10px] font-medium truncate leading-tight"
+          style={{ color: 'var(--text-primary)' }}>
+          {item.jenis_kegiatan || 'Kegiatan'}
+        </p>
+        <p className="text-[9px] truncate" style={{ color: 'var(--text-tertiary)' }}>
+          {item.pos_id} · {item.tanggal ? formatDate(item.tanggal) : '—'}
+        </p>
+      </div>
     </div>
   )
 }
@@ -243,7 +390,6 @@ export default function OverviewPage() {
 function PersonelPanel({ posList, loading, navigate }) {
   const totalPersonel = (posList || []).reduce((s, p) => s + (Number(p.jumlah_personel) || 0), 0)
 
-  // KOTIS/KT selalu paling atas, sisanya sort by jumlah_personel desc, ambil top 6
   const sorted = [...(posList || [])]
     .sort((a, b) => {
       const aIsKotis = a.pos_id === 'KT' || a.pos_id === 'KOTIS'
@@ -256,7 +402,6 @@ function PersonelPanel({ posList, loading, navigate }) {
 
   const maxPersonel = sorted[0] ? Math.max(...sorted.map(p => Number(p.jumlah_personel) || 0)) : 1
 
-  // Kelompokkan INDONESIA vs MALAYSIA
   const wilayahMap = { 'INDONESIA': { count: 0, personel: 0 }, 'MALAYSIA': { count: 0, personel: 0 } }
   ;(posList || []).forEach(p => {
     const key = p.kabupaten === 'Malaysia' ? 'MALAYSIA' : 'INDONESIA'
@@ -268,9 +413,9 @@ function PersonelPanel({ posList, loading, navigate }) {
   if (loading) {
     return (
       <div className="space-y-2">
-        <div className="h-10 rounded-sm bg-[rgba(0,255,136,0.04)] animate-pulse" />
+        <div className="h-10 rounded-sm animate-pulse" style={{ background: 'var(--accent-muted)' }} />
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-4 rounded-sm bg-[rgba(0,255,136,0.04)] animate-pulse" />
+          <div key={i} className="h-4 rounded-sm animate-pulse" style={{ background: 'var(--accent-muted)' }} />
         ))}
       </div>
     )
@@ -283,30 +428,33 @@ function PersonelPanel({ posList, loading, navigate }) {
       <div className="flex items-end justify-between px-0.5">
         <div>
           <p className="text-[8px] uppercase tracking-[0.18em] mb-0.5"
-            style={{ color: 'rgba(200,214,229,0.35)' }}>Total Kekuatan</p>
+            style={{ color: 'var(--text-tertiary)' }}>Total Kekuatan</p>
           <p className="font-mono font-bold leading-none"
-            style={{ fontSize: '26px', color: '#00ff88', textShadow: '0 0 18px rgba(0,255,136,0.45)' }}>
+            style={{
+              fontSize: '26px',
+              color: 'var(--accent-primary)',
+              textShadow: 'var(--shadow-glow)',
+            }}>
             {totalPersonel}
           </p>
-          <p className="text-[8px] mt-0.5 tracking-wide"
-            style={{ color: 'rgba(200,214,229,0.25)' }}>
+          <p className="text-[8px] mt-0.5 tracking-wide" style={{ color: 'var(--text-disabled)' }}>
             org · {(posList || []).length} pos
           </p>
         </div>
 
-        {/* Wilayah pills — INDONESIA / MALAYSIA */}
+        {/* Wilayah pills */}
         <div className="flex flex-col gap-1 items-end">
           {wilayahData.map(([wilayah, { count, personel }]) => {
-            const color = wilayah === 'MALAYSIA' ? '#ffaa00' : '#4488ff'
+            const color = wilayah === 'MALAYSIA' ? 'var(--color-warning)' : 'var(--color-info)'
             return (
-              <div key={wilayah} className="flex items-center gap-1.5 px-2 py-1 rounded-sm"
-                style={{ background: `${color}10`, border: `1px solid ${color}25` }}>
+              <div key={wilayah} className="flex items-center gap-1.5 px-2 py-1 rounded-sm transition-colors duration-150"
+                style={{ background: 'var(--surface-secondary)', border: `1px solid ${color}25` }}>
                 <div className="text-right">
                   <p className="font-mono text-[10px] font-bold leading-none" style={{ color }}>
                     {personel} <span className="text-[7px] font-normal opacity-60">org</span>
                   </p>
                   <p className="text-[7px] uppercase tracking-wide leading-tight"
-                    style={{ color: 'rgba(200,214,229,0.3)' }}>
+                    style={{ color: 'var(--text-tertiary)' }}>
                     {wilayah} · {count} pos
                   </p>
                 </div>
@@ -317,27 +465,29 @@ function PersonelPanel({ posList, loading, navigate }) {
       </div>
 
       {/* ── Divider ── */}
-      <div className="h-px" style={{ background: 'rgba(0,255,136,0.08)' }} />
+      <div className="h-px" style={{ background: 'var(--border-subtle)' }} />
 
-      {/* ── Bar chart — skala relatif ke max, min-width 4px ── */}
+      {/* ── Bar chart ── */}
       <div className="space-y-1.5">
         <p className="text-[7px] uppercase tracking-[0.2em] px-0.5"
-          style={{ color: 'rgba(200,214,229,0.25)' }}>Kekuatan per Pos (org)</p>
+          style={{ color: 'var(--text-disabled)' }}>Kekuatan per Pos (org)</p>
         {sorted.map((pos, i) => {
           const num    = Number(pos.jumlah_personel) || 0
           const pct    = maxPersonel > 0 ? Math.max(Math.round((num / maxPersonel) * 100), num > 0 ? 4 : 0) : 0
           const isKT   = pos.pos_id === 'KT' || pos.pos_id === 'KOTIS'
           const posNo  = isKT ? 'KT' : pos.pos_id.replace(/^POS-0?/, '')
-          const accent = isKT ? '#ffd700' : i === 1 ? '#00ff88' : i === 2 ? 'rgba(0,255,136,0.65)' : 'rgba(0,255,136,0.4)'
+          const accent = isKT ? '#ffd700' : i === 1 ? 'var(--accent-primary)' : i === 2 ? 'var(--accent-muted)' : 'var(--text-disabled)'
           return (
             <div key={pos.pos_id}
-              className="flex items-center gap-2 cursor-pointer group"
-              onClick={() => navigate(`/pos/${pos.pos_id}`)}>
-              {/* Rank */}
-              <span className="font-mono text-[8px] w-3 text-right flex-shrink-0 opacity-40"
-                style={{ color: '#00ff88' }}>{i + 1}</span>
-              {/* Pos label */}
-              <span className="font-mono text-[9px] font-bold w-6 text-center flex-shrink-0 rounded-sm py-px"
+              className="flex items-center gap-2 cursor-pointer group transition-opacity duration-150"
+              onClick={() => navigate(`/pos/${pos.pos_id}`)}
+              onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '0.7'}
+              style={{ opacity: 0.7 }}
+            >
+              <span className="font-mono text-[8px] w-3 text-right flex-shrink-0"
+                style={{ color: 'var(--text-disabled)' }}>{i + 1}</span>
+              <span className="font-mono text-[9px] font-bold w-6 text-center flex-shrink-0 rounded-sm py-px transition-colors duration-150"
                 style={{
                   color: accent,
                   background: `${accent}18`,
@@ -345,9 +495,8 @@ function PersonelPanel({ posList, loading, navigate }) {
                 }}>
                 {posNo}
               </span>
-              {/* Bar */}
               <div className="flex-1 h-[5px] rounded-full overflow-hidden"
-                style={{ background: 'rgba(255,255,255,0.05)' }}>
+                style={{ background: 'var(--surface-muted)' }}>
                 <div className="h-full rounded-full transition-all duration-700"
                   style={{
                     width: `${pct}%`,
@@ -356,10 +505,9 @@ function PersonelPanel({ posList, loading, navigate }) {
                     boxShadow: isKT ? `0 0 6px ${accent}66` : 'none',
                   }} />
               </div>
-              {/* Value */}
               <span className="font-mono text-[9px] font-bold w-12 text-right flex-shrink-0"
-                style={{ color: 'rgba(200,214,229,0.45)' }}>
-                {num} <span style={{ color: 'rgba(200,214,229,0.2)', fontSize: '7px' }}>org</span>
+                style={{ color: 'var(--text-tertiary)' }}>
+                {num} <span style={{ color: 'var(--text-disabled)', fontSize: '7px' }}>org</span>
               </span>
             </div>
           )
@@ -370,71 +518,50 @@ function PersonelPanel({ posList, loading, navigate }) {
   )
 }
 
-/* ── Sub-components ─────────────────────────────────────── */
-
-function MetricCard({ label, value, unit, color, icon, danger }) {
-  return (
-    <div className="flex-1 min-w-0 px-3 py-2 rounded-sm pointer-events-auto"
-      style={{
-        background: 'rgba(5,8,10,0.82)',
-        border: `1px solid ${danger ? 'rgba(255,51,51,0.3)' : 'rgba(0,255,136,0.15)'}`,
-        backdropFilter: 'blur(10px)',
-        boxShadow: danger ? '0 0 12px rgba(255,51,51,0.1)' : '0 0 12px rgba(0,0,0,0.4)',
-      }}
-    >
-      <div className="flex items-center gap-1.5 mb-1">
-        <span className="text-[10px]" style={{ color }}>{icon}</span>
-        <span className="text-[8px] tracking-[0.15em] uppercase"
-          style={{ color: 'rgba(200,214,229,0.4)' }}>{label}</span>
-      </div>
-      <div className="font-mono font-bold leading-none"
-        style={{ fontSize: '22px', color, textShadow: `0 0 16px ${color}66` }}>
-        {value}
-      </div>
-      <div className="text-[8px] mt-0.5 tracking-wider" style={{ color: 'rgba(200,214,229,0.3)' }}>
-        {unit}
-      </div>
-    </div>
-  )
-}
-
+/* ── OverlayPanel Component ────────────────────────────── */
 function OverlayPanel({ title, badge, badgeDanger, onMore, children }) {
   return (
-    <div className="rounded-sm overflow-hidden"
+    <div
+      className="rounded-sm overflow-hidden"
       style={{
-        background: 'rgba(5,8,10,0.88)',
-        border: '1px solid rgba(0,255,136,0.18)',
+        background: 'var(--surface-primary)',
+        border: '1px solid var(--border-subtle)',
         backdropFilter: 'blur(12px)',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
+        boxShadow: 'var(--shadow-lg)',
       }}
     >
-      <div className="flex items-center justify-between px-3 py-1.5"
-        style={{ borderBottom: '1px solid rgba(0,255,136,0.1)', background: 'rgba(0,255,136,0.04)' }}>
+      <div
+        className="flex items-center justify-between px-3 py-1.5"
+        style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--surface-secondary)' }}
+      >
         <span className="text-[9px] font-bold tracking-[0.15em] uppercase"
-          style={{ color: 'rgba(0,255,136,0.85)' }}>
+          style={{ color: 'var(--accent-primary)' }}>
           {title}
         </span>
         <div className="flex items-center gap-1.5">
           {badge !== undefined && (
-            <span className="font-mono text-[9px] font-bold px-1.5 py-0.5 rounded-sm"
+            <span
+              className="font-mono text-[9px] font-bold px-1.5 py-0.5 rounded-sm transition-colors duration-150"
               style={badgeDanger && Number(badge) > 0 ? {
-                color: '#ff3333',
-                background: 'rgba(255,51,51,0.12)',
-                border: '1px solid rgba(255,51,51,0.3)',
+                color: 'var(--color-danger)',
+                background: 'var(--color-danger-subtle)',
+                border: '1px solid var(--color-danger)',
               } : {
-                color: 'rgba(0,255,136,0.6)',
-                background: 'rgba(0,255,136,0.06)',
-                border: '1px solid rgba(0,255,136,0.2)',
-              }}>
+                color: 'var(--accent-primary)',
+                background: 'var(--accent-muted)',
+                border: '1px solid var(--accent-primary)',
+              }}
+            >
               {badge}
             </span>
           )}
           {onMore && (
-            <button onClick={onMore}
-              className="text-[8px] tracking-widest uppercase transition-colors"
-              style={{ color: 'rgba(0,255,136,0.4)' }}
-              onMouseEnter={e => e.target.style.color = '#00ff88'}
-              onMouseLeave={e => e.target.style.color = 'rgba(0,255,136,0.4)'}
+            <button
+              onClick={onMore}
+              className="text-[8px] tracking-widest uppercase transition-colors duration-150"
+              style={{ color: 'var(--text-tertiary)' }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-primary)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}
             >
               SEMUA →
             </button>
@@ -446,33 +573,40 @@ function OverlayPanel({ title, badge, badgeDanger, onMore, children }) {
   )
 }
 
+/* ── IntelRow Component ─────────────────────────────── */
 function IntelRow({ label, value, total, unit, color }) {
   const pct = total ? Math.round((value / total) * 100) : null
   return (
     <div>
       <div className="flex justify-between items-center mb-1">
-        <span className="text-[8px] uppercase tracking-[0.1em]"
-          style={{ color: 'rgba(200,214,229,0.4)' }}>{label}</span>
+        <span className="text-[8px] uppercase tracking-[0.1em]" style={{ color: 'var(--text-tertiary)' }}>
+          {label}
+        </span>
         <span className="font-mono text-[10px] font-bold" style={{ color }}>
           {value}{unit ? ` ${unit}` : ''}{pct !== null ? ` / ${total}` : ''}
         </span>
       </div>
       {pct !== null && (
         <div className="h-[2px] rounded-full overflow-hidden"
-          style={{ background: 'rgba(255,255,255,0.06)' }}>
+          style={{ background: 'var(--surface-muted)' }}>
           <div className="h-full rounded-full transition-all duration-700"
-            style={{ width: `${pct}%`, background: color }} />
+            style={{
+              width: `${pct}%`,
+              background: color,
+              boxShadow: `0 0 6px ${color}50`,
+            }} />
         </div>
       )}
     </div>
   )
 }
 
+/* ── MapLayerBar Component ─────────────────────────── */
 function MapLayerBar() {
   const { mapLayers, toggleMapLayer } = useApp()
 
   const layers = [
-    { key: 'pos',         label: 'Pos',         color: '#00ff88' },
+    { key: 'pos',         label: 'Pos',         color: 'var(--accent-primary)' },
     { key: 'narkoba',     label: 'Narkoba',     color: '#dc2626' },
     { key: 'kriminal',    label: 'Kriminal',    color: '#ef4444' },
     { key: 'logging',     label: 'Logging',     color: '#d97706' },
@@ -480,35 +614,41 @@ function MapLayerBar() {
     { key: 'trafficking', label: 'Trafficking', color: '#db2777' },
     { key: 'border',      label: 'Border',      color: '#0ea5e9' },
     { key: 'pmInp',       label: 'PMI NP',      color: '#ea580c' },
-    { key: 'binter',      label: 'Binter',      color: '#4488ff' },
+    { key: 'binter',      label: 'Binter',      color: 'var(--color-info)' },
   ]
 
   return (
-    <div className="flex items-center gap-1 px-2 py-1 rounded-sm"
+    <div
+      className="flex items-center gap-1 px-2 py-1 rounded-sm transition-colors duration-150"
       style={{
-        background: 'rgba(5,8,10,0.85)',
-        border: '1px solid rgba(0,255,136,0.12)',
+        background: 'var(--surface-primary)',
+        border: '1px solid var(--border-subtle)',
         backdropFilter: 'blur(8px)',
-      }}>
+      }}
+    >
       {layers.map(({ key, label, color }) => {
         const active = mapLayers[key]
         return (
           <button
             key={key}
             onClick={() => toggleMapLayer(key)}
-            className="flex items-center gap-1 px-1.5 py-0.5 rounded-sm transition-all whitespace-nowrap"
+            className="flex items-center gap-1 px-1.5 py-0.5 rounded-sm transition-all duration-150 whitespace-nowrap"
             style={{
               background: active ? `${color}18` : 'transparent',
-              border: `1px solid ${active ? color + '44' : 'rgba(255,255,255,0.06)'}`,
+              border: `1px solid ${active ? color + '44' : 'var(--border-subtle)'}`,
             }}
           >
-            <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 transition-all"
+            <div
+              className="w-1.5 h-1.5 rounded-full flex-shrink-0 transition-all duration-150"
               style={{
-                background: active ? color : 'rgba(255,255,255,0.15)',
+                background: active ? color : 'var(--text-disabled)',
                 boxShadow: active ? `0 0 4px ${color}` : 'none',
-              }} />
-            <span className="text-[8px] tracking-wide font-medium"
-              style={{ color: active ? 'rgba(200,214,229,0.75)' : 'rgba(200,214,229,0.25)' }}>
+              }}
+            />
+            <span
+              className="text-[8px] tracking-wide font-medium transition-colors duration-150"
+              style={{ color: active ? 'var(--text-primary)' : 'var(--text-disabled)' }}
+            >
               {label}
             </span>
           </button>

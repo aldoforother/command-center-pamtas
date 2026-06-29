@@ -1,114 +1,227 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 /**
- * Modal dengan focus trap (WCAG 2.1 criterion 2.1.2).
- * Tab cycling terbatas di dalam elemen modal saat terbuka.
+ * Modal Component - Feedback Component
+ *
+ * Design System Foundation v2.0
+ * Motion Bible Compliance:
+ * - Overlay: fade-in 200ms ease-out
+ * - Content: scale-in 150ms ease-out
+ * - Close: fade-out 150ms ease-sharp
+ *
+ * Features:
+ * - Focus trap (WCAG 2.1 criterion 2.1.2)
+ * - ESC to close
+ * - Click outside to close
+ * - Multiple sizes
+ * - Full ARIA support
  */
-export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
-  const overlayRef  = useRef(null)
-  const contentRef  = useRef(null)
 
+const SIZE_MAP = {
+  sm: 'max-w-sm',
+  md: 'max-w-lg',
+  lg: 'max-w-2xl',
+  xl: 'max-w-4xl',
+  full: 'max-w-[calc(100vw-2rem)]',
+}
+
+export function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  size = 'md',
+  closeOnOverlay = true,
+  closeOnEscape = true,
+  showClose = true,
+  footer,
+  className = '',
+}) {
+  const [isVisible, setIsVisible] = useState(false)
+  const [isExiting, setIsExiting] = useState(false)
+  const overlayRef = useRef(null)
+  const contentRef = useRef(null)
+  const previousFocusRef = useRef(null)
+
+  // Handle open/close animations
   useEffect(() => {
-    if (!isOpen) return
+    if (isOpen) {
+      previousFocusRef.current = document.activeElement
+      setIsVisible(true)
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
 
-    // Simpan elemen yang sedang aktif sebelum modal dibuka
-    const previouslyFocused = document.activeElement
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
 
-    // Focus ke container modal segera
-    const focusTimer = setTimeout(() => {
-      contentRef.current?.focus()
-    }, 50)
+  // Handle escape key and focus trap
+  useEffect(() => {
+    if (!isOpen || !isVisible) return
 
-    // ESC untuk tutup
-    const onKey = (e) => {
-      if (e.key === 'Escape') { onClose(); return }
+    const handleKeyDown = (e) => {
+      // ESC to close
+      if (e.key === 'Escape' && closeOnEscape) {
+        handleClose()
+        return
+      }
 
-      // Focus trap: Tab cycling di dalam modal
-      if (e.key !== 'Tab') return
-      if (!contentRef.current) return
+      // Focus trap
+      if (e.key !== 'Tab' || !contentRef.current) return
 
       const focusable = contentRef.current.querySelectorAll(
         'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
       )
-      if (focusable.length === 0) { e.preventDefault(); return }
+      if (focusable.length === 0) return
 
       const first = focusable[0]
-      const last  = focusable[focusable.length - 1]
+      const last = focusable[focusable.length - 1]
 
-      if (e.shiftKey) {
-        // Shift+Tab: dari elemen pertama → loncat ke elemen terakhir
-        if (document.activeElement === first) {
-          e.preventDefault()
-          last.focus()
-        }
-      } else {
-        // Tab: dari elemen terakhir → loncat ke elemen pertama
-        if (document.activeElement === last) {
-          e.preventDefault()
-          first.focus()
-        }
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
       }
     }
 
-    document.addEventListener('keydown', onKey)
-    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', handleKeyDown)
+
+    // Focus first focusable element
+    const timer = setTimeout(() => {
+      const focusable = contentRef.current?.querySelector(
+        'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+      focusable?.focus()
+    }, 50)
 
     return () => {
-      clearTimeout(focusTimer)
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = ''
-      // Kembalikan focus ke elemen sebelum modal dibuka
-      previouslyFocused?.focus?.()
+      document.removeEventListener('keydown', handleKeyDown)
+      clearTimeout(timer)
+      previousFocusRef.current?.focus?.()
     }
-  }, [isOpen, onClose])
+  }, [isOpen, isVisible, closeOnEscape])
 
-  if (!isOpen) return null
+  const handleClose = () => {
+    setIsExiting(true)
+    setTimeout(() => {
+      setIsExiting(false)
+      setIsVisible(false)
+      onClose?.()
+    }, 150) // Wait for exit animation
+  }
 
-  const maxW = { sm: 'max-w-md', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' }
+  const handleOverlayClick = (e) => {
+    if (closeOnOverlay && e.target === overlayRef.current) {
+      handleClose()
+    }
+  }
+
+  if (!isVisible && !isOpen) return null
 
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(2px)' }}
-      onClick={(e) => { if (e.target === overlayRef.current) onClose() }}
+      onClick={handleOverlayClick}
+      className={`
+        fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4
+        transition-opacity duration-200
+        ${isExiting ? 'opacity-0' : 'opacity-100'}
+      `}
+      style={{
+        backgroundColor: 'var(--overlay-scrim)',
+        backdropFilter: 'blur(4px)',
+        transitionTimingFunction: isExiting ? 'var(--ease-sharp)' : 'var(--ease-out)',
+      }}
       aria-modal="true"
       role="dialog"
-      aria-labelledby="modal-title"
+      aria-labelledby={title ? 'modal-title' : undefined}
     >
       <div
         ref={contentRef}
         tabIndex={-1}
-        className={`${maxW[size]} w-full fade-in outline-none`}
+        className={`
+          ${SIZE_MAP[size] || SIZE_MAP.md}
+          w-full
+          rounded-sm
+          transition-all duration-150
+          ${isExiting ? 'scale-95 opacity-0' : 'scale-100 opacity-100 animate-scale-in'}
+          ${className}
+        `}
         style={{
-          background: 'rgba(4,11,6,0.98)',
-          border: '1px solid rgba(0,255,136,0.22)',
-          borderRadius: '2px',
-          boxShadow: '0 0 40px rgba(0,0,0,0.8), 0 0 20px rgba(0,255,136,0.07)',
+          backgroundColor: 'var(--surface-tertiary)',
+          border: '1px solid var(--border-default)',
+          boxShadow: 'var(--shadow-xl)',
+          transitionTimingFunction: isExiting ? 'var(--ease-sharp)' : 'var(--ease-out)',
+          maxHeight: 'calc(100vh - 2rem)',
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3"
-          style={{ borderBottom: '1px solid rgba(0,255,136,0.12)', background: 'rgba(0,255,136,0.03)' }}>
-          <h2 id="modal-title" className="text-[11px] font-bold tracking-[0.15em] uppercase text-[rgba(0,255,136,0.85)]">
+        <div
+          className="flex items-center justify-between px-4 py-3"
+          style={{
+            borderBottom: '1px solid var(--border-subtle)',
+            backgroundColor: 'var(--accent-muted)',
+          }}
+        >
+          <h2
+            id="modal-title"
+            className="text-label-sm font-bold tracking-wider uppercase"
+            style={{ color: 'var(--accent-primary)' }}
+          >
             {title}
           </h2>
-          <button
-            onClick={onClose}
-            aria-label="Tutup modal"
-            className="text-[rgba(200,214,229,0.3)] hover:text-[rgba(0,255,136,0.7)] transition-colors p-1 rounded-sm"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          {showClose && (
+            <button
+              onClick={handleClose}
+              aria-label="Tutup modal"
+              className="p-1.5 rounded-sm transition-colors duration-100"
+              style={{ color: 'var(--text-tertiary)' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-primary)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-tertiary)'}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
 
         {/* Content */}
-        <div className="px-4 py-4 max-h-[80vh] overflow-y-auto">
+        <div
+          className="px-4 py-4 overflow-y-auto"
+          style={{ maxHeight: footer ? 'calc(100% - 130px)' : 'calc(100% - 60px)' }}
+        >
           {children}
         </div>
+
+        {/* Footer */}
+        {footer && (
+          <div
+            className="flex items-center justify-end gap-2 px-4 py-3"
+            style={{ borderTop: '1px solid var(--border-subtle)' }}
+          >
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   )
 }
+
+/**
+ * ModalFooter - Helper component for modal footer actions
+ */
+export function ModalFooter({ children, className = '' }) {
+  return (
+    <div className={`flex items-center justify-end gap-2 ${className}`}>
+      {children}
+    </div>
+  )
+}
+
+export default Modal

@@ -1,6 +1,8 @@
 /**
  * PageErrorBoundary — error boundary per halaman.
  * Mencegah error di satu page crash seluruh app.
+ *
+ * Uses CSS tokens for theming consistency.
  */
 import { Component } from 'react'
 
@@ -36,24 +38,29 @@ export default class PageErrorBoundary extends Component {
             gap: '12px',
             fontFamily: 'monospace',
             padding: '32px',
-            background: '#050810',
+            background: 'var(--surface-base)',
           }}
         >
-          <div style={{ color: '#ff4444', fontSize: '20px' }}>⚠</div>
-          <p
+          <div
             style={{
-              color: 'rgba(200,214,229,0.6)',
-              fontSize: '10px',
-              letterSpacing: '0.15em',
-              textTransform: 'uppercase',
+              color: 'var(--color-danger)',
+              fontSize: '20px',
+            }}
+          >
+            ⚠
+          </div>
+          <p
+            className="text-[10px] tracking-[0.15em] uppercase"
+            style={{
+              color: 'var(--text-secondary)',
             }}
           >
             Halaman ini mengalami kesalahan
           </p>
           <p
+            className="text-[9px]"
             style={{
-              color: 'rgba(255,68,68,0.55)',
-              fontSize: '9px',
+              color: 'var(--color-danger-text)',
               maxWidth: '360px',
               textAlign: 'center',
               lineHeight: 1.6,
@@ -63,17 +70,12 @@ export default class PageErrorBoundary extends Component {
           </p>
           <button
             onClick={this.handleReset}
+            className="text-[9px] tracking-[0.12em] uppercase px-5 py-2 rounded-sm cursor-pointer transition-all duration-150"
             style={{
               marginTop: '4px',
-              padding: '6px 20px',
-              background: 'rgba(0,255,136,0.08)',
-              border: '1px solid rgba(0,255,136,0.25)',
-              color: '#00ff88',
-              fontSize: '9px',
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-              borderRadius: '3px',
+              background: 'var(--accent-muted)',
+              border: '1px solid var(--accent-muted)',
+              color: 'var(--accent-primary)',
             }}
           >
             Coba Lagi

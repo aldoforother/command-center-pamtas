@@ -1,19 +1,23 @@
+import { createContext, useCallback, useContext, useRef, useState, useEffect } from 'react'
+
 /**
- * Toast — notifikasi non-blocking dengan auto-dismiss.
- * Digunakan sebagai pengganti window.alert() di seluruh project.
+ * Toast — Notification component with auto-dismiss
  *
- * Cara pakai:
- *   const { showToast } = useToast()
- *   showToast('Data berhasil disimpan', 'success')
- *   showToast('Gagal menghapus data', 'error')
- *   showToast('Perhatian: ...', 'warning')
- *   showToast('Info', 'info')
+ * Design System Foundation v2.0
+ * Motion Bible Compliance:
+ * - Enter: slide-in-right 200ms ease-out
+ * - Exit: fade-out 150ms ease-sharp
+ * - Progress bar: smooth countdown
+ *
+ * Features:
+ * - 4 types: success, error, warning, info
+ * - Auto-dismiss with progress indicator
+ * - Manual dismiss
+ * - Stack multiple toasts
+ * - Full ARIA support
  */
 
-import { createContext, useCallback, useContext, useRef, useState } from 'react'
-
-// ─── Context ──────────────────────────────────────────────────────────────────
-
+// Context
 const ToastContext = createContext(null)
 
 let _idCounter = 0
@@ -28,9 +32,12 @@ export function ToastProvider({ children }) {
     setToasts(prev => prev.filter(t => t.id !== id))
   }, [])
 
-  const showToast = useCallback((message, type = 'info', duration = 3500) => {
+  const showToast = useCallback((message, type = 'info', options = {}) => {
+    const { duration = type === 'error' ? 5000 : 3500, title } = options
     const id = ++_idCounter
-    setToasts(prev => [...prev, { id, message, type }])
+
+    setToasts(prev => [...prev, { id, message, type, title, duration }])
+
     timersRef.current[id] = setTimeout(() => dismiss(id), duration)
     return id
   }, [dismiss])
@@ -49,135 +56,237 @@ export function useToast() {
   return ctx
 }
 
-// ─── Styles per tipe ─────────────────────────────────────────────────────────
-
-const TOAST_STYLES = {
+// Toast styles per type
+const TOAST_TYPES = {
   success: {
-    border: 'rgba(0,255,136,0.4)',
-    bg: 'rgba(0,255,136,0.08)',
-    icon: '✓',
-    color: '#00ff88',
+    border: 'var(--color-success)',
+    bg: 'var(--color-success-subtle)',
+    color: 'var(--color-success)',
+    progressColor: 'var(--color-success)',
+    icon: 'check',
   },
   error: {
-    border: 'rgba(255,60,60,0.5)',
-    bg: 'rgba(255,60,60,0.1)',
-    icon: '✕',
-    color: '#ff4444',
+    border: 'var(--color-danger)',
+    bg: 'var(--color-danger-subtle)',
+    color: 'var(--color-danger)',
+    progressColor: 'var(--color-danger)',
+    icon: 'x',
   },
   warning: {
-    border: 'rgba(255,170,0,0.4)',
-    bg: 'rgba(255,170,0,0.08)',
-    icon: '⚠',
-    color: '#ffaa00',
+    border: 'var(--color-warning)',
+    bg: 'var(--color-warning-subtle)',
+    color: 'var(--color-warning)',
+    progressColor: 'var(--color-warning)',
+    icon: 'alert',
   },
   info: {
-    border: 'rgba(68,136,255,0.4)',
-    bg: 'rgba(68,136,255,0.08)',
-    icon: 'ℹ',
-    color: '#4488ff',
+    border: 'var(--color-info)',
+    bg: 'var(--color-info-subtle)',
+    color: 'var(--color-info)',
+    progressColor: 'var(--color-info)',
+    icon: 'info',
   },
 }
 
-// ─── Container (fixed pojok kanan bawah) ─────────────────────────────────────
+// SVG Icons
+const Icons = {
+  check: (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+    </svg>
+  ),
+  x: (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  ),
+  alert: (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+  ),
+  info: (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+}
 
+// Toast Container
 function ToastContainer({ toasts, onDismiss }) {
   if (toasts.length === 0) return null
+
   return (
     <div
-      style={{
-        position: 'fixed',
-        bottom: '2.5rem',
-        right: '1rem',
-        zIndex: 9999,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.5rem',
-        pointerEvents: 'none',
-      }}
+      className="fixed bottom-4 right-4 z-[var(--z-toast)] flex flex-col gap-2 pointer-events-none"
+      role="region"
+      aria-label="Notifications"
     >
       {toasts.map(t => (
-        <ToastItem key={t.id} toast={t} onDismiss={onDismiss} />
+        <ToastItem key={t.id} toast={t} onDismiss={() => onDismiss(t.id)} />
       ))}
     </div>
   )
 }
 
-// ─── Single Toast Item ────────────────────────────────────────────────────────
-
+// Single Toast Item
 function ToastItem({ toast, onDismiss }) {
-  const s = TOAST_STYLES[toast.type] || TOAST_STYLES.info
+  const [isExiting, setIsExiting] = useState(false)
+  const [progress, setProgress] = useState(100)
+  const config = TOAST_TYPES[toast.type] || TOAST_TYPES.info
+  const startTimeRef = useRef(Date.now())
+
+  // Progress countdown
+  useEffect(() => {
+    const duration = toast.duration || 3500
+    const interval = 50 // Update every 50ms for smooth progress
+
+    const timer = setInterval(() => {
+      const elapsed = Date.now() - startTimeRef.current
+      const remaining = Math.max(0, 100 - (elapsed / duration) * 100)
+      setProgress(remaining)
+
+      if (remaining <= 0) {
+        clearInterval(timer)
+      }
+    }, interval)
+
+    return () => clearInterval(timer)
+  }, [toast.duration])
+
+  const handleDismiss = () => {
+    setIsExiting(true)
+    setTimeout(onDismiss, 150) // Wait for exit animation
+  }
 
   return (
     <div
       role="alert"
-      aria-live="assertive"
+      aria-live="polite"
+      aria-atomic="true"
+      className={`
+        pointer-events-auto
+        flex items-start gap-3 px-4 py-3
+        rounded-sm max-w-sm w-full
+        transition-all duration-150
+        ${isExiting ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0 animate-slide-in-right'}
+      `}
       style={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: '0.5rem',
-        padding: '0.6rem 0.85rem',
-        borderRadius: '3px',
-        background: s.bg,
-        border: `1px solid ${s.border}`,
+        backgroundColor: config.bg,
+        border: `1px solid ${config.border}`,
+        boxShadow: 'var(--shadow-lg)',
         backdropFilter: 'blur(8px)',
-        maxWidth: '320px',
-        pointerEvents: 'auto',
-        animation: 'toast-in 0.2s ease-out',
-        boxShadow: `0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px ${s.border}`,
+        transitionTimingFunction: isExiting ? 'var(--ease-sharp)' : 'var(--ease-out)',
       }}
     >
       {/* Icon */}
       <span
-        style={{
-          color: s.color,
-          fontWeight: 'bold',
-          fontSize: '11px',
-          lineHeight: '16px',
-          flexShrink: 0,
-          marginTop: '1px',
-        }}
+        className="flex-shrink-0 mt-0.5"
+        style={{ color: config.color }}
       >
-        {s.icon}
+        {Icons[config.icon]}
       </span>
 
-      {/* Message */}
-      <span
-        style={{
-          color: 'rgba(200,214,229,0.9)',
-          fontSize: '10px',
-          lineHeight: '1.4',
-          letterSpacing: '0.03em',
-          flex: 1,
-        }}
-      >
-        {toast.message}
-      </span>
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        {toast.title && (
+          <p
+            className="text-label-sm font-semibold mb-0.5"
+            style={{ color: config.color }}
+          >
+            {toast.title}
+          </p>
+        )}
+        <p
+          className="text-body-sm leading-relaxed"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          {toast.message}
+        </p>
+
+        {/* Progress bar */}
+        <div
+          className="mt-2 h-0.5 rounded-full overflow-hidden"
+          style={{ backgroundColor: 'var(--border-subtle)' }}
+        >
+          <div
+            className="h-full rounded-full transition-all duration-100"
+            style={{
+              width: `${progress}%`,
+              backgroundColor: config.progressColor,
+              transitionTimingFunction: 'linear',
+            }}
+          />
+        </div>
+      </div>
 
       {/* Close button */}
       <button
-        onClick={() => onDismiss(toast.id)}
-        style={{
-          background: 'none',
-          border: 'none',
-          color: 'rgba(200,214,229,0.35)',
-          cursor: 'pointer',
-          fontSize: '10px',
-          lineHeight: '14px',
-          padding: '0 2px',
-          flexShrink: 0,
-        }}
+        onClick={handleDismiss}
+        className="flex-shrink-0 p-1 rounded-sm transition-colors duration-100"
+        style={{ color: 'var(--text-tertiary)' }}
+        onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+        onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-tertiary)'}
         aria-label="Tutup notifikasi"
       >
-        ✕
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
       </button>
-
-      {/* Keyframe animation — injected once */}
-      <style>{`
-        @keyframes toast-in {
-          from { opacity: 0; transform: translateX(20px); }
-          to   { opacity: 1; transform: translateX(0); }
-        }
-      `}</style>
     </div>
   )
 }
+
+/**
+ * ToastItem - Standalone toast for custom usage
+ */
+export function ToastItemComponent({
+  type = 'info',
+  title,
+  message,
+  duration = 3500,
+  onClose,
+}) {
+  const config = TOAST_TYPES[type] || TOAST_TYPES.info
+
+  return (
+    <div
+      role="alert"
+      aria-live="polite"
+      className="flex items-start gap-3 px-4 py-3 rounded-sm max-w-sm"
+      style={{
+        backgroundColor: config.bg,
+        border: `1px solid ${config.border}`,
+        boxShadow: 'var(--shadow-lg)',
+      }}
+    >
+      <span style={{ color: config.color }}>
+        {Icons[config.icon]}
+      </span>
+      <div className="flex-1">
+        {title && (
+          <p className="text-label-sm font-semibold mb-0.5" style={{ color: config.color }}>
+            {title}
+          </p>
+        )}
+        <p className="text-body-sm" style={{ color: 'var(--text-secondary)' }}>
+          {message}
+        </p>
+      </div>
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="p-1 rounded-sm"
+          style={{ color: 'var(--text-tertiary)' }}
+          aria-label="Tutup"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      )}
+    </div>
+  )
+}
+
+export default ToastProvider

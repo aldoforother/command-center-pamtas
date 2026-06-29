@@ -2,9 +2,7 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAllKerawanan, usePos } from '../hooks/useSupabase'
 import { KERAWANAN_CATEGORIES } from '../constants/kerawananCategories'
-import { KerawananBadge } from '../components/ui/Badge'
-import { LoadingSpinner } from '../components/ui/LoadingSpinner'
-import { EmptyState } from '../components/ui/EmptyState'
+import { KerawananBadge, LoadingSpinner, EmptyState } from '../components/ui'
 import { formatDate } from '../utils/formatDate'
 import { downloadKerawananPDF, downloadKerawananListPDF } from '../utils/generatePDF'
 
@@ -30,6 +28,9 @@ function filterByTimeline(items, timelineId) {
   }
   return items.filter(k => k.tanggal && new Date(k.tanggal) >= cutoff)
 }
+
+/* ── Animation stagger helper ───────────────────────────── */
+const getStaggerDelay = (index) => Math.min(index * 20, 200)
 
 export default function InsidenPage() {
   const navigate = useNavigate()
@@ -99,23 +100,23 @@ export default function InsidenPage() {
   }
 
   return (
-    <div className="flex flex-col h-full fade-in">
+    <div className="flex flex-col h-full animate-fade-in">
 
       {/* ── Header ──────────────────────────────────────── */}
       <div className="flex-shrink-0 px-4 py-3"
-        style={{ background: 'rgba(4,11,6,0.9)', borderBottom: '1px solid rgba(0,255,136,0.15)' }}>
+        style={{ background: 'var(--surface-primary)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 className="text-[rgba(200,214,229,0.85)] font-bold text-sm uppercase tracking-widest">
+            <h2 className="font-bold text-sm uppercase tracking-widest" style={{ color: 'var(--color-danger)' }}>
               ⚠ Data Insiden
             </h2>
-            <p className="text-[rgba(200,214,229,0.3)] text-[10px] mt-0.5">
+            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
               Agregasi seluruh laporan insiden — semua pos
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <StatChip label="Total" value={(kerawanan || []).length} color="#00ff88" />
-            <StatChip label="Aktif" value={aktifCount} color={aktifCount > 0 ? '#ff3333' : '#00ff88'} pulse={aktifCount > 0} />
+            <StatChip label="Total" value={(kerawanan || []).length} color="var(--accent-primary)" />
+            <StatChip label="Aktif" value={aktifCount} color={aktifCount > 0 ? 'var(--color-danger)' : 'var(--accent-primary)'} pulse={aktifCount > 0} />
           </div>
         </div>
 
@@ -199,42 +200,56 @@ export default function InsidenPage() {
               <p className="hud-label mb-2">{filtered.length} insiden ditampilkan</p>
               {filtered.map((item, i) => {
                 const cat = KERAWANAN_CATEGORIES.find(c => c.id === item.kategori)
-                const color = cat?.color || '#888'
+                const color = cat?.color || 'var(--text-tertiary)'
                 const isAktif = item.status?.toLowerCase() === 'aktif'
                 const isSelected = selectedItem?.id === item.id
                 return (
                   <div
                     key={item.id || i}
-                    className="hud-panel px-3 py-2.5 flex items-start gap-3 cursor-pointer transition-all"
+                    className="hud-panel px-3 py-2.5 flex items-start gap-3 cursor-pointer transition-all animate-fade-in"
                     style={{
-                      borderLeftColor: isAktif ? '#ff3333' : 'rgba(0,255,136,0.2)',
+                      borderLeftColor: isAktif ? 'var(--color-danger)' : 'var(--accent-primary)',
                       borderLeftWidth: '2px',
-                      background: isSelected ? 'rgba(0,255,136,0.08)' : undefined,
-                      borderColor: isSelected ? 'rgba(0,255,136,0.4)' : undefined,
+                      background: isSelected ? 'var(--accent-muted)' : 'var(--surface-primary)',
+                      borderColor: isSelected ? 'var(--accent-primary)' : 'var(--border-subtle)',
+                      animationDelay: `${getStaggerDelay(i)}ms`,
                     }}
                     onClick={() => handleClickItem(item)}
+                    onMouseEnter={e => {
+                      if (!isSelected) {
+                        e.currentTarget.style.background = 'var(--surface-secondary)'
+                        e.currentTarget.style.borderColor = 'var(--border-default)'
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (!isSelected) {
+                        e.currentTarget.style.background = 'var(--surface-primary)'
+                        e.currentTarget.style.borderColor = 'var(--border-subtle)'
+                      }
+                    }}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center flex-wrap gap-2 mb-1">
                         <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm border tracking-wider uppercase ${
                           isAktif
-                            ? 'text-[#ff3333] border-[rgba(255,51,51,0.3)] bg-[rgba(255,51,51,0.08)]'
-                            : 'text-[rgba(0,255,136,0.5)] border-[rgba(0,255,136,0.2)] bg-[rgba(0,255,136,0.05)]'
-                        }`}>
-                          {isAktif && <span className="inline-block w-1 h-1 rounded-full bg-[#ff3333] animate-pulse mr-1" />}
+                            ? 'text-[var(--color-danger)] border-[var(--color-danger-subtle)] bg-[var(--color-danger-subtle)]'
+                            : 'text-[var(--accent-primary)] border-[var(--accent-muted)] bg-[rgba(0,255,136,0.05)]'
+                        }`}
+                        style={isAktif ? { color: 'var(--color-danger)', borderColor: 'var(--color-danger-subtle)', backgroundColor: 'var(--color-danger-subtle)' } : { color: 'var(--accent-primary)', borderColor: 'var(--accent-muted)', backgroundColor: 'rgba(0,255,136,0.05)' }}>
+                          {isAktif && <span className="inline-block w-1 h-1 rounded-full animate-pulse mr-1" style={{ background: 'var(--color-danger)', boxShadow: '0 0 4px var(--color-danger)' }} />}
                           {item.status}
                         </span>
                         <KerawananBadge kategori={item.kategori} />
-                        <span className="text-[rgba(0,255,136,0.6)] text-[10px] font-mono font-bold">
+                        <span className="text-[10px] font-mono font-bold" style={{ color: 'var(--accent-primary)' }}>
                           {posMap[item.pos_id] || item.pos_id}
                         </span>
-                        <span className="text-[rgba(200,214,229,0.3)] text-[10px] font-mono">
+                        <span className="text-[10px] font-mono" style={{ color: 'var(--text-tertiary)' }}>
                           {formatDate(item.tanggal)}
                         </span>
                       </div>
-                      <p className="text-[rgba(200,214,229,0.6)] text-xs truncate">{item.deskripsi}</p>
+                      <p className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>{item.deskripsi}</p>
                     </div>
-                    <span className="text-[rgba(0,255,136,0.3)] text-[10px] flex-shrink-0">
+                    <span className="text-[10px] flex-shrink-0 transition-all" style={{ color: 'var(--accent-primary)' }}>
                       {isSelected ? '◀' : '▶'}
                     </span>
                   </div>
@@ -246,7 +261,8 @@ export default function InsidenPage() {
 
         {/* Detail panel */}
         {selectedItem && (
-          <div className="w-1/2 border-l border-[rgba(0,255,136,0.15)] overflow-y-auto">
+          <div className="w-1/2 border-l overflow-y-auto animate-slide-in-right"
+            style={{ borderColor: 'var(--border-subtle)', background: 'var(--surface-base)' }}>
             <InsidenDetail
               item={selectedItem}
               posName={selectedPosName}
@@ -263,7 +279,7 @@ export default function InsidenPage() {
 /* ── Detail Panel ──────────────────────────────────────────── */
 function InsidenDetail({ item, posName, onClose, onNavigate }) {
   const cat = KERAWANAN_CATEGORIES.find(c => c.id === item.kategori)
-  const color = cat?.color || '#888'
+  const color = cat?.color || 'var(--accent-primary)'
   const isAktif = item.status?.toLowerCase() === 'aktif'
 
   const rows = [
@@ -279,51 +295,53 @@ function InsidenDetail({ item, posName, onClose, onNavigate }) {
   ]
 
   return (
-    <div className="flex flex-col h-full fade-in">
+    <div className="flex flex-col h-full animate-fade-in">
       {/* Header */}
       <div className="flex-shrink-0 px-4 py-3 flex items-center justify-between"
-        style={{ background: `${color}08`, borderBottom: `1px solid ${color}25` }}>
+        style={{ background: 'var(--accent-muted)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div>
           <div className="flex items-center gap-2 mb-0.5">
             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-sm border"
-              style={{ color, borderColor: `${color}40`, background: `${color}10` }}>
+              style={{ color: 'var(--accent-primary)', borderColor: 'var(--accent-muted)', background: 'var(--surface-secondary)' }}>
               {item.kategori}
             </span>
-            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm border ${
-              isAktif
-                ? 'text-[#ff3333] border-[rgba(255,51,51,0.3)] bg-[rgba(255,51,51,0.08)]'
-                : 'text-[rgba(0,255,136,0.6)] border-[rgba(0,255,136,0.2)] bg-[rgba(0,255,136,0.05)]'
-            }`}>
-              {isAktif && <span className="inline-block w-1 h-1 rounded-full bg-[#ff3333] animate-pulse mr-1" />}
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-sm border"
+              style={isAktif
+                ? { color: 'var(--color-danger)', borderColor: 'var(--color-danger-subtle)', backgroundColor: 'var(--color-danger-subtle)' }
+                : { color: 'var(--accent-primary)', borderColor: 'var(--accent-muted)', backgroundColor: 'rgba(0,255,136,0.05)' }}>
+              {isAktif && <span className="inline-block w-1 h-1 rounded-full animate-pulse mr-1" style={{ background: 'var(--color-danger)', boxShadow: '0 0 4px var(--color-danger)' }} />}
               {item.status?.toUpperCase()}
             </span>
           </div>
-          <p className="text-[rgba(200,214,229,0.7)] text-[11px] font-bold">Detail Insiden</p>
+          <p className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>Detail Insiden</p>
         </div>
         <button
           onClick={onClose}
-          className="text-[rgba(200,214,229,0.3)] hover:text-[rgba(200,214,229,0.7)] text-lg leading-none transition-colors"
+          className="text-[10px] leading-none transition-all p-1 hover:bg-[var(--hover-surface)]"
+          style={{ color: 'var(--text-tertiary)' }}
+          aria-label="Tutup panel"
         >×</button>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         <div className="rounded-sm overflow-hidden"
-          style={{ border: '1px solid rgba(0,255,136,0.12)' }}>
+          style={{ border: '1px solid var(--border-subtle)', background: 'var(--surface-primary)' }}>
           <div className="px-3 py-1.5"
-            style={{ background: 'rgba(0,255,136,0.04)', borderBottom: '1px solid rgba(0,255,136,0.08)' }}>
-            <span className="text-[9px] font-bold tracking-[0.2em] uppercase text-[rgba(0,255,136,0.6)]">
+            style={{ background: 'var(--surface-secondary)', borderBottom: '1px solid var(--border-subtle)' }}>
+            <span className="text-[9px] font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--accent-primary)' }}>
               INFORMASI INSIDEN
             </span>
           </div>
-          <div className="divide-y divide-[rgba(0,255,136,0.05)]">
+          <div className="divide-y" style={{ borderColor: 'var(--border-subtle)' }}>
             {rows.map(row => (
               <div key={row.label} className={`px-3 py-2 ${row.fullRow ? 'block' : 'flex items-start gap-3'}`}>
                 <span className="text-[9px] uppercase tracking-wider flex-shrink-0 w-28"
-                  style={{ color: 'rgba(200,214,229,0.35)' }}>{row.label}</span>
+                  style={{ color: 'var(--text-tertiary)' }}>{row.label}</span>
                 <span className={`text-[11px] font-medium ${
-                  row.highlight ? 'text-[#ff3333]' : 'text-[rgba(200,214,229,0.8)]'
-                } ${row.fullRow ? 'block mt-1 leading-relaxed' : 'flex-1'}`}>
+                  row.highlight ? 'var(--color-danger)' : 'var(--text-secondary)'
+                } ${row.fullRow ? 'block mt-1 leading-relaxed' : 'flex-1'}`}
+                style={!row.highlight ? { color: 'var(--text-secondary)' } : { color: 'var(--color-danger)' }}>
                   {row.value || '—'}
                 </span>
               </div>
@@ -334,9 +352,9 @@ function InsidenDetail({ item, posName, onClose, onNavigate }) {
         {/* Koordinat */}
         {(item.lat && item.lng) && (
           <div className="px-3 py-2 rounded-sm"
-            style={{ background: 'rgba(0,255,136,0.04)', border: '1px solid rgba(0,255,136,0.12)' }}>
+            style={{ background: 'var(--surface-secondary)', border: '1px solid var(--border-subtle)' }}>
             <span className="hud-label block mb-1">Koordinat TKP</span>
-            <span className="font-mono text-[11px] text-[rgba(0,255,136,0.7)]">
+            <span className="font-mono text-[11px]" style={{ color: 'var(--accent-primary)' }}>
               {item.lat}, {item.lng}
             </span>
           </div>

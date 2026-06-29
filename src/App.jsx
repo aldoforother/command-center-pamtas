@@ -91,6 +91,13 @@ export default function App() {
           <AuthProvider>
             <AppProvider>
               <BrowserRouter basename={import.meta.env.BASE_URL}>
+                {/* Skip links for keyboard navigation */}
+                <a href="#main-content" className="skip-link">
+                  Langsung ke konten utama
+                </a>
+                <a href="#sidebar-nav" className="skip-link">
+                  Langsung ke navigasi
+                </a>
                 <Routes>
                   <Route path="/login" element={<LoginPage />} />
 

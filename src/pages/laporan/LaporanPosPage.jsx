@@ -5,6 +5,7 @@ import { formatDate, formatNumber } from '../../utils/formatDate'
 import { aggregateDemografi } from '../../utils/demografi'
 import { exportToPDF } from '../../utils/exportPDF'
 import { APP_CONFIG } from '../../constants/config'
+import { LoadingSpinner } from '../../components/ui'
 
 export default function LaporanPosPage() {
   const { posId } = useParams()
@@ -34,18 +35,28 @@ export default function LaporanPosPage() {
     exportToPDF(`Laporan Pos ${pos?.nama_pos || posId} — ${APP_CONFIG.SATGAS_NAME}`)
   }
 
+  // Loading state
+  if (!posList) {
+    return (
+      <div className="h-full flex items-center justify-center" style={{ background: 'var(--surface-base)' }}>
+        <LoadingSpinner text="Memuat laporan pos..." />
+      </div>
+    )
+  }
+
   return (
     <>
       {/* ── Tombol aksi (tidak ikut print) ─── */}
-      <div className="print:hidden flex items-center gap-3 px-4 py-3 border-b border-[rgba(0,255,136,0.12)]"
-        style={{ background: 'rgba(4,11,6,0.9)' }}>
+      <div className="print:hidden flex items-center gap-3 px-4 py-3"
+        style={{ background: 'var(--surface-primary)', borderBottom: '1px solid var(--border-subtle)' }}>
         <button
           onClick={() => navigate(`/pos/${posId}`)}
-          className="text-[9px] text-[rgba(0,255,136,0.4)] hover:text-[rgba(0,255,136,0.7)] tracking-widest uppercase transition-colors"
+          className="text-[9px] uppercase tracking-widest transition-all"
+          style={{ color: 'var(--accent-primary)' }}
         >
           ← Kembali ke Pos
         </button>
-        <span className="text-[rgba(0,255,136,0.15)] text-xs flex-1" />
+        <span className="text-xs flex-1" style={{ color: 'var(--border-subtle)' }} />
         <button
           onClick={handlePrint}
           className="hud-btn flex items-center gap-2"
@@ -62,20 +73,20 @@ export default function LaporanPosPage() {
       <div
         id="laporan-pos"
         className="p-6 max-w-4xl mx-auto space-y-6 print:p-4 print:space-y-4"
-        style={{ fontFamily: 'monospace' }}
+        style={{ fontFamily: 'monospace', background: 'var(--surface-base)', color: 'var(--text-primary)' }}
       >
         {/* Header */}
-        <div className="text-center space-y-1 border-b-2 border-[rgba(0,255,136,0.3)] pb-4 print:border-black">
-          <p className="text-[9px] tracking-[0.3em] uppercase text-[rgba(200,214,229,0.4)] print:text-gray-500">
+        <div className="text-center space-y-1 pb-4" style={{ borderBottom: '2px solid var(--accent-muted)' }}>
+          <p className="text-[9px] tracking-[0.3em] uppercase" style={{ color: 'var(--text-tertiary)' }}>
             {APP_CONFIG.SATGAS_NAME} · {APP_CONFIG.BATALYON} · {APP_CONFIG.TAHUN_ANGGARAN}
           </p>
-          <h1 className="text-xl font-bold text-[rgba(200,214,229,0.9)] print:text-black">
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
             LAPORAN DATA POS PAMTAS
           </h1>
-          <h2 className="text-base font-bold text-[#00ff88] print:text-black">
+          <h2 className="text-base font-bold" style={{ color: 'var(--accent-primary)' }}>
             {pos?.nama_pos || posId}
           </h2>
-          <p className="text-[10px] text-[rgba(200,214,229,0.4)] print:text-gray-500">
+          <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
             Dicetak: {today}
           </p>
         </div>
@@ -126,16 +137,20 @@ export default function LaporanPosPage() {
         {/* ── 4. Tokoh Masyarakat ──────────── */}
         <Section title={`IV. TOKOH MASYARAKAT (${(tokohList || []).length} orang)`}>
           {(tokohList || []).length > 0 ? (
-            <table className="w-full text-[10px] border-collapse">
+            <table className="w-full text-[10px] border-collapse" aria-label="Daftar Tokoh Masyarakat">
               <thead>
-                <tr className="border-b border-[rgba(0,255,136,0.2)] print:border-gray-400">
-                  <Th>No</Th><Th>Nama</Th><Th>Jabatan</Th><Th>Pengaruh</Th><Th>Keterangan</Th>
+                <tr>
+                  <Th scope="col">No</Th>
+                  <Th scope="col">Nama</Th>
+                  <Th scope="col">Jabatan</Th>
+                  <Th scope="col">Pengaruh</Th>
+                  <Th scope="col">Keterangan</Th>
                 </tr>
               </thead>
               <tbody>
                 {tokohList.map((t, i) => (
-                  <tr key={t.id || i} className="border-b border-[rgba(0,255,136,0.07)] print:border-gray-200">
-                    <Td>{i + 1}</Td>
+                  <tr key={t.id || i}>
+                    <Td scope="row">{i + 1}</Td>
                     <Td>{t.nama}</Td>
                     <Td>{t.jabatan || '—'}</Td>
                     <Td>{t.pengaruh || '—'}</Td>
@@ -152,28 +167,37 @@ export default function LaporanPosPage() {
         {/* ── 5. Data Insiden ──────────────── */}
         <Section title={`V. DATA INSIDEN (${(kerawananList || []).length} total)`}>
           <div className="flex gap-4 mb-3 text-[10px]">
-            <StatBox label="Klasifikasi" value={level} color={level === 'SIAGA' ? '#ff3333' : level === 'WASPADA' ? '#ffaa00' : '#00ff88'} />
+            <StatBox
+              label="Klasifikasi"
+              value={level}
+              color={level === 'SIAGA' ? 'var(--color-danger)' : level === 'WASPADA' ? 'var(--color-warning)' : 'var(--accent-primary)'}
+            />
             <StatBox label="Skor Ancaman" value={`${totalPoin} poin`} />
-            <StatBox label="Aktif" value={activeInsiden.length} color={activeInsiden.length > 0 ? '#ff3333' : '#00ff88'} />
+            <StatBox label="Aktif" value={activeInsiden.length} color={activeInsiden.length > 0 ? 'var(--color-danger)' : 'var(--accent-primary)'} />
             <StatBox label="Selesai" value={selesaiInsiden.length} />
           </div>
           {(kerawananList || []).length > 0 ? (
-            <table className="w-full text-[10px] border-collapse">
+            <table className="w-full text-[10px] border-collapse" aria-label="Daftar Insiden">
               <thead>
-                <tr className="border-b border-[rgba(0,255,136,0.2)] print:border-gray-400">
-                  <Th>No</Th><Th>Tanggal</Th><Th>Jenis</Th><Th>Deskripsi</Th><Th>Pelaku</Th><Th>Status</Th>
+                <tr>
+                  <Th scope="col">No</Th>
+                  <Th scope="col">Tanggal</Th>
+                  <Th scope="col">Jenis</Th>
+                  <Th scope="col">Deskripsi</Th>
+                  <Th scope="col">Pelaku</Th>
+                  <Th scope="col">Status</Th>
                 </tr>
               </thead>
               <tbody>
                 {[...activeInsiden, ...selesaiInsiden].map((k, i) => (
-                  <tr key={k.id || i} className="border-b border-[rgba(0,255,136,0.07)] print:border-gray-200">
-                    <Td>{i + 1}</Td>
+                  <tr key={k.id || i}>
+                    <Td scope="row">{i + 1}</Td>
                     <Td>{formatDate(k.tanggal)}</Td>
                     <Td>{k.kategori || k.jenis || '—'}</Td>
                     <Td>{k.deskripsi || k.uraian || '—'}</Td>
                     <Td>{k.pelaku || '—'}</Td>
                     <Td>
-                      <span className={k.status === 'aktif' ? 'text-[#ff3333] print:text-red-700' : 'text-[#00ff88] print:text-green-700'}>
+                      <span style={{ color: k.status === 'aktif' ? 'var(--color-danger)' : 'var(--accent-primary)' }}>
                         {k.status?.toUpperCase() || '—'}
                       </span>
                     </Td>
@@ -186,9 +210,9 @@ export default function LaporanPosPage() {
           )}
           {pos?.kerawanan_utama && (
             <div className="mt-3 p-2 rounded-sm text-[10px]"
-              style={{ background: 'rgba(255,170,0,0.05)', border: '1px solid rgba(255,170,0,0.15)' }}>
-              <span className="text-[rgba(255,170,0,0.5)] uppercase tracking-wider mr-2">Potensi Ancaman:</span>
-              <span className="text-[rgba(200,214,229,0.7)]">{pos.kerawanan_utama}</span>
+              style={{ background: 'var(--color-warning-subtle)', border: '1px solid var(--color-warning-subtle)' }}>
+              <span className="uppercase tracking-wider mr-2" style={{ color: 'var(--color-warning)' }}>Potensi Ancaman:</span>
+              <span style={{ color: 'var(--text-secondary)' }}>{pos.kerawanan_utama}</span>
             </div>
           )}
         </Section>
@@ -196,16 +220,20 @@ export default function LaporanPosPage() {
         {/* ── 6. Kegiatan Binter ───────────── */}
         <Section title={`VI. KEGIATAN BINTER (${(binterList || []).length} kegiatan)`}>
           {binterSorted.length > 0 ? (
-            <table className="w-full text-[10px] border-collapse">
+            <table className="w-full text-[10px] border-collapse" aria-label="Daftar Kegiatan Binter">
               <thead>
-                <tr className="border-b border-[rgba(0,255,136,0.2)] print:border-gray-400">
-                  <Th>No</Th><Th>Tanggal</Th><Th>Jenis</Th><Th>Sasaran</Th><Th>Hasil</Th>
+                <tr>
+                  <Th scope="col">No</Th>
+                  <Th scope="col">Tanggal</Th>
+                  <Th scope="col">Jenis</Th>
+                  <Th scope="col">Sasaran</Th>
+                  <Th scope="col">Hasil</Th>
                 </tr>
               </thead>
               <tbody>
                 {binterSorted.slice(0, 20).map((b, i) => (
-                  <tr key={b.id || i} className="border-b border-[rgba(0,255,136,0.07)] print:border-gray-200">
-                    <Td>{i + 1}</Td>
+                  <tr key={b.id || i}>
+                    <Td scope="row">{i + 1}</Td>
                     <Td>{formatDate(b.tanggal)}</Td>
                     <Td>{b.jenis_binter || b.jenis || '—'}</Td>
                     <Td>{b.sasaran || '—'}</Td>
@@ -214,7 +242,8 @@ export default function LaporanPosPage() {
                 ))}
                 {binterSorted.length > 20 && (
                   <tr>
-                    <td colSpan={5} className="px-2 py-1.5 text-[rgba(200,214,229,0.3)] italic text-center text-[9px]">
+                    <td colSpan={5} className="px-2 py-1.5 italic text-center text-[9px]"
+                      style={{ color: 'var(--text-tertiary)' }}>
                       … dan {binterSorted.length - 20} kegiatan lainnya
                     </td>
                   </tr>
@@ -229,16 +258,21 @@ export default function LaporanPosPage() {
         {/* ── 7. Laporan Patroli ───────────── */}
         <Section title={`VII. LAPORAN PATROLI (${(patroliList || []).length} laporan)`}>
           {patroliSorted.length > 0 ? (
-            <table className="w-full text-[10px] border-collapse">
+            <table className="w-full text-[10px] border-collapse" aria-label="Daftar Laporan Patroli">
               <thead>
-                <tr className="border-b border-[rgba(0,255,136,0.2)] print:border-gray-400">
-                  <Th>No</Th><Th>Tanggal</Th><Th>Jenis</Th><Th>Personel</Th><Th>Rute</Th><Th>Hasil</Th>
+                <tr>
+                  <Th scope="col">No</Th>
+                  <Th scope="col">Tanggal</Th>
+                  <Th scope="col">Jenis</Th>
+                  <Th scope="col">Personel</Th>
+                  <Th scope="col">Rute</Th>
+                  <Th scope="col">Hasil</Th>
                 </tr>
               </thead>
               <tbody>
                 {patroliSorted.slice(0, 20).map((p, i) => (
-                  <tr key={p.id || i} className="border-b border-[rgba(0,255,136,0.07)] print:border-gray-200">
-                    <Td>{i + 1}</Td>
+                  <tr key={p.id || i}>
+                    <Td scope="row">{i + 1}</Td>
                     <Td>{formatDate(p.tanggal)}</Td>
                     <Td>{p.jenis_patroli || '—'}</Td>
                     <Td>{p.jumlah_personel ? `${p.jumlah_personel} org` : '—'}</Td>
@@ -248,7 +282,8 @@ export default function LaporanPosPage() {
                 ))}
                 {patroliSorted.length > 20 && (
                   <tr>
-                    <td colSpan={6} className="px-2 py-1.5 text-[rgba(200,214,229,0.3)] italic text-center text-[9px]">
+                    <td colSpan={6} className="px-2 py-1.5 italic text-center text-[9px]"
+                      style={{ color: 'var(--text-tertiary)' }}>
                       … dan {patroliSorted.length - 20} laporan lainnya
                     </td>
                   </tr>
@@ -261,8 +296,8 @@ export default function LaporanPosPage() {
         </Section>
 
         {/* Footer */}
-        <div className="border-t border-[rgba(0,255,136,0.15)] print:border-gray-400 pt-4 text-center">
-          <p className="text-[9px] text-[rgba(200,214,229,0.25)] tracking-[0.2em] uppercase print:text-gray-400">
+        <div className="pt-4 text-center" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+          <p className="text-[9px] tracking-[0.2em] uppercase" style={{ color: 'var(--text-tertiary)' }}>
             {APP_CONFIG.SATGAS_NAME} · {APP_CONFIG.YONKAV} · {APP_CONFIG.WILAYAH} · {APP_CONFIG.TAHUN_ANGGARAN}
           </p>
         </div>
@@ -276,8 +311,8 @@ export default function LaporanPosPage() {
 function Section({ title, children }) {
   return (
     <div className="space-y-2">
-      <h3 className="text-[9px] font-bold tracking-[0.2em] uppercase px-3 py-1.5 rounded-sm print:text-black print:border print:border-gray-400"
-        style={{ color: 'rgba(0,255,136,0.8)', background: 'rgba(0,255,136,0.05)', border: '1px solid rgba(0,255,136,0.15)' }}>
+      <h3 className="text-[9px] font-bold tracking-[0.2em] uppercase px-3 py-1.5 rounded-sm"
+        style={{ color: 'var(--accent-primary)', background: 'var(--accent-muted)', border: '1px solid var(--border-subtle)' }}>
         {title}
       </h3>
       <div>{children}</div>
@@ -290,11 +325,11 @@ function TwoColTable({ rows }) {
     <table className="w-full text-[10px] border-collapse">
       <tbody>
         {rows.map(([label, value]) => (
-          <tr key={label} className="border-b border-[rgba(0,255,136,0.07)] print:border-gray-200">
-            <td className="px-3 py-1.5 w-40 text-[rgba(200,214,229,0.4)] uppercase tracking-wider print:text-gray-500 print:w-36">
+          <tr key={label}>
+            <td className="px-3 py-1.5 w-40 uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
               {label}
             </td>
-            <td className="px-3 py-1.5 text-[rgba(200,214,229,0.8)] print:text-black">
+            <td className="px-3 py-1.5" style={{ color: 'var(--text-secondary)' }}>
               {value}
             </td>
           </tr>
@@ -306,7 +341,8 @@ function TwoColTable({ rows }) {
 
 function Th({ children }) {
   return (
-    <th className="px-2 py-1.5 text-left text-[rgba(200,214,229,0.5)] uppercase tracking-wider font-bold print:text-gray-600">
+    <th className="px-2 py-1.5 text-left uppercase tracking-wider font-bold"
+      style={{ color: 'var(--text-tertiary)' }}>
       {children}
     </th>
   )
@@ -314,7 +350,7 @@ function Th({ children }) {
 
 function Td({ children }) {
   return (
-    <td className="px-2 py-1.5 text-[rgba(200,214,229,0.75)] align-top print:text-black">
+    <td className="px-2 py-1.5 align-top" style={{ color: 'var(--text-secondary)' }}>
       {children}
     </td>
   )
@@ -322,20 +358,20 @@ function Td({ children }) {
 
 function EmptyRow({ children }) {
   return (
-    <p className="text-[rgba(200,214,229,0.25)] text-[10px] italic px-3 py-2 print:text-gray-400">
+    <p className="text-[10px] italic px-3 py-2" style={{ color: 'var(--text-tertiary)' }}>
       {children}
     </p>
   )
 }
 
-function StatBox({ label, value, color = '#c8d6e5' }) {
+function StatBox({ label, value, color = 'var(--text-secondary)' }) {
   return (
-    <div className="px-3 py-2 rounded-sm flex-1 text-center print:border print:border-gray-300"
-      style={{ background: 'rgba(0,255,136,0.03)', border: '1px solid rgba(0,255,136,0.1)' }}>
-      <p className="text-[8px] uppercase tracking-wider text-[rgba(200,214,229,0.35)] mb-0.5 print:text-gray-500">
+    <div className="px-3 py-2 rounded-sm flex-1 text-center"
+      style={{ background: 'var(--surface-secondary)', border: '1px solid var(--border-subtle)' }}>
+      <p className="text-[8px] uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-tertiary)' }}>
         {label}
       </p>
-      <p className="font-bold text-sm print:text-black" style={{ color }}>
+      <p className="font-bold text-sm" style={{ color }}>
         {value}
       </p>
     </div>

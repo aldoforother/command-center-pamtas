@@ -10,7 +10,7 @@ import { TokohList } from '../components/pos/TokohList'
 import { BinterList } from '../components/pos/BinterList'
 import { KerawananList } from '../components/pos/KerawananList'
 import { PatroliList } from '../components/pos/PatroliList'
-import { Modal } from '../components/ui/Modal'
+import { Modal, useToast } from '../components/ui'
 import { PosForm } from '../components/forms/PosForm'
 import { formatNumber } from '../utils/formatDate'
 import { aggregateDemografi } from '../utils/demografi'
@@ -18,7 +18,6 @@ import { hitungKerawananPos } from '../constants/kerawananCategories'
 import { isDriveUrl, driveToThumbnail } from '../utils/driveUrl'
 import { POS_TABS, VALID_POS_TABS } from '../constants/config'
 import { posService } from '../services/pos.service'
-import { useToast } from '../components/ui/Toast'
 
 export default function PosDetailPage() {
   const { posId, tab } = useParams()
@@ -91,15 +90,15 @@ export default function PosDetailPage() {
   // Error state — GAS gagal
   if (posListError) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-3 text-center p-8">
-        <div className="text-3xl text-[rgba(255,51,51,0.4)]">⚠</div>
-        <p className="text-[rgba(255,100,100,0.7)] text-sm font-bold uppercase tracking-widest">
+      <div className="flex flex-col items-center justify-center h-full gap-3 text-center p-8 animate-fade-in">
+        <div className="text-3xl" style={{ color: 'var(--color-danger)', opacity: 0.4 }}>⚠</div>
+        <p className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--color-danger)' }}>
           Gagal Memuat Data
         </p>
-        <p className="text-[rgba(200,214,229,0.35)] text-xs max-w-xs">
+        <p className="text-xs max-w-xs" style={{ color: 'var(--text-tertiary)' }}>
           Koneksi ke server gagal. Periksa koneksi internet dan coba lagi.
         </p>
-        <p className="font-mono text-[rgba(255,100,100,0.4)] text-[10px]">{posListError}</p>
+        <p className="font-mono text-[10px]" style={{ color: 'var(--color-danger)', opacity: 0.4 }}>{posListError}</p>
         <button
           className="hud-btn mt-2"
           onClick={() => window.location.reload()}
@@ -115,10 +114,10 @@ export default function PosDetailPage() {
 
       {/* ── Header pos ─────────────────────────────────────── */}
       <div
-        className="flex-shrink-0 px-4 py-3"
+        className="flex-shrink-0 px-4 py-3 animate-fade-in"
         style={{
-          background: 'rgba(4,11,6,0.9)',
-          borderBottom: '1px solid rgba(0,255,136,0.15)',
+          background: 'var(--surface-primary)',
+          borderBottom: '1px solid var(--border-subtle)',
         }}
       >
         <div className="flex items-start justify-between gap-4">
@@ -127,19 +126,22 @@ export default function PosDetailPage() {
             <div className="flex items-center gap-2 mb-1">
               <button
                 onClick={() => navigate('/')}
-                className="text-[9px] text-[rgba(0,255,136,0.4)] hover:text-[rgba(0,255,136,0.7)] tracking-widest uppercase transition-colors"
+                className="text-[9px] tracking-widest uppercase transition-colors"
+                style={{ color: 'var(--accent-primary)', opacity: 0.6 }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '0.6'}
               >
                 ← Overview
               </button>
-              <span className="text-[rgba(0,255,136,0.2)] text-xs">/</span>
-              <span className="text-[9px] text-[rgba(200,214,229,0.3)] tracking-widest uppercase">
+              <span className="text-xs" style={{ color: 'var(--accent-primary)', opacity: 0.3 }}>/</span>
+              <span className="text-[9px] tracking-widest uppercase" style={{ color: 'var(--text-tertiary)' }}>
                 {posId}
               </span>
             </div>
-            <h2 className="text-[rgba(200,214,229,0.9)] font-bold text-base leading-tight truncate">
+            <h2 className="font-bold text-base leading-tight truncate" style={{ color: 'var(--text-primary)' }}>
               {pos?.nama_pos || posId}
             </h2>
-            <p className="text-[rgba(200,214,229,0.35)] text-xs mt-0.5">
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
               {[pos?.lokasi_desa, pos?.kabupaten].filter(Boolean).join(' · ')}
             </p>
           </div>
@@ -153,16 +155,16 @@ export default function PosDetailPage() {
               <InfoPill label="Personel" value={`${pos.jumlah_personel} org`} />
             )}
             {demografiSummary?.total_penduduk > 0 && (
-              <InfoPill label="Penduduk" value={formatNumber(demografiSummary.total_penduduk)} color="#4488ff" />
+              <InfoPill label="Penduduk" value={formatNumber(demografiSummary.total_penduduk)} color="var(--color-info)" />
             )}
             {activeKerawanan > 0 && (
-              <InfoPill label="Insiden" value={`${activeKerawanan} aktif`} color="#ff3333" pulse />
+              <InfoPill label="Insiden" value={`${activeKerawanan} aktif`} color="var(--color-danger)" pulse />
             )}
             {level !== 'AMAN' && (
               <InfoPill
                 label="Klasifikasi"
                 value={`${level} (${totalPoin} poin)`}
-                color={level === 'SIAGA' ? '#ff3333' : '#ffaa00'}
+                color={level === 'SIAGA' ? 'var(--color-danger)' : 'var(--color-warning)'}
                 pulse={level === 'SIAGA'}
               />
             )}
@@ -171,9 +173,9 @@ export default function PosDetailPage() {
               onClick={() => navigate(`/laporan/pos/${posId}`)}
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[9px] transition-colors"
               style={{
-                background: 'rgba(68,136,255,0.06)',
-                border: '1px solid rgba(68,136,255,0.2)',
-                color: 'rgba(68,136,255,0.7)',
+                background: 'var(--color-info-subtle)',
+                border: '1px solid var(--color-info-subtle)',
+                color: 'var(--color-info)',
               }}
               title="Cetak laporan pos"
             >
@@ -187,7 +189,7 @@ export default function PosDetailPage() {
         </div>
 
         {/* ── Tab nav ──────────────────────────────────────── */}
-        <div className="flex gap-0.5 mt-3 border-b border-[rgba(0,255,136,0.1)] overflow-x-auto">
+        <div className="flex gap-0.5 mt-3 border-b overflow-x-auto" style={{ borderColor: 'var(--accent-muted)' }}>
           {POS_TABS.map(tab => {
             const isActive = activeTab === tab.id
             const hasBadge = tab.id === 'kerawanan' && activeKerawanan > 0
@@ -195,18 +197,34 @@ export default function PosDetailPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold tracking-[0.12em] uppercase
-                  border-b-2 transition-all whitespace-nowrap flex-shrink-0 relative ${
-                  isActive
-                    ? 'text-[#00ff88] border-[#00ff88] bg-[rgba(0,255,136,0.06)]'
-                    : 'text-[rgba(200,214,229,0.35)] border-transparent hover:text-[rgba(200,214,229,0.6)] hover:border-[rgba(0,255,136,0.25)]'
-                }`}
+                className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold tracking-[0.12em] uppercase
+                  border-b-2 whitespace-nowrap flex-shrink-0 relative transition-all duration-100"
+                style={isActive ? {
+                  color: 'var(--accent-primary)',
+                  borderColor: 'var(--accent-primary)',
+                  background: 'var(--accent-muted)',
+                } : {
+                  color: 'var(--text-tertiary)',
+                  borderColor: 'transparent',
+                }}
+                onMouseEnter={e => {
+                  if (!isActive) {
+                    e.currentTarget.style.color = 'var(--text-secondary)'
+                    e.currentTarget.style.borderColor = 'var(--border-default)'
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!isActive) {
+                    e.currentTarget.style.color = 'var(--text-tertiary)'
+                    e.currentTarget.style.borderColor = 'transparent'
+                  }
+                }}
               >
                 <span>{tab.icon}</span>
                 <span>{tab.label}</span>
                 {hasBadge && (
-                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-[#ff3333] rounded-full animate-pulse"
-                    style={{ boxShadow: '0 0 4px rgba(255,51,51,0.8)' }} />
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full animate-pulse"
+                    style={{ background: 'var(--color-danger)', boxShadow: '0 0 4px rgba(255,51,51,0.8)' }} />
                 )}
               </button>
             )
@@ -321,7 +339,7 @@ function InfoPill({ label, value, color = '#00ff88', pulse }) {
 }
 
 function InfoPosTab({ pos, onEdit }) {
-  if (!pos) return <div className="text-[rgba(200,214,229,0.3)] text-xs text-center py-16">Data pos tidak ditemukan</div>
+  if (!pos) return <div className="text-xs text-center py-16" style={{ color: 'var(--text-tertiary)' }}>Data pos tidak ditemukan</div>
 
   const sections = [
     {
@@ -375,26 +393,28 @@ function InfoPosTab({ pos, onEdit }) {
   ]
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-fade-in">
       <div className="flex justify-end">
         <button className="hud-btn text-[10px]" onClick={onEdit}>
           ✎ Edit Data Pos
         </button>
       </div>
-      {sections.map(section => (
-        <div key={section.title} className="rounded-sm overflow-hidden"
-          style={{ border: '1px solid rgba(0,255,136,0.12)' }}>
+      {sections.map((section, idx) => (
+        <div key={section.title} className="rounded-sm overflow-hidden animate-scale-in"
+          style={{ border: '1px solid var(--border-subtle)', background: 'var(--surface-primary)', animationDelay: `${idx * 80}ms` }}>
           <div className="px-3 py-2"
-            style={{ background: 'rgba(0,255,136,0.05)', borderBottom: '1px solid rgba(0,255,136,0.1)' }}>
+            style={{ background: 'var(--surface-secondary)', borderBottom: '1px solid var(--border-subtle)' }}>
             <span className="text-[9px] font-bold tracking-[0.2em] uppercase"
-              style={{ color: 'rgba(0,255,136,0.7)' }}>{section.title}</span>
+              style={{ color: 'var(--accent-primary)' }}>{section.title}</span>
           </div>
-          <div className="divide-y divide-[rgba(0,255,136,0.05)]">
-            {section.rows.map(row => (
-              <div key={row.label} className="flex items-start gap-3 px-3 py-2">
+          <div className="divide-y" style={{ borderColor: 'var(--border-subtle)' }}>
+            {section.rows.map((row, rowIdx) => (
+              <div key={row.label} className="flex items-start gap-3 px-3 py-2 animate-fade-in"
+                style={{ animationDelay: `${idx * 80 + 50 + rowIdx * 30}ms` }}>
                 <span className="text-[10px] uppercase tracking-wider flex-shrink-0 w-36"
-                  style={{ color: 'rgba(200,214,229,0.35)' }}>{row.label}</span>
-                <span className={`text-[11px] font-medium flex-1 ${row.highlight ? 'text-[#ffaa00]' : 'text-[rgba(200,214,229,0.8)]'}`}>
+                  style={{ color: 'var(--text-tertiary)' }}>{row.label}</span>
+                <span className="text-[11px] font-medium flex-1"
+                  style={row.highlight ? { color: 'var(--color-warning)' } : { color: 'var(--text-secondary)' }}>
                   {row.value || '—'}
                 </span>
               </div>
@@ -441,13 +461,13 @@ function DokumentasiTab({ pos }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-fade-in">
       {/* Koordinat info */}
       {pos?.lat && pos?.lng && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-sm"
-          style={{ background: 'rgba(0,255,136,0.04)', border: '1px solid rgba(0,255,136,0.12)' }}>
+          style={{ background: 'var(--accent-muted)', border: '1px solid var(--border-subtle)' }}>
           <span className="hud-label">Koordinat Pos</span>
-          <span className="font-mono text-xs text-[rgba(0,255,136,0.6)]">
+          <span className="font-mono text-xs" style={{ color: 'var(--accent-primary)' }}>
             {pos.lat}°N, {pos.lng}°E
           </span>
         </div>
@@ -455,11 +475,11 @@ function DokumentasiTab({ pos }) {
 
       {/* Input tambah URL foto */}
       <div className="rounded-sm overflow-hidden"
-        style={{ border: '1px solid rgba(0,255,136,0.12)' }}>
+        style={{ border: '1px solid var(--border-subtle)' }}>
         <div className="px-3 py-1.5"
-          style={{ background: 'rgba(0,255,136,0.03)', borderBottom: '1px solid rgba(0,255,136,0.08)' }}>
+          style={{ background: 'var(--surface-secondary)', borderBottom: '1px solid var(--border-subtle)' }}>
           <span className="text-[8px] font-bold tracking-[0.2em] uppercase"
-            style={{ color: 'rgba(0,255,136,0.7)' }}>Tambah Foto</span>
+            style={{ color: 'var(--accent-primary)' }}>Tambah Foto</span>
         </div>
         <div className="p-3 space-y-2">
           <div className="flex gap-2">
@@ -479,13 +499,13 @@ function DokumentasiTab({ pos }) {
             </button>
           </div>
           {urlError && (
-            <p className="text-[10px] text-[rgba(255,80,80,0.8)]">✕ {urlError}</p>
+            <p className="text-[10px]" style={{ color: 'var(--color-danger)' }}>✕ {urlError}</p>
           )}
-          <p className="text-[9px] leading-relaxed" style={{ color: 'rgba(200,214,229,0.35)' }}>
+          <p className="text-[9px] leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
             Google Drive: klik kanan foto → "Dapatkan link" → akses "Siapa saja yang punya link" → salin URL.
             Untuk menyimpan permanen, tambahkan URL ke kolom{' '}
-            <span className="font-mono text-[rgba(0,255,136,0.5)]">foto_satelit_url</span>{' '}
-            di sheet <span className="font-mono text-[rgba(0,255,136,0.5)]">pos</span> (pisah koma).
+            <span className="font-mono" style={{ color: 'var(--accent-primary)', opacity: 0.6 }}>foto_satelit_url</span>{' '}
+            di sheet <span className="font-mono" style={{ color: 'var(--accent-primary)', opacity: 0.6 }}>pos</span> (pisah koma).
           </p>
         </div>
       </div>
@@ -496,7 +516,7 @@ function DokumentasiTab({ pos }) {
           <div className="flex items-center justify-between mb-2">
             <p className="hud-label">Dokumentasi ({allUrls.length})</p>
             {extraUrls.length > 0 && (
-              <span className="text-[9px] text-[rgba(255,170,0,0.6)] italic">
+              <span className="text-[9px] italic" style={{ color: 'var(--color-warning)' }}>
                 {extraUrls.length} URL baru (belum disimpan ke sheet)
               </span>
             )}
@@ -513,12 +533,12 @@ function DokumentasiTab({ pos }) {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-10 text-center">
-          <div className="text-3xl mb-3 text-[rgba(0,255,136,0.2)]">▣</div>
-          <p className="text-[rgba(200,214,229,0.3)] text-xs uppercase tracking-widest mb-2">
+        <div className="flex flex-col items-center justify-center py-10 text-center animate-fade-in">
+          <div className="text-3xl mb-3" style={{ color: 'var(--accent-primary)', opacity: 0.2 }}>▣</div>
+          <p className="text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--text-tertiary)' }}>
             Belum ada dokumentasi
           </p>
-          <p className="text-[rgba(200,214,229,0.2)] text-[10px] max-w-xs">
+          <p className="text-[10px] max-w-xs" style={{ color: 'var(--text-disabled)' }}>
             Tambahkan URL foto di atas untuk melihat galeri dokumentasi pos ini.
           </p>
         </div>
@@ -532,19 +552,20 @@ function GalleryItem({ url, isExtra, onRemove }) {
     ? driveToThumbnail(url, 400)
     : url
   const fullUrl = url
+  const accentColor = isExtra ? 'var(--color-warning)' : 'var(--accent-primary)'
 
   return (
-    <div className="relative group rounded-sm overflow-hidden"
+    <div className="relative group rounded-sm overflow-hidden animate-fade-in"
       style={{
         aspectRatio: '16/9',
-        background: 'rgba(0,255,136,0.03)',
-        border: isExtra ? '1px solid rgba(255,170,0,0.25)' : '1px solid rgba(0,255,136,0.15)',
+        background: 'var(--surface-secondary)',
+        border: isExtra ? '1px solid var(--color-warning)' : '1px solid var(--border-subtle)',
       }}>
       {/* Corner brackets */}
       <span className="absolute top-0 left-0 w-3 h-3 z-10 pointer-events-none"
-        style={{ borderTop: `1px solid ${isExtra ? 'rgba(255,170,0,0.5)' : 'rgba(0,255,136,0.5)'}`, borderLeft: `1px solid ${isExtra ? 'rgba(255,170,0,0.5)' : 'rgba(0,255,136,0.5)'}` }} />
+        style={{ borderTop: `1px solid ${isExtra ? 'var(--color-warning)' : 'var(--accent-primary)'}`, borderLeft: `1px solid ${isExtra ? 'var(--color-warning)' : 'var(--accent-primary)'}`, opacity: 0.5 }} />
       <span className="absolute bottom-0 right-0 w-3 h-3 z-10 pointer-events-none"
-        style={{ borderBottom: `1px solid ${isExtra ? 'rgba(255,170,0,0.5)' : 'rgba(0,255,136,0.5)'}`, borderRight: `1px solid ${isExtra ? 'rgba(255,170,0,0.5)' : 'rgba(0,255,136,0.5)'}` }} />
+        style={{ borderBottom: `1px solid ${isExtra ? 'var(--color-warning)' : 'var(--accent-primary)'}`, borderRight: `1px solid ${isExtra ? 'var(--color-warning)' : 'var(--accent-primary)'}`, opacity: 0.5 }} />
 
       <a href={fullUrl} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
         <img
@@ -558,13 +579,14 @@ function GalleryItem({ url, isExtra, onRemove }) {
         />
         {/* Fallback saat gambar gagal load */}
         <div className="hidden w-full h-full items-center justify-center absolute inset-0"
-          style={{ color: 'rgba(200,214,229,0.2)', fontSize: 11 }}>
+          style={{ color: 'var(--text-tertiary)', fontSize: 11 }}>
           ▣ Gagal load
         </div>
         {/* Hover overlay */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-          style={{ background: 'rgba(0,255,136,0.08)' }}>
-          <span className="text-[rgba(0,255,136,0.8)] text-xs tracking-widest uppercase font-bold">
+          style={{ background: 'var(--accent-muted)' }}>
+          <span className="text-xs tracking-widest uppercase font-bold"
+            style={{ color: accentColor }}>
             Buka →
           </span>
         </div>
@@ -574,13 +596,13 @@ function GalleryItem({ url, isExtra, onRemove }) {
       {isExtra && (
         <div className="absolute top-1 right-1 flex items-center gap-1 z-20">
           <span className="text-[8px] px-1 py-0.5 rounded-sm font-bold"
-            style={{ background: 'rgba(255,170,0,0.15)', color: 'rgba(255,170,0,0.8)', border: '1px solid rgba(255,170,0,0.25)' }}>
+            style={{ background: 'var(--color-warning-subtle)', color: 'var(--color-warning)', border: '1px solid var(--color-warning-subtle)' }}>
             BARU
           </span>
           <button
             onClick={e => { e.preventDefault(); e.stopPropagation(); onRemove() }}
             className="w-4 h-4 rounded-sm flex items-center justify-center text-[8px] transition-colors"
-            style={{ background: 'rgba(255,51,51,0.2)', color: 'rgba(255,51,51,0.8)', border: '1px solid rgba(255,51,51,0.3)' }}
+            style={{ background: 'var(--color-danger-subtle)', color: 'var(--color-danger)', border: '1px solid var(--color-danger-subtle)' }}
             title="Hapus dari preview"
           >
             ✕

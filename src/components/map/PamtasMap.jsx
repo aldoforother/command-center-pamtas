@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, LayerGroup, useMap } from 'react-leaflet'
 import { useNavigate } from 'react-router-dom'
 import { MAP_CONFIG, SATELLITE_TILE } from '../../constants/mapConfig'
@@ -21,31 +21,42 @@ function MapController({ selectedPosId, posList }) {
   return null
 }
 
-// Kategori kerawanan → key mapLayers
-// Mencakup nama baru (7 kategori resmi) + alias nama lama dari Google Sheet
+// Kategori kerawanan -> key mapLayers
 const KATEGORI_TO_LAYER = {
-  // ── Kategori resmi baru ──
-  'Narkoba':     'narkoba',
-  'Kriminal':    'kriminal',
-  'Logging':     'logging',
-  'Trading':     'trading',
+  // Kategori resmi baru
+  'Narkoba': 'narkoba',
+  'Kriminal': 'kriminal',
+  'Logging': 'logging',
+  'Trading': 'trading',
   'Trafficking': 'trafficking',
-  'Border':      'border',
-  'PMI NP':      'pmInp',
-
-  // ── Alias nama lama di sheet → kategori baru ──
-  'Human Trafficking':  'trafficking', // sinonim Trafficking
-  'Illegal Logging':    'logging',     // sinonim Logging
-  'Ilegal Logging':     'logging',     // typo umum
-  'Penyelundupan':      'trading',     // perdagangan lintas batas ilegal
-  'Imigran Gelap':      'pmInp',       // PMI non-prosedural
-  'Penjarahan Laut':    'kriminal',    // kejahatan oleh warga sekitar
-  'Ketergantungan':     'trading',     // dependensi sembako dari Malaysia
-  'Isolasi Wilayah':    'trading',     // akses sembako dari Malaysia saat terisolasi
+  'Border': 'border',
+  'PMI NP': 'pmInp',
+  // Alias nama lama di sheet -> kategori baru
+  'Human Trafficking': 'trafficking',
+  'Illegal Logging': 'logging',
+  'Ilegal Logging': 'logging',
+  'Penyelundupan': 'trading',
+  'Imigran Gelap': 'pmInp',
+  'Penjarahan Laut': 'kriminal',
+  'Ketergantungan': 'trading',
+  'Isolasi Wilayah': 'trading',
 }
 
+// Legend data
+const LEGEND_ITEMS = [
+  { key: 'pos', label: 'Pos', color: 'var(--accent-primary)' },
+  { key: 'narkoba', label: 'Narkoba', color: '#ff3333' },
+  { key: 'kriminal', label: 'Kriminal', color: '#ff8800' },
+  { key: 'logging', label: 'Logging', color: '#88cc00' },
+  { key: 'trading', label: 'Trading', color: '#ffcc00' },
+  { key: 'trafficking', label: 'Trafficking', color: '#ff66cc' },
+  { key: 'border', label: 'Border', color: '#4488ff' },
+  { key: 'pmInp', label: 'PMI NP', color: '#cc88ff' },
+]
+
 /**
- * Komponen peta utama Satgas Pamtas
+ * Komponen peta utama Pamtas
+ * Enhanced: CSS tokens, smooth fly-to, legend, keyboard a11y
  */
 export function PamtasMap({
   posList = [],
@@ -55,11 +66,12 @@ export function PamtasMap({
 }) {
   const navigate = useNavigate()
   const { selectedPosId, setSelectedPosId, mapLayer, mapLayers } = useApp()
+  const [showLegend, setShowLegend] = useState(true)
 
   // Filter pos yang punya koordinat valid
   const validPos = posList.filter(p => p.lat && p.lng && !isNaN(Number(p.lat)))
 
-  // Buat lookup pos_id → koordinat untuk fallback marker
+  // Buat lookup pos_id -> koordinat untuk fallback marker
   const posCoordMap = posList.reduce((acc, p) => {
     if (p.lat && p.lng && !isNaN(Number(p.lat)) && Number(p.lat) !== 0) {
       acc[p.pos_id] = { lat: Number(p.lat), lng: Number(p.lng) }
@@ -74,18 +86,15 @@ export function PamtasMap({
     if (k.lat && k.lng && !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
       return { lat, lng }
     }
-    // Fallback: koordinat pos
     return posCoordMap[k.pos_id] || null
   }
 
-  // Filter kerawanan berdasarkan mapLayers (per sub-layer kategori)
+  // Filter kerawanan berdasarkan mapLayers
   const visibleKerawanan = kerawananList
     .filter(k => {
       if (!showKerawanan) return false
-      // cek sub-layer berdasarkan kategori
       const layerKey = KATEGORI_TO_LAYER[k.kategori]
       if (!layerKey || !mapLayers[layerKey]) return false
-      // harus punya koordinat (sendiri atau dari pos)
       return resolveCoord(k) !== null
     })
     .map(k => ({ ...k, _coord: resolveCoord(k) }))
@@ -100,7 +109,7 @@ export function PamtasMap({
         style={{ height: '100%', width: '100%' }}
         zoomControl={false}
       >
-        {/* Tile layer — conditional rendering forces proper swap */}
+        {/* Tile layer */}
         {mapLayer === 'satellite' ? (
           <TileLayer
             url={SATELLITE_TILE.url}
@@ -109,20 +118,19 @@ export function PamtasMap({
         ) : (
           <TileLayer
             url={MAP_CONFIG.tileUrl}
-            attribution={MAP_CONFIG.tileAttribution}
+            attribution={MAP_CONFIG.attribution}
           />
         )}
 
         {/* Controller: fly to selected pos */}
         <MapController selectedPosId={selectedPosId} posList={validPos} />
 
-        {/* ── Pos markers ──────────────────────────────── */}
+        {/* Pos markers */}
         {mapLayers.pos && (
           <LayerGroup>
             {validPos.map((pos) => {
               const isSelected = pos.pos_id === selectedPosId
               const isKotis = pos.pos_id === 'KT'
-              // Hitung kerawanan aktif untuk pos ini
               const posActiveKerawanan = kerawananList.filter(
                 k => k.pos_id === pos.pos_id && k.status?.toLowerCase() === 'aktif'
               ).length
@@ -149,7 +157,7 @@ export function PamtasMap({
           </LayerGroup>
         )}
 
-        {/* ── Kerawanan markers ────────────────────────── */}
+        {/* Kerawanan markers */}
         {showKerawanan && (
           <LayerGroup>
             {visibleKerawanan.map((item, i) => (
@@ -168,43 +176,82 @@ export function PamtasMap({
         )}
       </MapContainer>
 
-      {/* Layer toggle controls */}
-      <div className="absolute bottom-4 left-2 z-[2000] pointer-events-auto"
-        style={{ isolation: 'isolate' }}>
+      {/* Layer toggle controls - bottom left */}
+      <div className="absolute bottom-4 left-2 z-[2000] pointer-events-auto flex flex-col gap-2" style={{ isolation: 'isolate' }}>
         <MapLayerControls />
+      </div>
+
+      {/* Legend - bottom right */}
+      <div className="absolute bottom-4 right-2 z-[2000]" style={{ isolation: 'isolate' }}>
+        <button
+          onClick={() => setShowLegend(!showLegend)}
+          className="map-layer-btn mb-1"
+          style={{
+            background: showLegend ? 'var(--map-control-active-bg)' : 'var(--map-control-bg)',
+            border: showLegend ? '1px solid var(--map-control-active-border)' : '1px solid var(--border-subtle)',
+            color: showLegend ? 'var(--accent-primary)' : 'var(--text-tertiary)',
+          }}
+          aria-expanded={showLegend}
+          aria-controls="map-legend"
+          aria-label={showLegend ? 'Sembunyikan legenda' : 'Tampilkan legenda'}
+        >
+          LEGEND
+        </button>
+        {showLegend && (
+          <div
+            id="map-legend"
+            className="map-legend animate-fade-in"
+            style={{
+              background: 'var(--map-control-bg)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-sm)',
+              backdropFilter: 'blur(8px)',
+              padding: '8px 10px',
+              minWidth: '100px',
+            }}
+            role="region"
+            aria-label="Legenda peta"
+          >
+            {LEGEND_ITEMS.filter(item => {
+              if (item.key === 'pos') return mapLayers.pos
+              return mapLayers[item.key]
+            }).map(item => (
+              <div key={item.key} className="flex items-center gap-2 py-1" style={{ fontSize: '9px' }}>
+                <span
+                  className="w-2 h-2 rounded-sm flex-shrink-0"
+                  style={{ background: item.color, boxShadow: `0 0 4px ${item.color}` }}
+                />
+                <span style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  {item.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
 /**
- * Kontrol tile layer — bisa dipakai standalone maupun di dalam PamtasMap
+ * Kontrol tile layer - CSS tokens styling
+ * Enhanced: keyboard accessibility with aria-pressed
  */
 export function MapLayerControls() {
   const { mapLayer, setMapLayer } = useApp()
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1" role="group" aria-label="Tipe tampilan peta">
       {[
-        { key: 'street',    label: '◫ PETA' },
-        { key: 'satellite', label: '◉ SATELIT' },
+        { key: 'street', label: 'PETA' },
+        { key: 'satellite', label: 'SATELIT' },
       ].map(({ key, label }) => (
         <button
           key={key}
           onClick={(e) => { e.stopPropagation(); setMapLayer(key) }}
-          className="px-3 py-1.5 text-[9px] font-bold tracking-widest uppercase rounded-sm transition-all"
-          style={mapLayer === key ? {
-            background: 'rgba(0,255,136,0.15)',
-            border: '1px solid rgba(0,255,136,0.5)',
-            color: '#00ff88',
-            backdropFilter: 'blur(8px)',
-            boxShadow: '0 0 8px rgba(0,255,136,0.2)',
-          } : {
-            background: 'rgba(5,8,10,0.85)',
-            border: '1px solid rgba(0,255,136,0.15)',
-            color: 'rgba(200,214,229,0.45)',
-            backdropFilter: 'blur(8px)',
-          }}
+          className={`map-layer-btn ${mapLayer === key ? 'map-layer-btn-active' : 'map-layer-btn-inactive'}`}
+          aria-pressed={mapLayer === key}
+          aria-label={`Tampilkan ${label === 'PETA' ? 'peta jalan' : 'citra satelit'}`}
         >
           {label}
         </button>

@@ -1,4 +1,8 @@
 import { usePos, useAllDemografi } from '../../hooks/useSupabase'
+import { LoadingSpinner, EmptyState } from '../../components/ui'
+
+/* ── Animation stagger helper ───────────────────────────── */
+const getStaggerDelay = (index) => Math.min(index * 50, 300)
 
 // Helper: ambil nilai numerik dari berbagai kemungkinan nama field
 function getNum(obj, ...keys) {
@@ -88,142 +92,191 @@ export default function DataDemografiPage() {
   const sortedPos = [...all].sort((a, b) => b.total_penduduk - a.total_penduduk)
   const maxPenduduk = sortedPos[0]?.total_penduduk || 1
 
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center" style={{ background: 'var(--surface-base)' }}>
+        <LoadingSpinner text="Memuat data demografi..." />
+      </div>
+    )
+  }
+
   return (
-    <div className="h-full overflow-y-auto bg-[#050810] p-4">
+    <div className="h-full overflow-y-auto p-4 animate-fade-in" style={{ background: 'var(--surface-base)' }}>
       {/* Header */}
-      <div className="mb-4">
-        <h2 className="font-bold text-sm tracking-[0.15em] uppercase text-[#00ff88]"
-          style={{ textShadow: '0 0 10px rgba(0,255,136,0.4)' }}>
+      <div className="mb-4 animate-fade-in">
+        <h2 className="font-bold text-sm tracking-widest uppercase" style={{ color: 'var(--color-info)' }}>
           ◈ DATA DEMOGRAFI
         </h2>
-        <p className="text-[10px] text-[rgba(200,214,229,0.35)] tracking-wider mt-0.5 uppercase">
+        <p className="text-[10px] tracking-wider mt-1 uppercase" style={{ color: 'var(--text-tertiary)' }}>
           Data kependudukan wilayah tugas satgas pamtas
         </p>
       </div>
 
-      {loading ? (
-        <div className="grid grid-cols-2 gap-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-32 rounded-sm bg-[rgba(0,255,136,0.04)] animate-pulse" />
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-4">
+      <div className="space-y-4">
 
-          {/* Summary cards */}
-          <div className="grid grid-cols-3 gap-3">
-            <StatCard label="Total Penduduk"  value={totalPenduduk.toLocaleString('id-ID')} color="#4488ff"  icon="◉" />
-            <StatCard label="Kepala Keluarga" value={totalKK.toLocaleString('id-ID')}       color="#ffaa00"  icon="◈" />
-            <StatCard label="Pos Aktif"       value={allPosIds.length}                      color="#00ff88"  icon="◫" />
+        {/* Summary cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <StatCard
+            label="Total Penduduk"
+            value={totalPenduduk.toLocaleString('id-ID')}
+            color="var(--color-info)"
+            icon="◉"
+            delay={getStaggerDelay(0)}
+          />
+          <StatCard
+            label="Kepala Keluarga"
+            value={totalKK.toLocaleString('id-ID')}
+            color="var(--color-warning)"
+            icon="◈"
+            delay={getStaggerDelay(1)}
+          />
+          <StatCard
+            label="Pos Aktif"
+            value={allPosIds.length}
+            color="var(--accent-primary)"
+            icon="◫"
+            delay={getStaggerDelay(2)}
+          />
+        </div>
+
+        {/* Per kabupaten */}
+        {Object.keys(byKabupaten).length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {Object.entries(byKabupaten).map(([kab, data], i) => (
+              <KabupatenCard
+                key={kab}
+                kab={kab}
+                data={data}
+                delay={getStaggerDelay(i + 3)}
+              />
+            ))}
           </div>
+        )}
 
-          {/* Per kabupaten */}
-          {Object.keys(byKabupaten).length > 0 && (
-            <div className="grid grid-cols-2 gap-3">
-              {Object.entries(byKabupaten).map(([kab, data]) => (
-                <Panel key={kab} title={kab}>
-                  <div className="grid grid-cols-3 gap-2 mt-1">
-                    <MiniStat label="Pos"      value={data.pos}                              color="#00ff88" />
-                    <MiniStat label="Penduduk" value={data.penduduk.toLocaleString('id-ID')} color="#4488ff" />
-                    <MiniStat label="KK"       value={data.kk.toLocaleString('id-ID')}       color="#ffaa00" />
+        {/* Distribusi penduduk per pos */}
+        <Panel title="DISTRIBUSI PENDUDUK PER POS" delay={getStaggerDelay(5)}>
+          <div className="space-y-2">
+            {sortedPos.map((d, i) => {
+              const jml = d.total_penduduk
+              const pct = maxPenduduk > 0 ? Math.round((jml / maxPenduduk) * 100) : 0
+              return (
+                <div key={d.pos_id} className="flex items-center gap-2">
+                  <span className="font-mono text-[9px] font-bold w-14 flex-shrink-0"
+                    style={{ color: 'var(--accent-primary)' }}>
+                    {d.pos_id}
+                  </span>
+                  <div className="flex-1 h-1.5 rounded-full overflow-hidden"
+                    style={{ background: 'var(--surface-muted)' }}>
+                    <div className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${pct}%`,
+                        background: 'var(--color-info)',
+                        boxShadow: '0 0 4px rgba(59,139,255,0.5)'
+                      }} />
                   </div>
-                </Panel>
-              ))}
-            </div>
-          )}
+                  <span className="font-mono text-[9px] w-16 text-right flex-shrink-0"
+                    style={{ color: 'var(--text-secondary)' }}>
+                    {jml.toLocaleString('id-ID')}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </Panel>
 
-          {/* Distribusi penduduk per pos */}
-          <Panel title="DISTRIBUSI PENDUDUK PER POS">
-            <div className="space-y-2 mt-1">
-              {sortedPos.map(d => {
-                const pos = posMap[d.pos_id]
-                const jml = d.total_penduduk
-                const pct = Math.round((jml / maxPenduduk) * 100)
-                return (
-                  <div key={d.pos_id} className="flex items-center gap-2">
-                    <span className="font-mono text-[9px] font-bold w-14 flex-shrink-0"
-                      style={{ color: 'rgba(0,255,136,0.6)' }}>
-                      {d.pos_id}
-                    </span>
-                    <div className="flex-1 h-1.5 rounded-full overflow-hidden"
-                      style={{ background: 'rgba(255,255,255,0.06)' }}>
-                      <div className="h-full rounded-full transition-all duration-700"
-                        style={{ width: `${pct}%`, background: '#4488ff', boxShadow: '0 0 4px rgba(68,136,255,0.5)' }} />
-                    </div>
-                    <span className="font-mono text-[9px] w-16 text-right flex-shrink-0"
-                      style={{ color: 'rgba(200,214,229,0.5)' }}>
-                      {jml.toLocaleString('id-ID')}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          </Panel>
+        {/* Tabel lengkap */}
+        <Panel title="DATA LENGKAP PER POS" delay={getStaggerDelay(6)}>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[9px]">
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                  <th scope="col" className="py-1.5 px-2 font-bold tracking-widest uppercase text-left" style={{ color: 'var(--accent-primary)' }}>
+                    POS
+                  </th>
+                  <th scope="col" className="py-1.5 px-2 font-bold tracking-widest uppercase text-left" style={{ color: 'var(--accent-primary)' }}>
+                    NAMA POS
+                  </th>
+                  <th scope="col" className="py-1.5 px-2 font-bold tracking-widest uppercase text-left" style={{ color: 'var(--accent-primary)' }}>
+                    KABUPATEN
+                  </th>
+                  <th scope="col" className="py-1.5 px-2 font-bold tracking-widest uppercase text-left" style={{ color: 'var(--accent-primary)' }}>
+                    DESA/LOKASI
+                  </th>
+                  <th scope="col" className="py-1.5 px-2 font-bold tracking-widest uppercase text-center" style={{ color: 'var(--accent-primary)' }}>
+                    PENDUDUK
+                  </th>
+                  <th scope="col" className="py-1.5 px-2 font-bold tracking-widest uppercase text-center" style={{ color: 'var(--accent-primary)' }}>
+                    KK
+                  </th>
+                  <th scope="col" className="py-1.5 px-2 font-bold tracking-widest uppercase text-center" style={{ color: 'var(--accent-primary)' }}>
+                    PERSONEL
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedPos.map((d, i) => {
+                  const pos = posMap[d.pos_id]
+                  return (
+                    <tr key={d.pos_id}
+                      className="transition-colors animate-fade-in"
+                      style={{
+                        borderBottom: '1px solid var(--border-subtle)',
+                        animationDelay: `${getStaggerDelay(i + 7)}ms`
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-secondary)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <td scope="row" className="py-1.5 px-2 font-mono font-bold" style={{ color: 'var(--accent-primary)' }}>
+                        {d.pos_id}
+                      </td>
+                      <td className="py-1.5 px-2" style={{ color: 'var(--text-secondary)' }}>
+                        {pos?.nama_pos || '—'}
+                      </td>
+                      <td className="py-1.5 px-2" style={{ color: 'var(--text-tertiary)' }}>
+                        {pos?.kabupaten || '—'}
+                      </td>
+                      <td className="py-1.5 px-2 max-w-[140px] truncate" style={{ color: 'var(--text-disabled)' }}>
+                        {pos?.lokasi_desa || '—'}
+                      </td>
+                      <td className="py-1.5 px-2 font-mono font-bold text-center" style={{ color: 'var(--color-info)' }}>
+                        {d.total_penduduk.toLocaleString('id-ID')}
+                      </td>
+                      <td className="py-1.5 px-2 font-mono font-bold text-center" style={{ color: 'var(--color-warning)' }}>
+                        {d.total_kk.toLocaleString('id-ID')}
+                      </td>
+                      <td className="py-1.5 px-2 font-mono font-bold text-center" style={{ color: 'var(--accent-primary)' }}>
+                        {Number(pos?.jumlah_personel) || '—'}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
 
-          {/* Tabel lengkap */}
-          <Panel title="DATA LENGKAP PER POS">
-            <div className="overflow-x-auto mt-1">
-              <table className="w-full text-[9px]">
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(0,255,136,0.1)' }}>
-                    {['POS', 'NAMA POS', 'KABUPATEN', 'DESA/LOKASI', 'PENDUDUK', 'KK', 'PERSONEL'].map(h => (
-                      <th key={h}
-                        className={`py-1.5 px-2 font-bold tracking-widest uppercase ${['PENDUDUK','KK','PERSONEL'].includes(h) ? 'text-center' : 'text-left'}`}
-                        style={{ color: 'rgba(0,255,136,0.4)' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedPos.map(d => {
-                    const pos = posMap[d.pos_id]
-                    return (
-                      <tr key={d.pos_id}
-                        style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,255,136,0.03)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <td className="py-1.5 px-2 font-mono font-bold" style={{ color: 'rgba(0,255,136,0.6)' }}>
-                          {d.pos_id}
-                        </td>
-                        <td className="py-1.5 px-2" style={{ color: 'rgba(200,214,229,0.7)' }}>
-                          {pos?.nama_pos || '—'}
-                        </td>
-                        <td className="py-1.5 px-2" style={{ color: 'rgba(200,214,229,0.45)' }}>
-                          {pos?.kabupaten || '—'}
-                        </td>
-                        <td className="py-1.5 px-2 max-w-[140px] truncate" style={{ color: 'rgba(200,214,229,0.35)' }}>
-                          {pos?.lokasi_desa || '—'}
-                        </td>
-                        <td className="py-1.5 px-2 font-mono font-bold text-center" style={{ color: '#4488ff' }}>
-                          {d.total_penduduk.toLocaleString('id-ID')}
-                        </td>
-                        <td className="py-1.5 px-2 font-mono font-bold text-center" style={{ color: '#ffaa00' }}>
-                          {d.total_kk.toLocaleString('id-ID')}
-                        </td>
-                        <td className="py-1.5 px-2 font-mono font-bold text-center" style={{ color: '#00ff88' }}>
-                          {Number(pos?.jumlah_personel) || '—'}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </Panel>
-
-        </div>
-      )}
+      </div>
     </div>
   )
 }
 
-function StatCard({ label, value, color, icon }) {
+/* ── Components ──────────────────────────────────────────────── */
+
+function StatCard({ label, value, color, icon, delay = 0 }) {
   return (
-    <div className="px-3 py-2.5 rounded-sm"
-      style={{ background: 'rgba(5,8,10,0.8)', border: '1px solid rgba(0,255,136,0.12)' }}>
+    <div
+      className="px-3 py-2.5 rounded-sm animate-scale-in"
+      style={{
+        background: 'var(--surface-primary)',
+        border: '1px solid var(--border-subtle)',
+        animationDelay: `${delay}ms`
+      }}
+    >
       <div className="flex items-center gap-1.5 mb-1">
         <span className="text-[10px]" style={{ color }}>{icon}</span>
-        <span className="text-[8px] uppercase tracking-widest" style={{ color: 'rgba(200,214,229,0.35)' }}>{label}</span>
+        <span className="text-[8px] uppercase tracking-widest" style={{ color: 'var(--text-tertiary)' }}>
+          {label}
+        </span>
       </div>
       <div className="font-mono font-bold text-xl leading-none"
         style={{ color, textShadow: `0 0 14px ${color}55` }}>
@@ -233,22 +286,71 @@ function StatCard({ label, value, color, icon }) {
   )
 }
 
-function MiniStat({ label, value, color }) {
+function KabupatenCard({ kab, data, delay = 0 }) {
+  const isMalaysia = kab.includes('MALAYSIA')
+  const accentColor = isMalaysia ? 'var(--color-info)' : 'var(--accent-primary)'
+
   return (
-    <div className="text-center p-2 rounded-sm"
-      style={{ background: `${color}08`, border: `1px solid ${color}18` }}>
-      <p className="font-mono font-bold text-sm" style={{ color }}>{value}</p>
-      <p className="text-[8px] uppercase tracking-widest mt-0.5" style={{ color: 'rgba(200,214,229,0.3)' }}>{label}</p>
+    <div
+      className="rounded-sm overflow-hidden animate-scale-in"
+      style={{
+        background: 'var(--surface-primary)',
+        border: '1px solid var(--border-subtle)',
+        animationDelay: `${delay}ms`
+      }}
+    >
+      <div className="px-3 py-1.5 flex items-center justify-between"
+        style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--surface-secondary)' }}>
+        <span className="text-[8px] font-bold tracking-[0.2em] uppercase" style={{ color: accentColor }}>
+          {kab}
+        </span>
+      </div>
+      <div className="grid grid-cols-3 gap-2 p-3">
+        <MiniStat
+          label="Pos"
+          value={data.pos}
+          color={accentColor}
+        />
+        <MiniStat
+          label="Penduduk"
+          value={data.penduduk.toLocaleString('id-ID')}
+          color="var(--color-info)"
+        />
+        <MiniStat
+          label="KK"
+          value={data.kk.toLocaleString('id-ID')}
+          color="var(--color-warning)"
+        />
+      </div>
     </div>
   )
 }
 
-function Panel({ title, children }) {
+function MiniStat({ label, value, color }) {
   return (
-    <div className="rounded-sm overflow-hidden"
-      style={{ background: 'rgba(5,8,10,0.8)', border: '1px solid rgba(0,255,136,0.12)' }}>
-      <div className="px-3 py-1.5" style={{ borderBottom: '1px solid rgba(0,255,136,0.08)', background: 'rgba(0,255,136,0.03)' }}>
-        <span className="text-[8px] font-bold tracking-[0.2em] uppercase" style={{ color: 'rgba(0,255,136,0.7)' }}>
+    <div className="text-center p-2 rounded-sm"
+      style={{ background: 'var(--surface-secondary)', border: '1px solid var(--border-subtle)' }}>
+      <p className="font-mono font-bold text-sm" style={{ color }}>{value}</p>
+      <p className="text-[8px] uppercase tracking-widest mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+        {label}
+      </p>
+    </div>
+  )
+}
+
+function Panel({ title, children, delay = 0 }) {
+  return (
+    <div
+      className="rounded-sm overflow-hidden animate-scale-in"
+      style={{
+        background: 'var(--surface-primary)',
+        border: '1px solid var(--border-subtle)',
+        animationDelay: `${delay}ms`
+      }}
+    >
+      <div className="px-3 py-1.5"
+        style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--surface-secondary)' }}>
+        <span className="text-[8px] font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--accent-primary)' }}>
           {title}
         </span>
       </div>
