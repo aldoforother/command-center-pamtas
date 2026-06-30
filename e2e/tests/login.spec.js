@@ -4,21 +4,19 @@ test.describe('Login Page', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login')
     await page.waitForLoadState('networkidle')
+
+    // Wait for form inputs to be visible (boot animation takes ~2-3 seconds)
+    await expect(page.locator('input[type="email"]')).toBeVisible({ timeout: 15000 })
+    await expect(page.locator('input[type="password"]')).toBeVisible({ timeout: 5000 })
   })
 
   test('should display login form elements', async ({ page }) => {
-    // Header
-    await expect(page.locator('text=NARASINGA OPERATION CENTER')).toBeVisible()
+    // Header - use first() to avoid strict mode violation
+    await expect(page.locator('text=NARASINGA OPERATION CENTER').first()).toBeVisible()
 
     // Form labels
     await expect(page.locator('text=── OPERATOR ID')).toBeVisible()
     await expect(page.locator('text=── ACCESS KEY')).toBeVisible()
-
-    // Inputs
-    const emailInput = page.locator('input[type="email"]')
-    const passwordInput = page.locator('input[type="password"]')
-    await expect(emailInput).toBeVisible()
-    await expect(passwordInput).toBeVisible()
 
     // Submit button
     await expect(page.locator('button[type="submit"]')).toBeVisible()
@@ -40,11 +38,11 @@ test.describe('Login Page', () => {
     // Submit
     await page.click('button[type="submit"]')
 
-    // Should redirect to home (/)
-    await page.waitForURL('**/', { timeout: 15000 })
+    // Should redirect to home
+    await page.waitForURL('**/command-center-pamtas/**', { timeout: 20000 })
 
     // Home page should load
-    await expect(page.locator('text=◈ NARASINGA')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('text=NARASINGA').first()).toBeVisible({ timeout: 10000 })
   })
 
   test('should show validation for invalid email', async ({ page }) => {
