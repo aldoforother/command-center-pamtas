@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
+// Base URL: use environment variable or fallback to dev server
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173/command-center-pamtas'
+
 export default defineConfig({
   testDir: './e2e/tests',
   timeout: 30000,
@@ -13,7 +16,7 @@ export default defineConfig({
   reporter: 'list',
 
   use: {
-    baseURL: 'http://localhost:5173/command-center-pamtas',
+    baseURL: BASE_URL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
