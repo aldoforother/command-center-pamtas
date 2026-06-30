@@ -35,37 +35,48 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Start preview server in background
+      # Verify dist folder exists
+      - name: Verify build output
+        run: |
+          echo "=== dist folder contents ===" && ls -la dist/
+          echo "=== index.html exists ===" && test -f dist/index.html && echo "YES" || echo "NO"
+
+      # Start preview server with explicit base path
       - name: Start preview server
-        run: npm run preview &
-        env:
-          PLAYWRIGHT_BASE_URL: http://localhost:4173/command-center-pamtas
+        run: |
+          echo "Starting preview server on port 4173..."
+          npx vite preview --port 4173 --base /command-center-pamtas/ &
+          PREVIEW_PID=$!
+          echo "Preview PID: $PREVIEW_PID"
+          sleep 5
+          curl -s -o /dev/null -w "%{http_code}" http://localhost:4173/command-center-pamtas/ || echo "Server check failed"
 
       # Wait for server to be ready
       - name: Wait for server
-        run: npx wait-on http://localhost:4173 --timeout 30000
+        run: npx wait-on http://localhost:4173/command-center-pamtas/ --timeout 30000 || echo "Wait timeout - continuing anyway"
+
+      # Debug: verify server is running
+      - name: Debug server
+        run: |
+          echo "=== Checking server ===" && curl -s http://localhost:4173/command-center-pamtas/ | head -c 500
+          echo ""
+          echo "=== HTTP Status ===" && curl -s -o /dev/null -w "%{http_code}" http://localhost:4173/command-center-pamtas/
 
       - name: Run E2E tests
-        run: npx playwright test
+        run: npx playwright test --reporter=line
         env:
           E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
           E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          PLAYWRIGHT_BASE_URL: http://localhost:4173/command-center-pamtas
+          PLAYWRIGHT_BASE_URL: http://localhost:4173/command-center-pamtas/
 
       - name: Upload test results
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7
-
-      - name: Upload test screenshots
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-screenshots
-          path: test-results/
+          name: playwright-report-${{ github.run_number }}
+          path: |
+            playwright-report/
+            test-results/
           retention-days: 7
