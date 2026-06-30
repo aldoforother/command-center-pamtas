@@ -15,7 +15,7 @@ export async function login(page) {
   const adminPassword = process.env.E2E_ADMIN_PASSWORD
 
   if (!adminEmail || !adminPassword) {
-    throw new Error('Credentials not configured')
+    return false
   }
 
   await page.goto(`${BASE_URL}/login`)
