@@ -5,6 +5,7 @@ import { BINTER_TYPES, BINTER_COLOR_MAP } from '../constants/kerawananCategories
 import { LoadingSpinner, EmptyState } from '../components/ui'
 import { formatDate } from '../utils/formatDate'
 import { downloadBinterPDF, downloadBinterListPDF } from '../utils/generatePDF'
+import { TIMELINE_OPTIONS, filterByTimeline, getStaggerDelay } from '../utils/timeline'
 
 /* ── Color helper ──────────────────────────────────────────── */
 function getColor(jenis) {
@@ -15,32 +16,6 @@ function getColor(jenis) {
     if (jenis.toLowerCase().includes(key.toLowerCase())) return val
   }
   return 'rgba(200,214,229,0.5)'
-}
-
-/* ── Stagger helper ─────────────────────────────────────── */
-const getStaggerDelay = (index) => Math.min(index * 50, 300)
-
-/* ── Timeline filter options ───────────────────────────────── */
-const TIMELINE_OPTIONS = [
-  { id: 'all',   label: 'Semua' },
-  { id: 'today', label: 'Hari Ini' },
-  { id: '7d',   label: '7 Hari' },
-  { id: '30d',   label: '30 Hari' },
-  { id: '90d',   label: '3 Bulan' },
-  { id: '180d',  label: '6 Bulan' },
-  { id: '365d',  label: '1 Tahun' },
-]
-
-function filterByTimeline(items, timelineId) {
-  if (timelineId === 'all') return items
-  const now = new Date()
-  const cutoff = new Date()
-  if (timelineId === 'today') {
-    cutoff.setHours(0, 0, 0, 0)
-  } else {
-    cutoff.setDate(now.getDate() - parseInt(timelineId))
-  }
-  return items.filter(b => b.tanggal && new Date(b.tanggal) >= cutoff)
 }
 
 export default function BinterPage() {

@@ -5,32 +5,7 @@ import { KERAWANAN_CATEGORIES } from '../constants/kerawananCategories'
 import { KerawananBadge, LoadingSpinner, EmptyState } from '../components/ui'
 import { formatDate } from '../utils/formatDate'
 import { downloadKerawananPDF, downloadKerawananListPDF } from '../utils/generatePDF'
-
-/* ── Timeline filter options ──────────────────────────────── */
-const TIMELINE_OPTIONS = [
-  { id: 'all',   label: 'Semua' },
-  { id: 'today', label: 'Hari Ini' },
-  { id: '7d',   label: '7 Hari' },
-  { id: '30d',   label: '30 Hari' },
-  { id: '90d',   label: '3 Bulan' },
-  { id: '180d',  label: '6 Bulan' },
-  { id: '365d',  label: '1 Tahun' },
-]
-
-function filterByTimeline(items, timelineId) {
-  if (timelineId === 'all') return items
-  const now = new Date()
-  const cutoff = new Date()
-  if (timelineId === 'today') {
-    cutoff.setHours(0, 0, 0, 0)
-  } else {
-    cutoff.setDate(now.getDate() - parseInt(timelineId))
-  }
-  return items.filter(k => k.tanggal && new Date(k.tanggal) >= cutoff)
-}
-
-/* ── Animation stagger helper ───────────────────────────── */
-const getStaggerDelay = (index) => Math.min(index * 50, 300)
+import { TIMELINE_OPTIONS, filterByTimeline, getStaggerDelay } from '../utils/timeline'
 
 export default function InsidenPage() {
   const navigate = useNavigate()

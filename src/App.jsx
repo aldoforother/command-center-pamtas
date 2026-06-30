@@ -14,15 +14,15 @@ import OverviewPage         from './pages/OverviewPage'
 import PosDetailPage        from './pages/PosDetailPage'
 import InsidenPage          from './pages/InsidenPage'
 import BinterPage           from './pages/BinterPage'
-import AdminPage            from './pages/AdminPage'
-import PanduanPage          from './pages/PanduanPage'
 import LaporanPosPage       from './pages/laporan/LaporanPosPage'
 
 // Lazy-loaded pages for code splitting (reduce initial bundle)
-const GrafikKerawananPage = lazy(() => import('./pages/laporan/GrafikKerawananPage'))
-const TimelineBinterPage  = lazy(() => import('./pages/laporan/TimelineBinterPage'))
-const DataDemografiPage    = lazy(() => import('./pages/laporan/DataDemografiPage'))
-const TokohWilayahPage    = lazy(() => import('./pages/laporan/TokohWilayahPage'))
+const AdminPage             = lazy(() => import('./pages/AdminPage'))
+const PanduanPage           = lazy(() => import('./pages/PanduanPage'))
+const GrafikKerawananPage   = lazy(() => import('./pages/laporan/GrafikKerawananPage'))
+const TimelineBinterPage    = lazy(() => import('./pages/laporan/TimelineBinterPage'))
+const DataDemografiPage     = lazy(() => import('./pages/laporan/DataDemografiPage'))
+const TokohWilayahPage      = lazy(() => import('./pages/laporan/TokohWilayahPage'))
 
 // Lazy loading fallback component
 function PageLoader() {
@@ -125,8 +125,8 @@ export default function App() {
                           {/* Alias lama supaya bookmark lama tidak 404 */}
                           <Route path="/kerawanan"              element={<Navigate to="/insiden" replace />} />
                           <Route path="/binter"                 element={<Safe><BinterPage /></Safe>} />
-                          <Route path="/admin"                  element={<ProtectedRoute requireAdmin><Safe><AdminPage /></Safe></ProtectedRoute>} />
-                          <Route path="/panduan"                element={<Safe><PanduanPage /></Safe>} />
+                          <Route path="/admin"                  element={<ProtectedRoute requireAdmin><Safe><Suspense fallback={<PageLoader />}><AdminPage /></Suspense></Safe></ProtectedRoute>} />
+                          <Route path="/panduan"                element={<Safe><Suspense fallback={<PageLoader />}><PanduanPage /></Suspense></Safe>} />
                           <Route path="/laporan/kerawanan"      element={<Safe><Suspense fallback={<PageLoader />}><GrafikKerawananPage /></Suspense></Safe>} />
                           <Route path="/laporan/binter"         element={<Safe><Suspense fallback={<PageLoader />}><TimelineBinterPage /></Suspense></Safe>} />
                           <Route path="/laporan/demografi"      element={<Safe><Suspense fallback={<PageLoader />}><DataDemografiPage /></Suspense></Safe>} />
