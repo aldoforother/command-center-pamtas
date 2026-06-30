@@ -1,3 +1,4 @@
+import { goto } from './helpers.js'
 import { test, expect } from '@playwright/test'
 
 // Helper: Login before each test
@@ -9,7 +10,7 @@ test.beforeEach(async ({ page }) => {
     test.skip(true, 'Credentials not configured')
   }
 
-  await page.goto('/login')
+  await goto(page, '/login')
   await page.waitForLoadState('networkidle')
 
   // Wait for form inputs to be visible (boot animation)
@@ -30,7 +31,7 @@ test.describe('Overview Page', () => {
   })
 
   test('should display metric cards', async ({ page }) => {
-    await page.goto('/overview')
+    await goto(page, '/overview')
     await page.waitForLoadState('networkidle')
 
     await expect(page.locator('text=TOTAL PERSONEL')).toBeVisible({ timeout: 10000 })
@@ -38,7 +39,7 @@ test.describe('Overview Page', () => {
   })
 
   test('should display map container', async ({ page }) => {
-    await page.goto('/overview')
+    await goto(page, '/overview')
     await page.waitForLoadState('networkidle')
 
     // Map should load (leaflet container)
@@ -47,7 +48,7 @@ test.describe('Overview Page', () => {
   })
 
   test('should display threat panel', async ({ page }) => {
-    await page.goto('/overview')
+    await goto(page, '/overview')
     await page.waitForLoadState('networkidle')
 
     // Threat panel should exist
@@ -56,14 +57,14 @@ test.describe('Overview Page', () => {
   })
 
   test('should display binter panel', async ({ page }) => {
-    await page.goto('/overview')
+    await goto(page, '/overview')
     await page.waitForLoadState('networkidle')
 
     await expect(page.locator('text=KEGIATAN BINTER')).toBeVisible()
   })
 
   test('should have zoom controls on map', async ({ page }) => {
-    await page.goto('/overview')
+    await goto(page, '/overview')
     await page.waitForSelector('.leaflet-container', { timeout: 15000 })
 
     await expect(page.locator('.leaflet-control-zoom-in')).toBeVisible()
@@ -71,7 +72,7 @@ test.describe('Overview Page', () => {
   })
 
   test('should zoom in on map', async ({ page }) => {
-    await page.goto('/overview')
+    await goto(page, '/overview')
     await page.waitForSelector('.leaflet-container', { timeout: 15000 })
 
     await page.click('.leaflet-control-zoom-in')
@@ -79,7 +80,7 @@ test.describe('Overview Page', () => {
   })
 
   test('should zoom out on map', async ({ page }) => {
-    await page.goto('/overview')
+    await goto(page, '/overview')
     await page.waitForSelector('.leaflet-container', { timeout: 15000 })
 
     await page.click('.leaflet-control-zoom-out')

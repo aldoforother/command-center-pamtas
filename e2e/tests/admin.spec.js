@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { goto } from './helpers.js'
 
 test.beforeEach(async ({ page }) => {
   const adminEmail = process.env.E2E_ADMIN_EMAIL
@@ -6,7 +7,7 @@ test.beforeEach(async ({ page }) => {
   if (!adminEmail || !adminPassword) {
     test.skip(true, 'Credentials not configured')
   }
-  await page.goto('/login')
+  await goto(page, '/login')
   await page.waitForLoadState('networkidle')
 
   // Wait for form inputs to be visible (boot animation)
@@ -21,19 +22,19 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('Admin Page', () => {
   test('should navigate to admin page', async ({ page }) => {
-    await page.goto('/admin')
+    await goto(page, '/admin')
     await page.waitForLoadState('networkidle')
     await expect(page).toHaveURL(/\/admin/)
   })
 
   test('should display user management section', async ({ page }) => {
-    await page.goto('/admin')
+    await goto(page, '/admin')
     await page.waitForLoadState('networkidle')
     await expect(page.locator('button:has-text("Tambah")')).toBeVisible()
   })
 
   test('should display user list or empty state', async ({ page }) => {
-    await page.goto('/admin')
+    await goto(page, '/admin')
     await page.waitForLoadState('networkidle')
     const hasUsers = await page.locator('table tbody tr').count() > 0
     const hasEmpty = await page.locator('text=BELUM ADA USER').isVisible().catch(() => false)
@@ -41,7 +42,7 @@ test.describe('Admin Page', () => {
   })
 
   test('should display role filter buttons', async ({ page }) => {
-    await page.goto('/admin')
+    await goto(page, '/admin')
     await page.waitForLoadState('networkidle')
     await expect(page.locator('button:has-text("Admin")')).toBeVisible()
     await expect(page.locator('button:has-text("Operator")')).toBeVisible()
@@ -49,21 +50,21 @@ test.describe('Admin Page', () => {
   })
 
   test('should filter by Admin role', async ({ page }) => {
-    await page.goto('/admin')
+    await goto(page, '/admin')
     await page.waitForLoadState('networkidle')
     await page.click('button:has-text("Admin")')
     await page.waitForTimeout(500)
   })
 
   test('should filter by Operator role', async ({ page }) => {
-    await page.goto('/admin')
+    await goto(page, '/admin')
     await page.waitForLoadState('networkidle')
     await page.click('button:has-text("Operator")')
     await page.waitForTimeout(500)
   })
 
   test('should open add user modal', async ({ page }) => {
-    await page.goto('/admin')
+    await goto(page, '/admin')
     await page.waitForLoadState('networkidle')
     await page.click('button:has-text("Tambah")')
     await page.waitForTimeout(500)
@@ -72,7 +73,7 @@ test.describe('Admin Page', () => {
   })
 
   test('should close add user modal', async ({ page }) => {
-    await page.goto('/admin')
+    await goto(page, '/admin')
     await page.waitForLoadState('networkidle')
     await page.click('button:has-text("Tambah")')
     await page.waitForTimeout(500)
@@ -81,7 +82,7 @@ test.describe('Admin Page', () => {
   })
 
   test('should display Supabase status', async ({ page }) => {
-    await page.goto('/admin')
+    await goto(page, '/admin')
     await page.waitForLoadState('networkidle')
     await expect(page.locator('text=Supabase')).toBeVisible()
   })

@@ -1,3 +1,4 @@
+import { goto } from './helpers.js'
 import { test, expect } from '@playwright/test'
 
 // Helper: Login before each test
@@ -9,7 +10,7 @@ test.beforeEach(async ({ page }) => {
     test.skip(true, 'Credentials not configured')
   }
 
-  await page.goto('/login')
+  await goto(page, '/login')
   await page.waitForLoadState('networkidle')
 
   // Wait for form inputs to be visible (boot animation)

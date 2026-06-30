@@ -1,5 +1,13 @@
-// Test helper constants
-export const BASE_URL = 'http://localhost:5173/command-center-pamtas'
+// Test helper constants - read from environment variable set by playwright.config.js
+export const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173/command-center-pamtas'
+
+/**
+ * Navigate to a page using absolute URL (required because Playwright's page.goto()
+ * does NOT automatically prepend baseURL from config)
+ */
+export async function goto(page, path) {
+  await page.goto(`${BASE_URL}${path}`)
+}
 
 // Login helper
 export async function login(page) {

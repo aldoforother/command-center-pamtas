@@ -1,3 +1,4 @@
+import { goto } from './helpers.js'
 import { test, expect } from '@playwright/test'
 
 // Helper: Login before each test
@@ -9,7 +10,7 @@ test.beforeEach(async ({ page }) => {
     test.skip(true, 'Credentials not configured')
   }
 
-  await page.goto('/login')
+  await goto(page, '/login')
   await page.waitForLoadState('networkidle')
 
   // Wait for form inputs to be visible (boot animation)
@@ -24,40 +25,40 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('Insiden Page', () => {
   test('should navigate to insiden page', async ({ page }) => {
-    await page.goto('/insiden')
+    await goto(page, '/insiden')
     await page.waitForLoadState('networkidle')
     await expect(page).toHaveURL(/\/insiden/)
   })
 
   test('should display filter controls', async ({ page }) => {
-    await page.goto('/insiden')
+    await goto(page, '/insiden')
     await page.waitForLoadState('networkidle')
     await expect(page.locator('button:has-text("Semua")').first()).toBeVisible()
     await expect(page.locator('button:has-text("Aktif")')).toBeVisible()
   })
 
   test('should display search input', async ({ page }) => {
-    await page.goto('/insiden')
+    await goto(page, '/insiden')
     await page.waitForLoadState('networkidle')
     await expect(page.locator('input[placeholder*="Cari"]')).toBeVisible()
   })
 
   test('should filter by status Aktif', async ({ page }) => {
-    await page.goto('/insiden')
+    await goto(page, '/insiden')
     await page.waitForLoadState('networkidle')
     await page.click('button:has-text("Aktif")')
     await page.waitForTimeout(500)
   })
 
   test('should search insiden', async ({ page }) => {
-    await page.goto('/insiden')
+    await goto(page, '/insiden')
     await page.waitForLoadState('networkidle')
     await page.locator('input[placeholder*="Cari"]').fill('test')
     await page.waitForTimeout(500)
   })
 
   test('should display insiden list or empty state', async ({ page }) => {
-    await page.goto('/insiden')
+    await goto(page, '/insiden')
     await page.waitForLoadState('networkidle')
     const hasList = await page.locator('.hud-panel').count() > 0
     const hasEmpty = await page.locator('text=BELUM ADA DATA').isVisible().catch(() => false)
@@ -65,7 +66,7 @@ test.describe('Insiden Page', () => {
   })
 
   test('should have download PDF button', async ({ page }) => {
-    await page.goto('/insiden')
+    await goto(page, '/insiden')
     await page.waitForLoadState('networkidle')
     await expect(page.locator('button:has-text("Download PDF")')).toBeVisible()
   })

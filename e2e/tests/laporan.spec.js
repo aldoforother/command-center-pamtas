@@ -1,3 +1,4 @@
+import { goto } from './helpers.js'
 import { test, expect } from '@playwright/test'
 
 test.beforeEach(async ({ page }) => {
@@ -6,7 +7,7 @@ test.beforeEach(async ({ page }) => {
   if (!adminEmail || !adminPassword) {
     test.skip(true, 'Credentials not configured')
   }
-  await page.goto('/login')
+  await goto(page, '/login')
   await page.waitForLoadState('networkidle')
 
   // Wait for form inputs to be visible (boot animation)
@@ -21,38 +22,38 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('Laporan (Reports) Pages', () => {
   test('should navigate to Grafik Kerawanan', async ({ page }) => {
-    await page.goto('/laporan/kerawanan')
+    await goto(page, '/laporan/kerawanan')
     await page.waitForLoadState('networkidle')
     await expect(page).toHaveURL(/\/laporan\/kerawanan/)
   })
 
   test('should display chart on Grafik Kerawanan', async ({ page }) => {
-    await page.goto('/laporan/kerawanan')
+    await goto(page, '/laporan/kerawanan')
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(2000)
     await expect(page.locator('.recharts-wrapper, [class*="chart"]').first()).toBeVisible({ timeout: 10000 })
   })
 
   test('should navigate to Timeline Binter', async ({ page }) => {
-    await page.goto('/laporan/binter')
+    await goto(page, '/laporan/binter')
     await page.waitForLoadState('networkidle')
     await expect(page).toHaveURL(/\/laporan\/binter/)
   })
 
   test('should navigate to Data Demografi', async ({ page }) => {
-    await page.goto('/laporan/demografi')
+    await goto(page, '/laporan/demografi')
     await page.waitForLoadState('networkidle')
     await expect(page).toHaveURL(/\/laporan\/demografi/)
   })
 
   test('should navigate to Tokoh Wilayah', async ({ page }) => {
-    await page.goto('/laporan/tokoh')
+    await goto(page, '/laporan/tokoh')
     await page.waitForLoadState('networkidle')
     await expect(page).toHaveURL(/\/laporan\/tokoh/)
   })
 
   test('should display tokoh list on Tokoh Wilayah', async ({ page }) => {
-    await page.goto('/laporan/tokoh')
+    await goto(page, '/laporan/tokoh')
     await page.waitForLoadState('networkidle')
     const hasList = await page.locator('.hud-panel').count() > 0
     const hasEmpty = await page.locator('text=BELUM ADA DATA').isVisible().catch(() => false)
@@ -60,13 +61,13 @@ test.describe('Laporan (Reports) Pages', () => {
   })
 
   test('should have filter on Tokoh Wilayah', async ({ page }) => {
-    await page.goto('/laporan/tokoh')
+    await goto(page, '/laporan/tokoh')
     await page.waitForLoadState('networkidle')
     await expect(page.locator('select').first()).toBeVisible()
   })
 
   test('should have download button on laporan pages', async ({ page }) => {
-    await page.goto('/laporan/kerawanan')
+    await goto(page, '/laporan/kerawanan')
     await page.waitForLoadState('networkidle')
     await expect(page.locator('button:has-text("Download")')).toBeVisible()
   })

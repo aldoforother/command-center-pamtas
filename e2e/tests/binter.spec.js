@@ -1,3 +1,4 @@
+import { goto } from './helpers.js'
 import { test, expect } from '@playwright/test'
 
 test.beforeEach(async ({ page }) => {
@@ -6,7 +7,7 @@ test.beforeEach(async ({ page }) => {
   if (!adminEmail || !adminPassword) {
     test.skip(true, 'Credentials not configured')
   }
-  await page.goto('/login')
+  await goto(page, '/login')
   await page.waitForLoadState('networkidle')
 
   // Wait for form inputs to be visible (boot animation)
@@ -21,26 +22,26 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('Binter Page', () => {
   test('should navigate to binter page', async ({ page }) => {
-    await page.goto('/binter')
+    await goto(page, '/binter')
     await page.waitForLoadState('networkidle')
     await expect(page).toHaveURL(/\/binter/)
   })
 
   test('should display filter controls', async ({ page }) => {
-    await page.goto('/binter')
+    await goto(page, '/binter')
     await page.waitForLoadState('networkidle')
     const selects = page.locator('select')
     await expect(selects.first()).toBeVisible()
   })
 
   test('should display search input', async ({ page }) => {
-    await page.goto('/binter')
+    await goto(page, '/binter')
     await page.waitForLoadState('networkidle')
     await expect(page.locator('input[placeholder*="Cari"]')).toBeVisible()
   })
 
   test('should filter by timeline', async ({ page }) => {
-    await page.goto('/binter')
+    await goto(page, '/binter')
     await page.waitForLoadState('networkidle')
     const selects = page.locator('select')
     await selects.first().selectOption('7d')
@@ -48,7 +49,7 @@ test.describe('Binter Page', () => {
   })
 
   test('should display binter list or empty state', async ({ page }) => {
-    await page.goto('/binter')
+    await goto(page, '/binter')
     await page.waitForLoadState('networkidle')
     const hasList = await page.locator('.hud-panel').count() > 0
     const hasEmpty = await page.locator('text=BELUM ADA DATA').isVisible().catch(() => false)
@@ -56,7 +57,7 @@ test.describe('Binter Page', () => {
   })
 
   test('should have download PDF button', async ({ page }) => {
-    await page.goto('/binter')
+    await goto(page, '/binter')
     await page.waitForLoadState('networkidle')
     await expect(page.locator('button:has-text("Download PDF")')).toBeVisible()
   })

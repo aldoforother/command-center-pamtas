@@ -1,3 +1,4 @@
+import { goto } from './helpers.js'
 import { test, expect } from '@playwright/test'
 
 test.beforeEach(async ({ page }) => {
@@ -6,7 +7,7 @@ test.beforeEach(async ({ page }) => {
   if (!adminEmail || !adminPassword) {
     test.skip(true, 'Credentials not configured')
   }
-  await page.goto('/login')
+  await goto(page, '/login')
   await page.waitForLoadState('networkidle')
 
   // Wait for form inputs to be visible (boot animation)
@@ -21,13 +22,13 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('POS Detail Page', () => {
   test('should navigate to KOTIS POS', async ({ page }) => {
-    await page.goto('/pos/KOTIS')
+    await goto(page, '/pos/KOTIS')
     await page.waitForLoadState('networkidle')
     await expect(page).toHaveURL(/\/pos\/KOTIS/)
   })
 
   test('should display tab navigation', async ({ page }) => {
-    await page.goto('/pos/KOTIS')
+    await goto(page, '/pos/KOTIS')
     await page.waitForLoadState('networkidle')
     await expect(page.locator('button:has-text("Info")')).toBeVisible()
     await expect(page.locator('button:has-text("Demografi")')).toBeVisible()
@@ -35,7 +36,7 @@ test.describe('POS Detail Page', () => {
   })
 
   test('should switch to Demografi tab', async ({ page }) => {
-    await page.goto('/pos/KOTIS')
+    await goto(page, '/pos/KOTIS')
     await page.waitForLoadState('networkidle')
     await page.click('button:has-text("Demografi")')
     await page.waitForTimeout(500)
@@ -43,7 +44,7 @@ test.describe('POS Detail Page', () => {
   })
 
   test('should switch to Tokoh tab', async ({ page }) => {
-    await page.goto('/pos/KOTIS')
+    await goto(page, '/pos/KOTIS')
     await page.waitForLoadState('networkidle')
     await page.click('button:has-text("Tokoh")')
     await page.waitForTimeout(500)
@@ -51,7 +52,7 @@ test.describe('POS Detail Page', () => {
   })
 
   test('should switch to Binter tab', async ({ page }) => {
-    await page.goto('/pos/KOTIS')
+    await goto(page, '/pos/KOTIS')
     await page.waitForLoadState('networkidle')
     await page.click('button:has-text("Binter")')
     await page.waitForTimeout(500)
@@ -59,7 +60,7 @@ test.describe('POS Detail Page', () => {
   })
 
   test('should switch to Kerawanan tab', async ({ page }) => {
-    await page.goto('/pos/KOTIS')
+    await goto(page, '/pos/KOTIS')
     await page.waitForLoadState('networkidle')
     await page.click('button:has-text("Kerawanan")')
     await page.waitForTimeout(500)
@@ -67,7 +68,7 @@ test.describe('POS Detail Page', () => {
   })
 
   test('should switch to Patroli tab', async ({ page }) => {
-    await page.goto('/pos/KOTIS')
+    await goto(page, '/pos/KOTIS')
     await page.waitForLoadState('networkidle')
     await page.click('button:has-text("Patroli")')
     await page.waitForTimeout(500)
@@ -75,13 +76,13 @@ test.describe('POS Detail Page', () => {
   })
 
   test('should display Edit Pos button on Info tab', async ({ page }) => {
-    await page.goto('/pos/KOTIS')
+    await goto(page, '/pos/KOTIS')
     await page.waitForLoadState('networkidle')
     await expect(page.locator('button:has-text("Edit Pos")')).toBeVisible()
   })
 
   test('should display POS info', async ({ page }) => {
-    await page.goto('/pos/KOTIS')
+    await goto(page, '/pos/KOTIS')
     await page.waitForLoadState('networkidle')
     // Should show POS name
     await expect(page.locator('text=KOTIS').first()).toBeVisible()

@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test'
+import { goto } from './helpers.js'
 
 test.describe('Login Page', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/login')
+    await goto(page, '/login')
     await page.waitForLoadState('networkidle')
 
     // Wait for form inputs to be visible (boot animation takes ~2-3 seconds)

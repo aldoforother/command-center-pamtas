@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { goto } from './helpers.js'
 
 test.describe('Smoke Tests', () => {
   let authenticated = false
@@ -13,7 +14,7 @@ test.describe('Smoke Tests', () => {
       test.skip(true, 'Credentials not configured')
     }
 
-    await page.goto('/login')
+    await goto(page, '/login')
     await page.waitForLoadState('networkidle')
 
     // Wait for form inputs to be visible (boot animation)
