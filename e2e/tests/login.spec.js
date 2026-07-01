@@ -1,12 +1,15 @@
 import { test, expect } from '@playwright/test'
-import { goto } from './helpers.js'
+import { goto, logout } from './helpers.js'
 
 test.describe('Login Page', () => {
   test.beforeEach(async ({ page }) => {
+    // Ensure logged out state before each test
+    await logout(page)
     await goto(page, '/login')
     await page.waitForLoadState('networkidle')
 
     // Wait for form inputs to be visible (boot animation takes ~2-3 seconds)
+    await page.waitForTimeout(3000)
     await expect(page.locator('input[type="email"]')).toBeVisible({ timeout: 15000 })
     await expect(page.locator('input[type="password"]')).toBeVisible({ timeout: 5000 })
   })
