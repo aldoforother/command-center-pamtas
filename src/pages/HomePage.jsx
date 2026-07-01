@@ -92,6 +92,32 @@ export default function HomePage() {
             backgroundSize: '60px 60px',
           }}
         />
+
+        {/* ══ HERO FIGURE - Person Photo Overlay ══ */}
+        <div
+          className="absolute transition-all duration-[1000ms]"
+          style={{
+            left: '5.98%',
+            width: '35.13%',
+            top: '4.70%',
+            bottom: 0,
+            zIndex: 7,
+            opacity: loaded ? 1 : 0,
+            transform: loaded ? 'translateY(0)' : 'translateY(20px)',
+            transitionDelay: '200ms',
+          }}
+        >
+          <img
+            src={`${import.meta.env.BASE_URL}hero-figure.png`}
+            alt=""
+            className="w-full h-auto object-contain object-bottom"
+            style={{
+              filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.5)) drop-shadow(0 0 25px rgba(0,255,136,0.15))',
+              maxHeight: '95vh',
+            }}
+            onError={(e) => { e.target.style.display = 'none' }}
+          />
+        </div>
       </div>
 
       {/* ══ SCANLINE EFFECT ══ */}
@@ -110,7 +136,7 @@ export default function HomePage() {
         <div className="h-12 flex-shrink-0" />
 
         {/* Center Area - Motto on Right */}
-        <div className="flex-1 flex items-center justify-end px-8">
+        <div className="flex-1 flex items-end justify-end px-8 pb-32">
           {/* ══ NARASINGA SIAGA PERBATASAN TERJAGA (Right Side) ══ */}
           <div
             className={`text-right transition-all duration-[800ms] ${
@@ -119,43 +145,34 @@ export default function HomePage() {
           >
             {/* Motto Line 1 */}
             <h1
-              className="glitch-text text-2xl md:text-3xl font-black tracking-[0.2em] uppercase leading-tight"
+              className="glitch-text text-4xl md:text-6xl tracking-[0.1em] uppercase leading-none"
               style={{
+                fontFamily: "'Russo One', sans-serif",
                 color: 'var(--accent-primary)',
-                textShadow: '0 0 30px rgba(0,255,136,0.6), 0 0 60px rgba(0,255,136,0.3)',
+                textShadow: '0 0 35px rgba(0,255,136,0.6), 0 0 70px rgba(0,255,136,0.3)',
               }}
             >
-              NARASINGA
+              NARASINGA SIAGA
             </h1>
 
             {/* Motto Line 2 */}
             <h1
-              className="glitch-text text-xl md:text-2xl font-bold tracking-[0.18em] uppercase leading-tight"
+              className="glitch-text text-3xl md:text-5xl tracking-[0.1em] uppercase leading-none"
               style={{
+                fontFamily: "'Russo One', sans-serif",
                 color: 'var(--accent-primary)',
-                textShadow: '0 0 25px rgba(0,255,136,0.5), 0 0 50px rgba(0,255,136,0.25)',
+                textShadow: '0 0 30px rgba(0,255,136,0.5), 0 0 60px rgba(0,255,136,0.25)',
               }}
             >
-              SIAGA PERBATASAN
-            </h1>
-
-            {/* Motto Line 3 */}
-            <h1
-              className="glitch-text text-lg md:text-xl font-semibold tracking-[0.15em] uppercase leading-tight"
-              style={{
-                color: 'var(--accent-primary)',
-                textShadow: '0 0 20px rgba(0,255,136,0.4), 0 0 40px rgba(0,255,136,0.2)',
-              }}
-            >
-              TERJAGA
+              PERBATASAN TERJAGA
             </h1>
 
             {/* Subtitle */}
             <p
-              className="text-[10px] tracking-[0.15em] uppercase mt-4"
-              style={{ color: 'var(--text-tertiary)' }}
+              className="text-sm md:text-base tracking-[0.25em] uppercase mt-4"
+              style={{ fontFamily: "'Russo One', sans-serif", color: 'var(--text-tertiary)' }}
             >
-              SATGAS PAMTAS RI-MLY YONKAV 8/SNW TA 2026
+              SATGAS PAMTAS RI-MLY YONKAV 8/NSW TA 2026
             </p>
           </div>
         </div>
@@ -167,13 +184,14 @@ export default function HomePage() {
           }`}
           style={{ transitionDelay: '400ms' }}
         >
-          {/* Dark Backdrop */}
+          {/* HUD Panel - Lighter with subtle glow */}
           <div
             className="inline-flex gap-3 p-4 rounded-sm"
             style={{
-              background: 'rgba(5,8,16,0.85)',
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(0,255,136,0.15)',
+              background: 'rgba(5,8,16,0.5)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(0,255,136,0.25)',
+              boxShadow: '0 0 30px rgba(0,255,136,0.08), inset 0 0 20px rgba(0,255,136,0.03)',
             }}
           >
             {/* PERSONEL */}
@@ -356,24 +374,24 @@ export default function HomePage() {
 /* ── Stat Panel (Bottom Left) ─────────────────────── */
 function StatPanel({ label, value, color, pulse }) {
   return (
-    <div className="flex flex-col items-center px-3 py-2">
-      <div className="flex items-center gap-1.5">
+    <div className="flex flex-col items-center px-4 py-2">
+      <div className="flex items-center gap-2">
         {pulse && (
           <span
-            className="w-1.5 h-1.5 rounded-full animate-pulse"
-            style={{ background: color, boxShadow: `0 0 6px ${color}` }}
+            className="w-2 h-2 rounded-full animate-pulse"
+            style={{ background: color, boxShadow: `0 0 8px ${color}` }}
           />
         )}
         <span
-          className="text-lg font-bold font-mono"
-          style={{ color, textShadow: `0 0 10px ${color}60` }}
+          className="text-xl font-bold font-mono"
+          style={{ color, textShadow: `0 0 12px ${color}80` }}
         >
           {value.toLocaleString('id-ID')}
         </span>
       </div>
       <span
-        className="text-[8px] tracking-[0.15em] uppercase mt-1"
-        style={{ color: 'var(--text-tertiary)' }}
+        className="text-[9px] tracking-[0.2em] uppercase mt-1.5 font-medium"
+        style={{ color: 'rgba(200,214,229,0.6)' }}
       >
         {label}
       </span>
@@ -390,21 +408,22 @@ function ActionPanel({ icon, label, onClick, color, badge }) {
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="relative flex flex-col items-center justify-center px-3 py-2 rounded-sm transition-all duration-150"
+      className="relative flex flex-col items-center justify-center px-4 py-2 rounded-sm transition-all duration-150"
       style={{
-        background: hovered ? `${color}15` : 'transparent',
-        border: `1px solid ${hovered ? color : 'transparent'}`,
-        transform: hovered ? 'scale(1.05)' : 'scale(1)',
+        background: hovered ? `${color}20` : 'transparent',
+        border: `1px solid ${hovered ? color : 'rgba(0,255,136,0.1)'}`,
+        transform: hovered ? 'scale(1.08)' : 'scale(1)',
+        boxShadow: hovered ? `0 0 15px ${color}30` : 'none',
       }}
     >
       <div
-        className="w-5 h-5 mb-1"
-        style={{ color }}
+        className="w-6 h-6 mb-1.5"
+        style={{ color, filter: hovered ? `drop-shadow(0 0 6px ${color})` : 'none' }}
       >
         {icon}
       </div>
       <span
-        className="text-[8px] tracking-[0.12em] font-semibold uppercase"
+        className="text-[9px] tracking-[0.15em] font-semibold uppercase"
         style={{ color }}
       >
         {label}
