@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion, useReducedMotion } from 'motion/react'
 import { useAuth } from '../context/AuthContext'
 import { useAllKerawanan, usePos, useSummary } from '../hooks/useSupabase'
 import { StatChip, StatusDot } from '../components/ui'
@@ -17,7 +18,8 @@ import { StatChip, StatusDot } from '../components/ui'
  *
  * Features:
  * - Full-screen hero banner (HD, no blur)
- * - NARASINGA SIAGA PERBATASAN TERJAGA motto on right
+ * - NARASINGA SIAGA / PERBATASAN TERJAGA motto with motion animations
+ * - Logo with cinematic entrance and floating idle animation
  * - Minimal UI - only hamburger menu visible
  * - Bottom-left panel row with dark backdrop
  * - Animated HUD effects
@@ -29,9 +31,9 @@ export default function HomePage() {
   const { data: kerawanan } = useAllKerawanan()
   const { data: posList } = usePos()
   const { data: summary } = useSummary()
+  const prefersReducedMotion = useReducedMotion()
 
   const [loaded, setLoaded] = useState(false)
-  const [showContent, setShowContent] = useState(false)
 
   const aktifCount = (kerawanan || []).filter(k => k.status?.toLowerCase() === 'aktif').length
   const totalPos = (posList || []).length || 17
@@ -40,24 +42,56 @@ export default function HomePage() {
   // Entrance animation
   useEffect(() => {
     const timer = setTimeout(() => setLoaded(true), 100)
-    const contentTimer = setTimeout(() => setShowContent(true), 600)
-    return () => {
-      clearTimeout(timer)
-      clearTimeout(contentTimer)
-    }
+    return () => clearTimeout(timer)
   }, [])
+
+  // Motion animation variants
+  const shouldAnimate = !prefersReducedMotion
+
+  const textVariants = {
+    line1: {
+      hidden: { opacity: 0, x: 60, filter: 'blur(8px)' },
+      visible: { opacity: 1, x: 0, filter: 'blur(0px)', transition: { duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] } }
+    },
+    line2: {
+      hidden: { opacity: 0, x: 60, filter: 'blur(8px)' },
+      visible: { opacity: 1, x: 0, filter: 'blur(0px)', transition: { duration: 0.9, delay: 0.5, ease: [0.16, 1, 0.3, 1] } }
+    },
+    line3: {
+      hidden: { opacity: 0, x: 60, filter: 'blur(8px)' },
+      visible: { opacity: 1, x: 0, filter: 'blur(0px)', transition: { duration: 0.9, delay: 0.7, ease: [0.16, 1, 0.3, 1] } }
+    },
+    subtitle: {
+      hidden: { opacity: 0, y: 12 },
+      visible: { opacity: 1, y: 0, transition: { duration: 0.8, delay: 1.0, ease: 'easeOut' } }
+    }
+  }
+
+  const logoVariants = {
+    hidden: { opacity: 0, scale: 0.7, rotate: -8 },
+    visible: { opacity: 1, scale: 1, rotate: 0, transition: { duration: 1.2, delay: 0.8, ease: [0.16, 1, 0.3, 1] } },
+    float: {
+      y: [0, -8, 0],
+      filter: [
+        'drop-shadow(0 0 8px rgba(0,255,136,0.3)',
+        'drop-shadow(0 0 18px rgba(0,255,136,0.6)',
+        'drop-shadow(0 0 8px rgba(0,255,136,0.3)'
+      ],
+      transition: { duration: 4, repeat: Infinity, ease: 'easeInOut' }
+    }
+  }
 
   return (
     <div
       className="h-full overflow-hidden relative"
       style={{ background: '#050810' }}
     >
-      {/* ══ HERO BANNER (HD, No Blur) ══ */}
+      {/* HERO BANNER (HD, No Blur) */}
       <div
         className="absolute inset-0 transition-all duration-[800ms]"
         style={{
-          opacity: loaded ? 1 : 0,
-          transform: loaded ? 'scale(1)' : 'scale(1.02)',
+          opacity: prefersReducedMotion ? 1 : (loaded ? 1 : 0),
+          transform: prefersReducedMotion ? 'scale(1)' : (loaded ? 'scale(1)' : 'scale(1.02)'),
         }}
       >
         {/* Banner Background - HD Quality */}
@@ -93,7 +127,7 @@ export default function HomePage() {
           }}
         />
 
-        {/* ══ HERO FIGURE - Person Photo Overlay ══ */}
+        {/* HERO FIGURE - Person Photo Overlay */}
         <div
           className="absolute transition-all duration-[1000ms]"
           style={{
@@ -102,8 +136,8 @@ export default function HomePage() {
             top: '4.70%',
             bottom: 0,
             zIndex: 7,
-            opacity: loaded ? 1 : 0,
-            transform: loaded ? 'translateY(0)' : 'translateY(20px)',
+            opacity: prefersReducedMotion ? 1 : (loaded ? 1 : 0),
+            transform: prefersReducedMotion ? 'translateY(0)' : (loaded ? 'translateY(0)' : 'translateY(20px)'),
             transitionDelay: '200ms',
           }}
         >
@@ -120,30 +154,45 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ══ SCANLINE EFFECT ══ */}
+      {/* SCANLINE EFFECT */}
       <div className="scanline-overlay" aria-hidden="true" />
 
-      {/* ══ FLOATING PARTICLES ══ */}
+      {/* FLOATING PARTICLES */}
       <Particles count={15} />
 
-      {/* ══ GLOW BORDER ══ */}
+      {/* GLOW BORDER */}
       <div className="glow-border" aria-hidden="true" />
 
-      {/* ══ MAIN CONTENT (NO HEADER, NO FOOTER) ══ */}
-      <div className="relative z-10 h-full flex flex-col">
-
+      {/* MAIN CONTENT (NO HEADER, NO FOOTER) */}
+      <div className="relative z-10 h-full">
         {/* Space for hamburger menu only */}
         <div className="h-12 flex-shrink-0" />
 
-        {/* Center Area - Motto on Right */}
-        <div className="flex-1 flex items-end justify-end px-8 pb-32">
-          {/* ══ NARASINGA SIAGA PERBATASAN TERJAGA (Right Side) ══ */}
-          <div
-            className={`text-right transition-all duration-[800ms] ${
-              showContent ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
-            }`}
-          >
-            {/* Motto Line 1 */}
+        {/* Motto Text - Positioned absolutely */}
+        <div
+          className="absolute text-right"
+          style={{
+            left: '45.72%',
+            bottom: '17.43%',
+            zIndex: 10,
+          }}
+        >
+          {/* Motto Line 1 - NARASINGA SIAGA */}
+          {shouldAnimate ? (
+            <motion.h1
+              variants={textVariants.line1}
+              initial="hidden"
+              animate="visible"
+              className="glitch-text text-4xl md:text-6xl tracking-[0.1em] uppercase leading-none"
+              style={{
+                fontFamily: "'Russo One', sans-serif",
+                color: 'var(--accent-primary)',
+                textShadow: '0 0 35px rgba(0,255,136,0.6), 0 0 70px rgba(0,255,136,0.3)',
+              }}
+            >
+              NARASINGA SIAGA
+            </motion.h1>
+          ) : (
             <h1
               className="glitch-text text-4xl md:text-6xl tracking-[0.1em] uppercase leading-none"
               style={{
@@ -154,8 +203,24 @@ export default function HomePage() {
             >
               NARASINGA SIAGA
             </h1>
+          )}
 
-            {/* Motto Line 2 */}
+          {/* Motto Line 2 - PERBATASAN TERJAGA */}
+          {shouldAnimate ? (
+            <motion.h1
+              variants={textVariants.line2}
+              initial="hidden"
+              animate="visible"
+              className="glitch-text text-3xl md:text-5xl tracking-[0.1em] uppercase leading-none"
+              style={{
+                fontFamily: "'Russo One', sans-serif",
+                color: 'var(--accent-primary)',
+                textShadow: '0 0 30px rgba(0,255,136,0.5), 0 0 60px rgba(0,255,136,0.25)',
+              }}
+            >
+              PERBATASAN TERJAGA
+            </motion.h1>
+          ) : (
             <h1
               className="glitch-text text-3xl md:text-5xl tracking-[0.1em] uppercase leading-none"
               style={{
@@ -166,23 +231,68 @@ export default function HomePage() {
             >
               PERBATASAN TERJAGA
             </h1>
+          )}
 
-            {/* Subtitle */}
+          {/* Subtitle */}
+          {shouldAnimate ? (
+            <motion.p
+              variants={textVariants.subtitle}
+              initial="hidden"
+              animate="visible"
+              className="text-sm md:text-base tracking-[0.25em] uppercase mt-4"
+              style={{ fontFamily: "'Russo One', sans-serif", color: 'var(--text-tertiary)' }}
+            >
+              SATGAS PAMTAS RI-MLY YONKAV 8/NSW TA 2026
+            </motion.p>
+          ) : (
             <p
               className="text-sm md:text-base tracking-[0.25em] uppercase mt-4"
               style={{ fontFamily: "'Russo One', sans-serif", color: 'var(--text-tertiary)' }}
             >
               SATGAS PAMTAS RI-MLY YONKAV 8/NSW TA 2026
             </p>
-          </div>
+          )}
         </div>
 
-        {/* ══ BOTTOM LEFT PANEL ROW ══ */}
+        {/* Logo - Top Right with motion */}
+        {shouldAnimate ? (
+          <motion.img
+            src={`${import.meta.env.BASE_URL}logo.png`}
+            alt="Logo"
+            className="absolute"
+            style={{
+              left: '86.63%',
+              top: '5.11%',
+              maxWidth: '220px',
+              height: 'auto',
+              zIndex: 10,
+            }}
+            variants={logoVariants}
+            initial="hidden"
+            animate={loaded ? ['visible', 'float'] : 'hidden'}
+          />
+        ) : (
+          <img
+            src={`${import.meta.env.BASE_URL}logo.png`}
+            alt="Logo"
+            className="absolute"
+            style={{
+              left: '86.63%',
+              top: '5.11%',
+              maxWidth: '220px',
+              height: 'auto',
+              zIndex: 10,
+            }}
+          />
+        )}
+
+        {/* BOTTOM LEFT PANEL ROW */}
         <div
-          className={`flex-shrink-0 px-6 pb-6 transition-all duration-[800ms] ${
-            showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-          }`}
-          style={{ transitionDelay: '400ms' }}
+          className="flex-shrink-0 px-6 pb-6 transition-all duration-[800ms]"
+          style={{
+            opacity: prefersReducedMotion ? 1 : (loaded ? 1 : 0),
+            transform: prefersReducedMotion ? 'translateY(0)' : (loaded ? 'translateY(0)' : 'translateY(16px)'),
+          }}
         >
           {/* HUD Panel - Lighter with subtle glow */}
           <div
@@ -247,7 +357,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ══ CSS ANIMATIONS ══ */}
+      {/* CSS ANIMATIONS */}
       <style>{`
         /* Scanline Effect */
         .scanline-overlay {
@@ -371,7 +481,7 @@ export default function HomePage() {
   )
 }
 
-/* ── Stat Panel (Bottom Left) ─────────────────────── */
+/* Stat Panel (Bottom Left) */
 function StatPanel({ label, value, color, pulse }) {
   return (
     <div className="flex flex-col items-center px-4 py-2">
@@ -399,7 +509,7 @@ function StatPanel({ label, value, color, pulse }) {
   )
 }
 
-/* ── Action Panel (Bottom Left) ────────────────────── */
+/* Action Panel (Bottom Left) */
 function ActionPanel({ icon, label, onClick, color, badge }) {
   const [hovered, setHovered] = useState(false)
 
@@ -444,7 +554,7 @@ function ActionPanel({ icon, label, onClick, color, badge }) {
   )
 }
 
-/* ── Particles ──────────────────────────────── */
+/* Particles */
 function Particles({ count = 15 }) {
   const particles = useRef(
     Array.from({ length: count }, (_, i) => ({
@@ -476,7 +586,7 @@ function Particles({ count = 15 }) {
   )
 }
 
-/* ── Icons ──────────────────────────────────────────── */
+/* Icons */
 function MapIcon() {
   return (
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
