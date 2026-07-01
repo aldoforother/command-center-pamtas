@@ -9,6 +9,26 @@ export async function goto(page, path) {
   await page.goto(`${BASE_URL}${path}`)
 }
 
+// Logout helper - clears auth state
+export async function logout(page) {
+  // Navigate to a blank page first to ensure we have a valid document
+  await page.goto('about:blank')
+
+  // Clear storage in a new context
+  await page.context().storageState({ paths: [] })
+
+  // Clear all cookies
+  await page.context().clearCookies()
+
+  // Navigate to app to trigger fresh auth check
+  try {
+    await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(500)
+  } catch (e) {
+    // Ignore navigation errors
+  }
+}
+
 // Login helper
 export async function login(page) {
   const adminEmail = process.env.E2E_ADMIN_EMAIL
@@ -17,6 +37,9 @@ export async function login(page) {
   if (!adminEmail || !adminPassword) {
     return false
   }
+
+  // Ensure logged out first
+  await logout(page)
 
   await page.goto(`${BASE_URL}/login`)
   await page.waitForLoadState('domcontentloaded')
