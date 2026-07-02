@@ -93,15 +93,17 @@ Generated: 2026-07-02
 │   ├── InfoPill "Insiden"
 │   └── InfoPill "Klasifikasi"
 │
-├── [Tab Navigation]
-│   ├── button[role="tab"] "Info"
-│   ├── button[role="tab"] "Demografi"
-│   ├── button[role="tab"] "Tokoh"
-│   ├── button[role="tab"] "Binter"
-│   ├── button[role="tab"] "Insiden"
-│   └── button[role="tab"] "Patroli"
+├── [Tab Navigation] - Urutan Kiri ke Kanan:
+│   ├── button[role="tab"] "INFO POS"
+│   ├── button[role="tab"] "DEMOGRAFI"
+│   ├── button[role="tab"] "GEO-DEMO-KONSOS"
+│   ├── button[role="tab"] "TOKOH"
+│   ├── button[role="tab"] "BINTER"
+│   ├── button[role="tab"] "DATA INSIDEN"
+│   ├── button[role="tab"] "PATROLI"
+│   └── button[role="tab"] "DOKUMENTASI"
 │
-├── [INFO TAB]
+├── [INFO POS TAB]
 │   ├── button[Edit Pos] "✎ Edit"
 │   └── map placeholder
 │
@@ -114,6 +116,11 @@ Generated: 2026-07-02
 │       ├── input fields
 │       ├── button[Batal]
 │       └── button[Simpan]
+│
+├── [GEO-DEMO-KONSOS TAB]
+│   └── [GeoDemoKonsos]
+│       ├── GeoJSON map
+│       └── Konsos data visualization
 │
 ├── [TOKOH TAB]
 │   ├── [TokohList]
@@ -154,6 +161,10 @@ Generated: 2026-07-02
         ├── input fields
         ├── button[Batal]
         └── button[Simpan]
+
+└── [DOKUMENTASI TAB]
+    └── [PhotoGallery]
+        └── Image grid with lightbox
 ```
 
 ---

@@ -33,12 +33,12 @@ export function Sidebar({ id }) {
       role="navigation"
       aria-label="Navigasi utama"
       style={{
-        width: sidebarOpen ? '220px' : '0px',
+        width: sidebarOpen ? '180px' : '0px',
         transition: 'width var(--duration-smooth) var(--ease-out)',
       }}
     >
       <div
-        className="w-[220px] flex flex-col h-full overflow-hidden"
+        className="w-[180px] flex flex-col h-full overflow-hidden"
         style={{
           backgroundColor: 'var(--surface-base)',
           borderRight: sidebarOpen ? '1px solid var(--border-subtle)' : 'none',
@@ -47,7 +47,7 @@ export function Sidebar({ id }) {
       >
         {/* ── Main Navigation ───────────────────────────────── */}
         <nav
-          className="px-2 pt-3 pb-2"
+          className="px-2 pt-2 pb-1"
           style={{ borderBottom: '1px solid var(--border-subtle)' }}
         >
           <SidebarSectionLabel>NAVIGASI</SidebarSectionLabel>
@@ -79,7 +79,7 @@ export function Sidebar({ id }) {
 
         {/* ── Reports & Analytics ──────────────────────────── */}
         <nav
-          className="px-2 pt-3 pb-2"
+          className="px-2 pt-2 pb-1"
           style={{ borderBottom: '1px solid var(--border-subtle)' }}
         >
           <SidebarSectionLabel>LAPORAN</SidebarSectionLabel>
@@ -151,7 +151,7 @@ export function Sidebar({ id }) {
 
         {/* ── Bottom nav ────────────────────────────── */}
         <nav
-          className="px-2 pt-1 pb-2"
+          className="px-2 pt-1 pb-1"
           style={{ borderTop: '1px solid var(--border-subtle)' }}
         >
           <NavItem
@@ -173,9 +173,9 @@ export function Sidebar({ id }) {
 /* ── Section Label ──────────────────────────────────────────── */
 function SidebarSectionLabel({ children, noMargin }) {
   return (
-    <div className={`px-2 mb-2 ${noMargin ? 'mb-1' : ''}`}>
+    <div className={`px-2 mb-1 ${noMargin ? 'mb-0.5' : ''}`}>
       <span
-        className="text-micro-xs font-bold tracking-[0.2em] uppercase"
+        className="text-micro-xs font-bold tracking-[0.15em] uppercase"
         style={{ color: 'var(--text-disabled)' }}
       >
         {children}
@@ -193,7 +193,7 @@ function NavItem({ to, icon, label, end, badge, badgeVariant = 'accent' }) {
       to={to}
       end={end}
       className={({ isActive }) => {
-        const baseClass = 'flex items-center gap-2.5 px-2.5 py-2 text-label-sm font-semibold tracking-wide rounded-sm cursor-pointer'
+        const baseClass = 'flex items-center gap-2 px-2 py-1.5 text-label-xs font-medium tracking-wide rounded-sm cursor-pointer'
         return baseClass
       }}
       style={({ isActive }) => {
@@ -223,7 +223,7 @@ function NavItem({ to, icon, label, end, badge, badgeVariant = 'accent' }) {
       onMouseLeave={() => setIsHovered(false)}
     >
       <span
-        className="w-4 flex-shrink-0"
+        className="w-3 flex-shrink-0"
         style={{ opacity: 0.85 }}
       >
         {icon}
@@ -293,7 +293,7 @@ function PosNavItem({ pos, kerawanan }) {
       onMouseLeave={() => setIsHovered(false)}
     >
       <span
-        className="w-6 h-6 rounded-sm flex items-center justify-center flex-shrink-0 text-caption-sm font-bold font-mono relative"
+        className="w-5 h-5 rounded-sm flex items-center justify-center flex-shrink-0 text-micro font-bold font-mono relative"
         style={
           hasRawan
             ? {
@@ -325,13 +325,13 @@ function PosNavItem({ pos, kerawanan }) {
       <div className="min-w-0 flex-1">
         <p
           className="font-medium leading-tight truncate"
-          style={{ fontSize: '11px' }}
+          style={{ fontSize: '10px' }}
         >
           {pos.nama_pos}
         </p>
         <p
           className="truncate leading-tight opacity-50"
-          style={{ fontSize: '10px' }}
+          style={{ fontSize: '9px' }}
         >
           {pos.lokasi_desa || pos.kabupaten}
         </p>

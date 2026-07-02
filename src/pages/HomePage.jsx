@@ -127,31 +127,7 @@ export default function HomePage() {
           }}
         />
 
-        {/* HERO FIGURE - Person Photo Overlay */}
-        <div
-          className="absolute transition-all duration-[1000ms]"
-          style={{
-            left: '5.98%',
-            width: '35.13%',
-            top: '4.70%',
-            bottom: 0,
-            zIndex: 7,
-            opacity: prefersReducedMotion ? 1 : (loaded ? 1 : 0),
-            transform: prefersReducedMotion ? 'translateY(0)' : (loaded ? 'translateY(0)' : 'translateY(20px)'),
-            transitionDelay: '200ms',
-          }}
-        >
-          <img
-            src={`${import.meta.env.BASE_URL}hero-figure.png`}
-            alt=""
-            className="w-full h-auto object-contain object-bottom"
-            style={{
-              filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.5)) drop-shadow(0 0 25px rgba(0,255,136,0.15))',
-              maxHeight: '95vh',
-            }}
-            onError={(e) => { e.target.style.display = 'none' }}
-          />
-        </div>
+        {/* HERO FIGURE - Removed per user request */}
       </div>
 
       {/* SCANLINE EFFECT */}
@@ -257,7 +233,7 @@ export default function HomePage() {
         {/* Logo - Top Right with motion */}
         {shouldAnimate ? (
           <motion.img
-            src={`${import.meta.env.BASE_URL}logo.png`}
+            src={`${import.meta.env.BASE_URL}logo-satgas.png`}
             alt="Logo"
             className="absolute"
             style={{
@@ -273,7 +249,7 @@ export default function HomePage() {
           />
         ) : (
           <img
-            src={`${import.meta.env.BASE_URL}logo.png`}
+            src={`${import.meta.env.BASE_URL}logo-satgas.png`}
             alt="Logo"
             className="absolute"
             style={{
@@ -286,22 +262,24 @@ export default function HomePage() {
           />
         )}
 
-        {/* BOTTOM LEFT PANEL ROW */}
+        {/* BOTTOM LEFT PANEL ROW - Smaller, 3x2 grid, aligned with subtitle */}
         <div
-          className="flex-shrink-0 px-6 pb-6 transition-all duration-[800ms]"
+          className="absolute flex-shrink-0 transition-all duration-[800ms]"
           style={{
+            left: '45.72%',
+            bottom: '10%',
             opacity: prefersReducedMotion ? 1 : (loaded ? 1 : 0),
             transform: prefersReducedMotion ? 'translateY(0)' : (loaded ? 'translateY(0)' : 'translateY(16px)'),
           }}
         >
-          {/* HUD Panel - Lighter with subtle glow */}
+          {/* HUD Panel - Smaller with 3x2 grid */}
           <div
-            className="inline-flex gap-3 p-4 rounded-sm"
+            className="grid grid-cols-3 gap-2 p-3 rounded-sm"
             style={{
               background: 'rgba(5,8,16,0.5)',
               backdropFilter: 'blur(12px)',
               border: '1px solid rgba(0,255,136,0.25)',
-              boxShadow: '0 0 30px rgba(0,255,136,0.08), inset 0 0 20px rgba(0,255,136,0.03)',
+              boxShadow: '0 0 20px rgba(0,255,136,0.08), inset 0 0 15px rgba(0,255,136,0.03)',
             }}
           >
             {/* PERSONEL */}
@@ -309,6 +287,7 @@ export default function HomePage() {
               label="PERSONEL"
               value={totalPersonel}
               color="var(--accent-primary)"
+              compact
             />
 
             {/* POS AKTIF */}
@@ -316,6 +295,7 @@ export default function HomePage() {
               label="POS AKTIF"
               value={totalPos}
               color="var(--color-info)"
+              compact
             />
 
             {/* INSIDEN */}
@@ -324,10 +304,8 @@ export default function HomePage() {
               value={aktifCount}
               color={aktifCount > 0 ? 'var(--color-danger)' : 'var(--accent-primary)'}
               pulse={aktifCount > 0}
+              compact
             />
-
-            {/* Divider */}
-            <div className="w-px" style={{ background: 'rgba(0,255,136,0.2)' }} />
 
             {/* OVERVIEW */}
             <ActionPanel
@@ -335,6 +313,7 @@ export default function HomePage() {
               label="OVERVIEW"
               onClick={() => navigate('/overview')}
               color="var(--accent-primary)"
+              compact
             />
 
             {/* INSIDEN Action */}
@@ -344,6 +323,7 @@ export default function HomePage() {
               onClick={() => navigate('/insiden')}
               color={aktifCount > 0 ? 'var(--color-danger)' : 'var(--accent-primary)'}
               badge={aktifCount > 0 ? aktifCount : null}
+              compact
             />
 
             {/* LAPORAN */}
@@ -352,6 +332,7 @@ export default function HomePage() {
               label="LAPORAN"
               onClick={() => navigate('/laporan/kerawanan')}
               color="var(--color-purple)"
+              compact
             />
           </div>
         </div>
@@ -482,25 +463,25 @@ export default function HomePage() {
 }
 
 /* Stat Panel (Bottom Left) */
-function StatPanel({ label, value, color, pulse }) {
+function StatPanel({ label, value, color, pulse, compact }) {
   return (
-    <div className="flex flex-col items-center px-4 py-2">
-      <div className="flex items-center gap-2">
+    <div className={`flex flex-col items-center ${compact ? 'px-2 py-1' : 'px-4 py-2'}`}>
+      <div className="flex items-center gap-1.5">
         {pulse && (
           <span
-            className="w-2 h-2 rounded-full animate-pulse"
-            style={{ background: color, boxShadow: `0 0 8px ${color}` }}
+            className="w-1.5 h-1.5 rounded-full animate-pulse"
+            style={{ background: color, boxShadow: `0 0 6px ${color}` }}
           />
         )}
         <span
-          className="text-xl font-bold font-mono"
-          style={{ color, textShadow: `0 0 12px ${color}80` }}
+          className={`font-bold font-mono ${compact ? 'text-base' : 'text-xl'}`}
+          style={{ color, textShadow: `0 0 10px ${color}80` }}
         >
           {value.toLocaleString('id-ID')}
         </span>
       </div>
       <span
-        className="text-[9px] tracking-[0.2em] uppercase mt-1.5 font-medium"
+        className={`tracking-[0.15em] uppercase font-medium ${compact ? 'text-[8px] mt-1' : 'text-[9px] tracking-[0.2em] mt-1.5'}`}
         style={{ color: 'rgba(200,214,229,0.6)' }}
       >
         {label}
@@ -510,7 +491,7 @@ function StatPanel({ label, value, color, pulse }) {
 }
 
 /* Action Panel (Bottom Left) */
-function ActionPanel({ icon, label, onClick, color, badge }) {
+function ActionPanel({ icon, label, onClick, color, badge, compact }) {
   const [hovered, setHovered] = useState(false)
 
   return (
@@ -518,33 +499,33 @@ function ActionPanel({ icon, label, onClick, color, badge }) {
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="relative flex flex-col items-center justify-center px-4 py-2 rounded-sm transition-all duration-150"
+      className={`relative flex flex-col items-center justify-center rounded-sm transition-all duration-150 ${compact ? 'px-2 py-1' : 'px-4 py-2'}`}
       style={{
         background: hovered ? `${color}20` : 'transparent',
         border: `1px solid ${hovered ? color : 'rgba(0,255,136,0.1)'}`,
-        transform: hovered ? 'scale(1.08)' : 'scale(1)',
-        boxShadow: hovered ? `0 0 15px ${color}30` : 'none',
+        transform: hovered ? 'scale(1.05)' : 'scale(1)',
+        boxShadow: hovered ? `0 0 10px ${color}30` : 'none',
       }}
     >
       <div
-        className="w-6 h-6 mb-1.5"
-        style={{ color, filter: hovered ? `drop-shadow(0 0 6px ${color})` : 'none' }}
+        className={`flex items-center justify-center ${compact ? 'w-4 h-4 mb-0.5' : 'w-6 h-6 mb-1.5'}`}
+        style={{ color, filter: hovered ? `drop-shadow(0 0 4px ${color})` : 'none' }}
       >
         {icon}
       </div>
       <span
-        className="text-[9px] tracking-[0.15em] font-semibold uppercase"
+        className={`font-semibold uppercase ${compact ? 'text-[7px] tracking-[0.1em]' : 'text-[9px] tracking-[0.15em]'}`}
         style={{ color }}
       >
         {label}
       </span>
       {badge && (
         <span
-          className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[8px] font-bold flex items-center justify-center animate-pulse"
+          className={`absolute rounded-full font-bold flex items-center justify-center animate-pulse ${compact ? '-top-0.5 -right-0.5 w-3 h-3 text-[6px]' : '-top-1 -right-1 w-4 h-4 text-[8px]'}`}
           style={{
             background: 'var(--color-danger)',
             color: '#fff',
-            boxShadow: '0 0 8px var(--color-danger)',
+            boxShadow: '0 0 6px var(--color-danger)',
           }}
         >
           {badge}
