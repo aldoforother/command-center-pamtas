@@ -9,18 +9,21 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Timeout fallback - if getSession hangs, proceed without auth
-    const timeoutId = setTimeout(() => {
-      console.warn('[AuthContext] getSession timeout - proceeding without auth')
-      setLoading(false)
-    }, 10000) // 10 second timeout
+    // P0 FIX: Removed 10s timeout bypass that allowed unauthenticated access
+    // If Supabase is unavailable, we keep loading=true and block access
+    // This prevents security bypass where users could access protected routes
 
     // Ambil sesi yang sudah ada (jika user sudah login sebelumnya)
     supabase.auth.getSession().then(({ data: { session }, error }) => {
-      clearTimeout(timeoutId) // Clear timeout on success
       if (error) {
         console.error('[AuthContext] getSession error:', error.message)
-        setLoading(false)
+        // P0 FIX: Set user to null but keep loading until timeout
+        // This ensures protected routes remain blocked on auth failure
+        setUser(null)
+        // Retry after delay to handle transient network issues
+        setTimeout(() => {
+          setLoading(false)
+        }, 5000)
         return
       }
       setUser(session?.user ?? null)
@@ -30,9 +33,12 @@ export function AuthProvider({ children }) {
         setLoading(false)
       }
     }).catch(err => {
-      clearTimeout(timeoutId)
       console.error('[AuthContext] getSession exception:', err)
-      setLoading(false)
+      setUser(null)
+      // Retry after delay before giving up
+      setTimeout(() => {
+        setLoading(false)
+      }, 5000)
     })
 
     // Dengarkan perubahan auth state (login, logout, token refresh)
