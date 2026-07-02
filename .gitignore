@@ -27,6 +27,9 @@ Thumbs.db
 # Test coverage
 coverage/
 
+# Playwright test results (large binary files)
+test-results/
+
 # Temp scripts
 pin-hosts.ps1
 .hosts-result.txt
