@@ -153,77 +153,117 @@ export default function HomePage() {
             zIndex: 10,
           }}
         >
-          {/* Motto Line 1 - NARASINGA SIAGA */}
-          {shouldAnimate ? (
-            <motion.h1
-              variants={textVariants.line1}
-              initial="hidden"
-              animate="visible"
-              className="glitch-text text-3xl md:text-4xl tracking-[0.1em] uppercase leading-none"
-              style={{
-                fontFamily: "'Russo One', sans-serif",
-                color: 'var(--accent-primary)',
-                textShadow: '0 0 35px rgba(0,255,136,0.6), 0 0 70px rgba(0,255,136,0.3)',
-              }}
-            >
-              NARASINGA SIAGA
-            </motion.h1>
-          ) : (
-            <h1
-              className="glitch-text text-3xl md:text-4xl tracking-[0.1em] uppercase leading-none"
-              style={{
-                fontFamily: "'Russo One', sans-serif",
-                color: 'var(--accent-primary)',
-                textShadow: '0 0 35px rgba(0,255,136,0.6), 0 0 70px rgba(0,255,136,0.3)',
-              }}
-            >
-              NARASINGA SIAGA
-            </h1>
-          )}
+          {/* Motto Line 1 - NARASINGA SIAGA - Cyberpunk Glitch Neon */}
+          <div className="relative">
+            {shouldAnimate ? (
+              <motion.h1
+                variants={textVariants.line1}
+                initial="hidden"
+                animate="visible"
+                className="cyberpunk-glitch text-4xl md:text-5xl lg:text-6xl tracking-[0.08em] uppercase leading-none"
+                style={{
+                  fontFamily: "'Russo One', sans-serif",
+                  color: '#00FF88',
+                  textShadow: `
+                    0 0 10px #00FF88,
+                    0 0 20px #00FF88,
+                    0 0 40px #00FF88,
+                    0 0 80px rgba(0,255,136,0.6)
+                  `,
+                }}
+                data-text="NARASINGA SIAGA"
+              >
+                NARASINGA SIAGA
+              </motion.h1>
+            ) : (
+              <h1
+                className="text-4xl md:text-5xl lg:text-6xl tracking-[0.08em] uppercase leading-none"
+                style={{
+                  fontFamily: "'Russo One', sans-serif",
+                  color: '#00FF88',
+                  textShadow: `
+                    0 0 10px #00FF88,
+                    0 0 20px #00FF88,
+                    0 0 40px #00FF88,
+                    0 0 80px rgba(0,255,136,0.6)
+                  `,
+                }}
+              >
+                NARASINGA SIAGA
+              </h1>
+            )}
+          </div>
 
-          {/* Motto Line 2 - PERBATASAN TERJAGA */}
-          {shouldAnimate ? (
-            <motion.h1
-              variants={textVariants.line2}
-              initial="hidden"
-              animate="visible"
-              className="glitch-text text-3xl md:text-4xl tracking-[0.1em] uppercase leading-none"
-              style={{
-                fontFamily: "'Russo One', sans-serif",
-                color: 'var(--accent-primary)',
-                textShadow: '0 0 30px rgba(0,255,136,0.5), 0 0 60px rgba(0,255,136,0.25)',
-              }}
-            >
-              PERBATASAN TERJAGA
-            </motion.h1>
-          ) : (
-            <h1
-              className="glitch-text text-3xl md:text-4xl tracking-[0.1em] uppercase leading-none"
-              style={{
-                fontFamily: "'Russo One', sans-serif",
-                color: 'var(--accent-primary)',
-                textShadow: '0 0 30px rgba(0,255,136,0.5), 0 0 60px rgba(0,255,136,0.25)',
-              }}
-            >
-              PERBATASAN TERJAGA
-            </h1>
-          )}
+          {/* Motto Line 2 - PERBATASAN TERJAGA - Cyberpunk Glitch Neon */}
+          <div className="relative">
+            {shouldAnimate ? (
+              <motion.h1
+                variants={textVariants.line2}
+                initial="hidden"
+                animate="visible"
+                className="cyberpunk-glitch text-4xl md:text-5xl lg:text-6xl tracking-[0.08em] uppercase leading-none"
+                style={{
+                  fontFamily: "'Russo One', sans-serif",
+                  color: '#00FF88',
+                  textShadow: `
+                    0 0 10px #00FF88,
+                    0 0 20px #00FF88,
+                    0 0 40px #00FF88,
+                    0 0 80px rgba(0,255,136,0.6)
+                  `,
+                }}
+                data-text="PERBATASAN TERJAGA"
+              >
+                PERBATASAN TERJAGA
+              </motion.h1>
+            ) : (
+              <h1
+                className="text-4xl md:text-5xl lg:text-6xl tracking-[0.08em] uppercase leading-none"
+                style={{
+                  fontFamily: "'Russo One', sans-serif",
+                  color: '#00FF88',
+                  textShadow: `
+                    0 0 10px #00FF88,
+                    0 0 20px #00FF88,
+                    0 0 40px #00FF88,
+                    0 0 80px rgba(0,255,136,0.6)
+                  `,
+                }}
+              >
+                PERBATASAN TERJAGA
+              </h1>
+            )}
+          </div>
 
-          {/* Subtitle */}
+          {/* Subtitle - SATGAS with White Neon Glow */}
           {shouldAnimate ? (
             <motion.p
               variants={textVariants.subtitle}
               initial="hidden"
               animate="visible"
-              className="text-sm md:text-base tracking-[0.25em] uppercase mt-2"
-              style={{ fontFamily: "'Russo One', sans-serif", color: 'var(--text-tertiary)' }}
+              className="white-neon-glow text-base md:text-lg tracking-[0.2em] uppercase mt-3"
+              style={{
+                fontFamily: "'Russo One', sans-serif",
+                color: '#ffffff',
+                letterSpacing: '0.2em',
+              }}
             >
               SATGAS PAMTAS RI-MLY YONKAV 8/NSW TA 2026
             </motion.p>
           ) : (
             <p
-              className="text-sm md:text-base tracking-[0.25em] uppercase mt-2"
-              style={{ fontFamily: "'Russo One', sans-serif", color: 'var(--text-tertiary)' }}
+              className="text-base md:text-lg tracking-[0.2em] uppercase mt-3"
+              style={{
+                fontFamily: "'Russo One', sans-serif",
+                color: '#ffffff',
+                textShadow: `
+                  0 0 5px rgba(255,255,255,0.9),
+                  0 0 10px rgba(255,255,255,0.7),
+                  0 0 20px rgba(255,255,255,0.5),
+                  0 0 40px rgba(255,255,255,0.3)
+                `,
+                letterSpacing: '0.2em',
+              }}
             >
               SATGAS PAMTAS RI-MLY YONKAV 8/NSW TA 2026
             </p>
@@ -326,51 +366,213 @@ export default function HomePage() {
           }
         }
 
-        /* Glitch Text Effect */
-        .glitch-text {
+        /* Cyberpunk Glitch Neon Effect - Premium */
+        .cyberpunk-glitch {
           position: relative;
-          animation: glitch-skew 6s infinite linear alternate-reverse;
+          animation: glitch-main 4s infinite linear alternate-reverse;
         }
-        .glitch-text::before,
-        .glitch-text::after {
+        .cyberpunk-glitch::before,
+        .cyberpunk-glitch::after {
           content: attr(data-text);
           position: absolute;
           top: 0;
           left: 0;
           width: 100%;
           height: 100%;
+          opacity: 0.8;
         }
-        .glitch-text::before {
-          color: #ff0088;
-          animation: glitch-1 0.4s infinite linear alternate-reverse;
-          clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
-          transform: translate(-2px);
-          opacity: 0.7;
+        /* Magenta/Cyan RGB split glitch layers */
+        .cyberpunk-glitch::before {
+          color: #ff00ff;
+          animation: glitch-cyan 3s infinite linear alternate-reverse;
+          clip-path: polygon(0 0, 100% 0, 100% 38%, 0 38%);
+          transform: translate(-3px, -1px);
+          text-shadow: -2px 0 #ff00ff;
+          mix-blend-mode: screen;
         }
-        .glitch-text::after {
+        .cyberpunk-glitch::after {
           color: #00ffff;
-          animation: glitch-2 0.4s infinite linear alternate-reverse;
-          clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
-          transform: translate(2px);
-          opacity: 0.7;
+          animation: glitch-magenta 2.5s infinite linear alternate-reverse;
+          clip-path: polygon(0 62%, 100% 62%, 100% 100%, 0 100%);
+          transform: translate(3px, 1px);
+          text-shadow: 2px 0 #00ffff;
+          mix-blend-mode: screen;
         }
-        @keyframes glitch-1 {
-          0% { transform: translate(-2px); }
-          100% { transform: translate(2px); }
+        /* Scanline overlay effect */
+        .cyberpunk-glitch {
+          position: relative;
+          overflow: hidden;
         }
-        @keyframes glitch-2 {
-          0% { transform: translate(2px); }
-          100% { transform: translate(-2px); }
+        .cyberpunk-glitch::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 0, 0, 0.3) 2px,
+            rgba(0, 0, 0, 0.3) 4px
+          );
+          pointer-events: none;
+          z-index: 1;
         }
-        @keyframes glitch-skew {
-          0% { transform: skew(0deg); }
-          20% { transform: skew(0deg); }
-          21% { transform: skew(1deg); }
-          22% { transform: skew(0deg); }
-          80% { transform: skew(0deg); }
-          81% { transform: skew(-0.5deg); }
-          82% { transform: skew(0deg); }
-          100% { transform: skew(0deg); }
+        @keyframes glitch-main {
+          0%, 100% {
+            transform: skew(0deg);
+            filter: brightness(1);
+          }
+          7% {
+            transform: skew(0deg);
+            filter: brightness(1.2);
+          }
+          7.5% {
+            transform: skew(0.5deg);
+            filter: brightness(1.5) hue-rotate(10deg);
+          }
+          8% {
+            transform: skew(-0.3deg);
+            filter: brightness(1);
+          }
+          9% {
+            transform: skew(0deg);
+          }
+          92% {
+            transform: skew(0deg);
+            filter: brightness(1);
+          }
+          92.5% {
+            transform: skew(-0.8deg) scaleY(1.02);
+            filter: brightness(1.3) hue-rotate(-15deg);
+          }
+          93% {
+            transform: skew(0.3deg) scaleY(0.98);
+            filter: brightness(1.1);
+          }
+          93.5% {
+            transform: skew(0deg);
+            filter: brightness(1);
+          }
+        }
+        @keyframes glitch-cyan {
+          0%, 100% {
+            transform: translate(-3px, -1px);
+            opacity: 0.8;
+          }
+          20% {
+            transform: translate(2px, 0px);
+            opacity: 0.6;
+          }
+          21% {
+            transform: translate(-4px, 1px);
+            opacity: 0.9;
+          }
+          40% {
+            transform: translate(-2px, -1px);
+            opacity: 0.7;
+          }
+          60% {
+            transform: translate(3px, 0px);
+            opacity: 0.5;
+          }
+          80% {
+            transform: translate(-1px, 1px);
+            opacity: 0.8;
+          }
+          /* Rapid flicker at glitch moments */
+          7% {
+            transform: translate(-6px, -2px);
+            opacity: 1;
+          }
+          7.5% {
+            transform: translate(4px, 2px);
+            opacity: 0.4;
+          }
+          92.5% {
+            transform: translate(5px, 1px);
+            opacity: 1;
+          }
+          93% {
+            transform: translate(-4px, -1px);
+            opacity: 0.3;
+          }
+        }
+        @keyframes glitch-magenta {
+          0%, 100% {
+            transform: translate(3px, 1px);
+            opacity: 0.8;
+          }
+          25% {
+            transform: translate(-2px, 0px);
+            opacity: 0.6;
+          }
+          26% {
+            transform: translate(4px, -1px);
+            opacity: 0.9;
+          }
+          50% {
+            transform: translate(2px, 1px);
+            opacity: 0.7;
+          }
+          75% {
+            transform: translate(-3px, 0px);
+            opacity: 0.5;
+          }
+          /* Rapid flicker at glitch moments */
+          7% {
+            transform: translate(6px, 2px);
+            opacity: 1;
+          }
+          7.5% {
+            transform: translate(-4px, -2px);
+            opacity: 0.4;
+          }
+          92.5% {
+            transform: translate(-5px, -1px);
+            opacity: 1;
+          }
+          93% {
+            transform: translate(4px, 1px);
+            opacity: 0.3;
+          }
+        }
+
+        /* White Neon Glow Effect */
+        .white-neon-glow {
+          animation: white-neon-pulse 3s ease-in-out infinite;
+        }
+        @keyframes white-neon-pulse {
+          0%, 100% {
+            text-shadow:
+              0 0 5px rgba(255,255,255,0.9),
+              0 0 10px rgba(255,255,255,0.7),
+              0 0 20px rgba(255,255,255,0.5),
+              0 0 40px rgba(255,255,255,0.3);
+            filter: brightness(1);
+          }
+          50% {
+            text-shadow:
+              0 0 8px rgba(255,255,255,1),
+              0 0 15px rgba(255,255,255,0.9),
+              0 0 30px rgba(255,255,255,0.7),
+              0 0 60px rgba(255,255,255,0.4),
+              0 0 100px rgba(255,255,255,0.2);
+            filter: brightness(1.2);
+          }
+        }
+        /* Subtle flicker effect for neon authenticity */
+        @keyframes neon-flicker {
+          0%, 100% { opacity: 1; }
+          92% { opacity: 1; }
+          93% { opacity: 0.8; }
+          94% { opacity: 1; }
+          96% { opacity: 0.9; }
+          97% { opacity: 1; }
+        }
+        .white-neon-glow {
+          animation:
+            white-neon-pulse 3s ease-in-out infinite,
+            neon-flicker 4s linear infinite;
         }
 
         /* Glow Border */
