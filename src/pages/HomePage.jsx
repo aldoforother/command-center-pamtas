@@ -264,7 +264,7 @@ export default function HomePage() {
           />
         )}
 
-        {/* HUD Panel - Tactical Military Design */}
+        {/* HUD Panel - Professional Card Dashboard */}
         <div
           className="absolute"
           style={{
@@ -315,24 +315,14 @@ export default function HomePage() {
         }
 
         /* HUD Panel Animations */
-        @keyframes tacticalIn {
+        @keyframes cardFadeIn {
           0% {
             opacity: 0;
-            transform: translateY(8px);
+            transform: translateY(10px);
           }
           100% {
             opacity: 1;
             transform: translateY(0);
-          }
-        }
-        @keyframes tacticalPulse {
-          0%, 100% {
-            opacity: 1;
-            box-shadow: 0 0 4px currentColor;
-          }
-          50% {
-            opacity: 0.5;
-            box-shadow: 0 0 2px currentColor;
           }
         }
 
@@ -430,229 +420,126 @@ export default function HomePage() {
   )
 }
 
-/* Tactical HUD Component - Military Grade Design */
+/* ═══════════════════════════════════════════════════════════════════════
+   PROFESSIONAL CARD-BASED HUD — Clean Dashboard Style
+   ═══════════════════════════════════════════════════════════════════════ */
 function TacticalHUD({ totalPersonel, totalPos, aktifCount, navigate, prefersReducedMotion }) {
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 100)
-    return () => clearTimeout(timer)
-  }, [])
-
   return (
-    <div
-      className="relative w-full h-full"
-      style={{
-        opacity: mounted ? 1 : 0,
-        transform: mounted ? 'translateX(0)' : 'translateX(-20px)',
-        transition: 'all 400ms cubic-bezier(0.23, 1, 0.32, 1)',
-      }}
-    >
-      {/* Main Frame - Angular Border */}
-      <div className="absolute inset-0">
-        {/* Outer Border */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'linear-gradient(135deg, rgba(0,255,136,0.3) 0%, rgba(0,255,136,0.1) 50%, rgba(0,255,136,0.05) 100%)',
-            clipPath: 'polygon(0 8px, 8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px))',
-          }}
+    <div className="relative w-full h-full">
+      {/* 2x3 Card Grid */}
+      <div className="w-full h-full grid grid-cols-3 grid-rows-2 gap-2 p-2">
+        {/* Row 1: Stats */}
+        <DashboardCard
+          label="PERSONEL"
+          value={totalPersonel}
+          color="var(--accent-primary)"
+          index={0}
+          prefersReducedMotion={prefersReducedMotion}
+        />
+        <DashboardCard
+          label="POS AKTIF"
+          value={totalPos}
+          color="var(--color-info)"
+          index={1}
+          prefersReducedMotion={prefersReducedMotion}
+        />
+        <DashboardCard
+          label="INSIDEN"
+          value={aktifCount}
+          color={aktifCount > 0 ? 'var(--color-danger)' : 'var(--accent-primary)'}
+          alert={aktifCount > 0}
+          index={2}
+          prefersReducedMotion={prefersReducedMotion}
         />
 
-        {/* Inner Frame */}
-        <div
-          className="absolute inset-[2px]"
-          style={{
-            background: 'rgba(5,8,15,0.95)',
-            clipPath: 'polygon(0 8px, 8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px))',
-          }}
+        {/* Row 2: Actions */}
+        <DashboardAction
+          icon={<MapIcon />}
+          label="OVERVIEW"
+          onClick={() => navigate('/overview')}
+          color="var(--accent-primary)"
+          index={3}
+          prefersReducedMotion={prefersReducedMotion}
         />
-
-        {/* Corner Accents */}
-        <CornerAccent position="top-left" />
-        <CornerAccent position="top-right" />
-        <CornerAccent position="bottom-left" />
-        <CornerAccent position="bottom-right" />
-      </div>
-
-      {/* Header Bar */}
-      <div className="absolute top-0 left-0 right-0 h-7 flex items-center px-3"
-        style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px))' }}>
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#00ff88]" style={{ boxShadow: '0 0 8px #00ff88' }} />
-          <span className="font-mono text-[8px] tracking-[0.2em] text-[rgba(0,255,136,0.7)]">
-            SYSTEM STATUS
-          </span>
-        </div>
-        <div className="flex-1 h-px mx-3" style={{ background: 'linear-gradient(90deg, rgba(0,255,136,0.4), transparent)' }} />
-      </div>
-
-      {/* Content Area */}
-      <div className="absolute inset-0 pt-8 pb-1 px-1">
-        {/* Row 1: Stats - Seamless flex */}
-        <div className="h-[calc(50%-2px)] flex mb-0.5">
-          <TacticalStat
-            icon={<CrosshairIcon />}
-            label="PERSONEL"
-            value={totalPersonel}
-            color="var(--accent-primary)"
-            index={0}
-            prefersReducedMotion={prefersReducedMotion}
-          />
-          <TacticalStat
-            icon={<TargetIcon />}
-            label="POS AKTIF"
-            value={totalPos}
-            color="var(--color-info)"
-            index={1}
-            prefersReducedMotion={prefersReducedMotion}
-          />
-          <TacticalStat
-            icon={<AlertIcon />}
-            label="INSIDEN"
-            value={aktifCount}
-            color={aktifCount > 0 ? 'var(--color-danger)' : 'var(--accent-primary)'}
-            index={2}
-            pulse={aktifCount > 0}
-            prefersReducedMotion={prefersReducedMotion}
-          />
-        </div>
-
-        {/* Divider */}
-        <div className="h-px mx-1 my-0.5" style={{ background: 'linear-gradient(90deg, transparent, rgba(0,255,136,0.25), transparent)' }} />
-
-        {/* Row 2: Actions - Seamless joined panels */}
-        <div className="h-[calc(50%-4px)] flex">
-          <TacticalAction
-            icon={<MapIcon />}
-            label="OVERVIEW"
-            onClick={() => navigate('/overview')}
-            color="var(--accent-primary)"
-            index={3}
-            prefersReducedMotion={prefersReducedMotion}
-          />
-          <TacticalAction
-            icon={<AlertIcon />}
-            label="INSIDEN"
-            onClick={() => navigate('/insiden')}
-            color={aktifCount > 0 ? 'var(--color-danger)' : 'var(--accent-primary)'}
-            badge={aktifCount > 0 ? aktifCount : null}
-            index={4}
-            prefersReducedMotion={prefersReducedMotion}
-          />
-          <TacticalAction
-            icon={<ChartIcon />}
-            label="LAPORAN"
-            onClick={() => navigate('/laporan/kerawanan')}
-            color="var(--color-purple)"
-            index={5}
-            prefersReducedMotion={prefersReducedMotion}
-            isLast
-          />
-        </div>
+        <DashboardAction
+          icon={<AlertIcon />}
+          label="INSIDEN"
+          onClick={() => navigate('/insiden')}
+          color={aktifCount > 0 ? 'var(--color-danger)' : 'var(--accent-primary)'}
+          badge={aktifCount > 0 ? aktifCount : null}
+          index={4}
+          prefersReducedMotion={prefersReducedMotion}
+        />
+        <DashboardAction
+          icon={<ChartIcon />}
+          label="LAPORAN"
+          onClick={() => navigate('/laporan/kerawanan')}
+          color="var(--color-purple)"
+          index={5}
+          prefersReducedMotion={prefersReducedMotion}
+        />
       </div>
     </div>
   )
 }
 
-/* Corner Accent Component */
-function CornerAccent({ position }) {
-  const positions = {
-    'top-left': { top: 0, left: 0, rotate: '0deg' },
-    'top-right': { top: 0, right: 0, rotate: '90deg' },
-    'bottom-right': { bottom: 0, right: 0, rotate: '180deg' },
-    'bottom-left': { bottom: 0, left: 0, rotate: '270deg' },
-  }
-
+/* Dashboard Stat Card - Clean & Professional */
+function DashboardCard({ label, value, color, alert, index, prefersReducedMotion }) {
   return (
     <div
-      className="absolute w-4 h-4"
+      className="relative flex flex-col items-center justify-center rounded-lg overflow-hidden"
       style={{
-        ...positions[position],
-        background: 'linear-gradient(135deg, #00ff88 0%, transparent 60%)',
-        clipPath: 'polygon(0 0, 100% 0, 0 100%)',
-      }}
-    />
-  )
-}
-
-/* Tactical Stat Display with Bracket Frame & Heartbeat */
-function TacticalStat({ icon, label, value, color, index, pulse, prefersReducedMotion }) {
-  return (
-    <div
-      className="relative flex-1 flex flex-col items-center justify-center px-2 py-1 border-r"
-      style={{
-        borderColor: 'rgba(0,255,136,0.12)',
-        animation: prefersReducedMotion ? 'none' : `tacticalIn 300ms ${index * 80}ms ease-out forwards`,
+        background: 'rgba(15,20,30,0.85)',
+        border: `1px solid ${color}30`,
+        boxShadow: `0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 ${color}15`,
+        animation: prefersReducedMotion ? 'none' : `cardFadeIn 400ms ${index * 60}ms ease-out forwards`,
         opacity: 0,
+        backdropFilter: 'blur(8px)',
       }}
     >
-      {/* Status Dot - top right */}
+      {/* Top accent bar */}
       <div
-        className={`absolute top-1 right-2 w-1.5 h-1.5 rounded-full ${pulse ? 'animate-pulse' : ''}`}
-        style={{ background: color, boxShadow: `0 0 8px ${color}` }}
+        className="absolute top-0 left-0 right-0 h-0.5"
+        style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }}
       />
 
-      {/* Icon Badge with Chamfer Frame */}
-      <div
-        className="mb-1"
+      {/* Alert indicator */}
+      {alert && (
+        <div
+          className="absolute top-2 right-2 w-2 h-2 rounded-full animate-pulse"
+          style={{ background: color, boxShadow: `0 0 8px ${color}` }}
+        />
+      )}
+
+      {/* Value */}
+      <span
+        className="font-bold text-2xl leading-none"
         style={{
-          background: `${color}10`,
-          border: `1px solid ${color}35`,
-          clipPath: 'polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))',
-          padding: '4px',
+          color,
+          fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+          textShadow: `0 0 20px ${color}40`,
         }}
       >
-        <span style={{ color, fontSize: '10px', display: 'block' }}>{icon}</span>
-      </div>
-
-      {/* Value with Bracket Corners */}
-      <div className="relative">
-        {/* Corner brackets */}
-        <span className="absolute -left-1 -top-1 w-2 h-2" style={{ borderTop: `1.5px solid ${color}`, borderLeft: `1.5px solid ${color}`, opacity: 0.6 }} />
-        <span className="absolute -right-1 -top-1 w-2 h-2" style={{ borderTop: `1.5px solid ${color}`, borderRight: `1.5px solid ${color}`, opacity: 0.6 }} />
-        <span className="absolute -left-1 -bottom-1 w-2 h-2" style={{ borderBottom: `1.5px solid ${color}`, borderLeft: `1.5px solid ${color}`, opacity: 0.6 }} />
-        <span className="absolute -right-1 -bottom-1 w-2 h-2" style={{ borderBottom: `1.5px solid ${color}`, borderRight: `1.5px solid ${color}`, opacity: 0.6 }} />
-
-        {/* Value */}
-        <span
-          className="font-mono font-bold text-base leading-none px-1"
-          style={{
-            color,
-            textShadow: `0 0 12px ${color}80`,
-            fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-          }}
-        >
-          {value.toLocaleString('id-ID')}
-        </span>
-      </div>
+        {value.toLocaleString('id-ID')}
+      </span>
 
       {/* Label */}
       <span
-        className="text-[6px] uppercase tracking-[0.15em] mt-1 font-medium"
-        style={{ color: 'rgba(200,214,229,0.45)', letterSpacing: '0.1em' }}
+        className="text-[9px] uppercase tracking-[0.15em] mt-2 font-medium"
+        style={{
+          color: 'rgba(200,214,229,0.6)',
+          fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+          letterSpacing: '0.1em',
+        }}
       >
         {label}
       </span>
-
-      {/* Heartbeat/ECG Line */}
-      <div className="w-full mt-1 px-2">
-        <svg width="100%" height="4" viewBox="0 0 80 4" preserveAspectRatio="none">
-          <path
-            d="M0 2 L15 2 L20 0 L25 4 L30 1.5 L35 2.5 L45 2 L80 2"
-            fill="none"
-            stroke={color}
-            strokeWidth="0.75"
-            opacity="0.5"
-          />
-        </svg>
-      </div>
     </div>
   )
 }
 
-/* Tactical Action - Seamless Panel with Hazard Stripe */
-function TacticalAction({ icon, label, onClick, color, badge, index, prefersReducedMotion, isLast }) {
+/* Dashboard Action Card - Clean & Professional */
+function DashboardAction({ icon, label, onClick, color, badge, index, prefersReducedMotion }) {
   const [hovered, setHovered] = useState(false)
 
   return (
@@ -660,80 +547,63 @@ function TacticalAction({ icon, label, onClick, color, badge, index, prefersRedu
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className={`relative flex-1 flex flex-col items-center justify-center px-2 py-1 ${!isLast ? 'border-r' : ''}`}
+      className="relative flex flex-col items-center justify-center rounded-lg overflow-hidden"
       style={{
-        background: hovered ? `${color}12` : 'rgba(0,0,0,0.25)',
-        borderColor: hovered ? color : 'rgba(0,255,136,0.12)',
-        borderWidth: '0px',
-        borderRightWidth: '1px',
-        boxShadow: hovered ? `0 0 15px ${color}30, inset 0 0 12px ${color}08` : 'none',
-        transform: hovered ? 'scale(1.01)' : 'scale(1)',
-        transition: 'all 150ms ease',
-        animation: prefersReducedMotion ? 'none' : `tacticalIn 300ms ${index * 80}ms ease-out forwards`,
+        background: hovered ? `${color}12` : 'rgba(15,20,30,0.85)',
+        border: `1px solid ${hovered ? color : color}25`,
+        boxShadow: hovered
+          ? `0 4px 20px rgba(0,0,0,0.4), 0 0 15px ${color}20`
+          : '0 4px 20px rgba(0,0,0,0.3)',
+        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
+        transition: 'all 200ms cubic-bezier(0.23, 1, 0.32, 1)',
+        animation: prefersReducedMotion ? 'none' : `cardFadeIn 400ms ${index * 60}ms ease-out forwards`,
         opacity: 0,
+        backdropFilter: 'blur(8px)',
       }}
     >
-      {/* Hazard Stripe - bottom right on hover */}
-      {hovered && (
-        <div
-          className="absolute bottom-0 right-0 w-10 h-2.5"
-          style={{
-            background: `repeating-linear-gradient(
-              -45deg,
-              ${color}25 0px,
-              ${color}25 2px,
-              transparent 2px,
-              transparent 4px
-            )`,
-          }}
-        />
-      )}
-
-      {/* Icon with Bracket Corner Frame */}
-      <div className="relative mb-0.5">
-        {/* Corner brackets */}
-        <span className="absolute -left-0.5 -top-0.5 w-1.5 h-1.5" style={{ borderTop: `1px solid ${hovered ? color : 'rgba(200,214,229,0.2)'}`, borderLeft: `1px solid ${hovered ? color : 'rgba(200,214,229,0.2)'}`, transition: 'border-color 150ms' }} />
-        <span className="absolute -right-0.5 -top-0.5 w-1.5 h-1.5" style={{ borderTop: `1px solid ${hovered ? color : 'rgba(200,214,229,0.2)'}`, borderRight: `1px solid ${hovered ? color : 'rgba(200,214,229,0.2)'}`, transition: 'border-color 150ms' }} />
-        <span className="absolute -left-0.5 -bottom-0.5 w-1.5 h-1.5" style={{ borderBottom: `1px solid ${hovered ? color : 'rgba(200,214,229,0.2)'}`, borderLeft: `1px solid ${hovered ? color : 'rgba(200,214,229,0.2)'}`, transition: 'border-color 150ms' }} />
-        <span className="absolute -right-0.5 -bottom-0.5 w-1.5 h-1.5" style={{ borderBottom: `1px solid ${hovered ? color : 'rgba(200,214,229,0.2)'}`, borderRight: `1px solid ${hovered ? color : 'rgba(200,214,229,0.2)'}`, transition: 'border-color 150ms' }} />
-
-        {/* Icon */}
-        <div style={{ color: hovered ? color : 'rgba(200,214,229,0.45)', transition: 'color 150ms' }} className="w-5 h-5">
-          {icon}
-        </div>
-
-        {/* Badge */}
-        {badge && (
-          <span
-            className="absolute -top-1.5 -right-1.5 font-mono text-[7px] font-bold px-1 py-0.5 rounded animate-pulse"
-            style={{ background: color, color: '#000', boxShadow: `0 0 8px ${color}` }}
-          >
-            {badge}
-          </span>
-        )}
+      {/* Icon */}
+      <div
+        className="w-6 h-6 mb-1"
+        style={{ color: hovered ? color : 'rgba(200,214,229,0.5)' }}
+      >
+        {icon}
       </div>
 
       {/* Label */}
       <span
-        className="text-[7px] uppercase tracking-[0.12em] font-semibold"
+        className="text-[9px] uppercase tracking-[0.15em] font-semibold"
         style={{
-          color: hovered ? color : 'rgba(200,214,229,0.55)',
-          textShadow: hovered ? `0 0 8px ${color}50` : 'none',
-          transition: 'all 150ms',
-          letterSpacing: '0.08em',
+          color: hovered ? color : 'rgba(200,214,229,0.6)',
+          fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+          letterSpacing: '0.1em',
+          transition: 'color 150ms ease',
         }}
       >
         {label}
       </span>
 
-      {/* Arrow indicator */}
+      {/* Badge */}
+      {badge && (
+        <span
+          className="absolute -top-1 -right-1 font-mono text-[9px] font-bold px-1.5 py-0.5 rounded animate-pulse"
+          style={{
+            background: color,
+            color: '#000',
+            boxShadow: `0 0 10px ${color}`,
+          }}
+        >
+          {badge}
+        </span>
+      )}
+
+      {/* Hover arrow */}
       <span
-        className="absolute bottom-0.5 right-1 text-[8px]"
+        className="absolute bottom-1 text-xs"
         style={{
           color,
-          opacity: hovered ? 0.9 : 0,
-          transform: hovered ? 'translateX(0)' : 'translateX(-4px)',
-          transition: 'all 150ms',
+          opacity: hovered ? 0.8 : 0,
+          transform: hovered ? 'translateX(0)' : 'translateX(-5px)',
+          transition: 'all 150ms ease',
         }}
       >
         →
