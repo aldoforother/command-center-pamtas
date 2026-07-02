@@ -1,15 +1,20 @@
 # DASHBOARD BUTTON INVENTORY
 Generated: 2026-07-02
+Updated: 2026-07-02 (v2)
 
 ---
 
 ## LOGIN PAGE (`/login`)
 ```
 [LoginPage]
-├── form
-│   ├── input[type="email"]
-│   ├── input[type="password"]
-│   └── button[type="submit"] "MASUK SISTEM"
+├── [Branding]
+│   ├── text "NARASINGA OPERATION CENTER"
+│   └── text "── OPERATOR ID" / "── ACCESS KEY"
+│
+└── [Form]
+    ├── input[type="email"]
+    ├── input[type="password"]
+    └── button[type="submit"] "MASUK SISTEM"
 ```
 
 ---
@@ -17,32 +22,41 @@ Generated: 2026-07-02
 ## HOME PAGE (`/`)
 ```
 [HomePage]
-├── NARASINGA SIAGA (text)
-├── PERBATASAN TERJAGA (text)
-├── SATGAS PAMTAS tagline
-├── Logo
+├── [Hero Banner]
+│   ├── text "NARASINGA SIAGA"
+│   ├── text "PERBATASAN TERJAGA"
+│   ├── text "SATGAS PAMTAS RI-MLY YONKAV 8/NSW TA 2026"
+│   └── img "Logo" (logo-satgas.png)
 │
-├── [Sidebar Navigation]
-│   ├── a[href="/"] "Home"
-│   ├── a[href="/overview"] "Overview"
-│   ├── a[href="/insiden"] "Insiden"
-│   ├── a[href="/binter"] "Binter"
-│   ├── a[href="/admin"] "Admin" (admin only)
-│   ├── a[href="/panduan"] "Panduan"
-│   ├── a[href="/laporan/kerawanan"] "Grafik Kerawanan"
-│   ├── a[href="/laporan/tokoh"] "Tokoh Wilayah"
-│   ├── a[href="/laporan/demografi"] "Data Demografi"
-│   └── [POS List in sidebar]
-│       ├── a[href="/pos/KOTIS"]
-│       ├── a[href="/pos/KT"]
-│       ├── a[href="/pos/A1"]
-│       ├── a[href="/pos/A2"]
-│       └── ... (all POS)
+├── [HUD Stats] - 3x2 Grid Layout
+│   ├── StatPanel "PERSONEL" (value)
+│   ├── StatPanel "POS AKTIF" (value)
+│   ├── StatPanel "INSIDEN" (value)
+│   ├── ActionButton "OVERVIEW" (→ /overview)
+│   ├── ActionButton "INSIDEN" (→ /insiden)
+│   └── ActionButton "LAPORAN" (→ /laporan/kerawanan)
 │
-└── [HUD Stats]
-    ├── StatPanel "PERSONEL" (value)
-    ├── StatPanel "POS AKTIF" (value)
-    └── StatPanel "INSIDEN" (value)
+└── [Sidebar Navigation] - Collapsible (180px width)
+    ├── NAVIGASI
+    │   ├── a[href="/"] "Home"
+    │   ├── a[href="/overview"] "Overview"
+    │   ├── a[href="/insiden"] "Data Insiden" (badge: count)
+    │   └── a[href="/binter"] "Program Binter"
+    │
+    ├── LAPORAN
+    │   ├── a[href="/laporan/kerawanan"] "Grafik Insiden"
+    │   ├── a[href="/laporan/binter"] "Timeline Binter"
+    │   ├── a[href="/laporan/demografi"] "Data Demografi"
+    │   └── a[href="/laporan/tokoh"] "Tokoh Wilayah"
+    │
+    ├── 17 POS SATGAS
+    │   ├── a[href="/pos/KOTIS"] "KT - POS KOTIS"
+    │   ├── a[href="/pos/AJ"] "AJ - Pos Aji Kuning"
+    │   └── ... (all POS)
+    │
+    └── PENGATURAN
+        ├── a[href="/panduan"] "Panduan Input"
+        └── a[href="/admin"] "Pengaturan" (admin only)
 ```
 
 ---
@@ -50,12 +64,6 @@ Generated: 2026-07-02
 ## OVERVIEW PAGE (`/overview`)
 ```
 [OverviewPage]
-├── [TopBar]
-│   ├── button[presentation mode]
-│   ├── button[fullscreen]
-│   ├── button[print]
-│   └── button[logout]
-│
 ├── [Sidebar] (same as Home)
 │
 ├── [MapContainer]
@@ -93,78 +101,80 @@ Generated: 2026-07-02
 │   ├── InfoPill "Insiden"
 │   └── InfoPill "Klasifikasi"
 │
-├── [Tab Navigation] - Urutan Kiri ke Kanan:
-│   ├── button[role="tab"] "INFO POS"
-│   ├── button[role="tab"] "DEMOGRAFI"
-│   ├── button[role="tab"] "GEO-DEMO-KONSOS"
-│   ├── button[role="tab"] "TOKOH"
-│   ├── button[role="tab"] "BINTER"
-│   ├── button[role="tab"] "DATA INSIDEN"
-│   ├── button[role="tab"] "PATROLI"
-│   └── button[role="tab"] "DOKUMENTASI"
-│
-├── [INFO POS TAB]
-│   ├── button[Edit Pos] "✎ Edit"
-│   └── map placeholder
-│
-├── [DEMOGRAFI TAB]
-│   ├── [DemografiTable]
-│   │   ├── button[Tambah Data]
-│   │   ├── button[Edit Row] (per row)
-│   │   └── button[Delete Row] (per row)
-│   └── [EditDemografiForm] (modal)
-│       ├── input fields
-│       ├── button[Batal]
-│       └── button[Simpan]
-│
-├── [GEO-DEMO-KONSOS TAB]
-│   └── [GeoDemoKonsos]
-│       ├── GeoJSON map
-│       └── Konsos data visualization
-│
-├── [TOKOH TAB]
-│   ├── [TokohList]
-│   │   ├── button[Tambah Tokoh]
-│   │   ├── button[Edit Tokoh] (per card)
-│   │   └── button[Hapus Tokoh] (per card)
-│   └── [TokohForm] (modal)
-│       ├── input fields
-│       ├── button[Batal]
-│       └── button[Simpan]
-│
-├── [BINTER TAB]
-│   ├── [BinterList]
-│   │   ├── button[Tambah Binter]
-│   │   ├── button[Edit Binter] (per row)
-│   │   └── button[Hapus Binter] (per row)
-│   └── [BinterForm] (modal)
-│       ├── input fields
-│       ├── button[Batal]
-│       └── button[Simpan]
-│
-├── [INSIDEN TAB]
-│   ├── [KerawananList]
-│   │   ├── button[Tambah Insiden]
-│   │   ├── button[Edit Insiden] (per card)
-│   │   └── button[Hapus Insiden] (per card)
-│   └── [KerawananForm] (modal)
-│       ├── input fields
-│       ├── button[Batal]
-│       └── button[Simpan]
-│
-└── [PATROLI TAB]
-    ├── [PatroliList]
-    │   ├── button[Tambah Patroli]
-    │   ├── button[Edit Patroli] (per row)
-    │   └── button[Hapus Patroli] (per row)
-    └── [PatroliForm] (modal)
-        ├── input fields
-        ├── button[Batal]
-        └── button[Simpan]
-
-└── [DOKUMENTASI TAB]
-    └── [PhotoGallery]
-        └── Image grid with lightbox
+└── [Content Area]
+    ├── [Tab Navigation] - Urutan Kiri ke Kanan:
+    │   ├── button[role="tab"] "INFO POS"
+    │   ├── button[role="tab"] "DEMOGRAFI"
+    │   ├── button[role="tab"] "GEO-DEMO-KONSOS"
+    │   ├── button[role="tab"] "TOKOH"
+    │   ├── button[role="tab"] "BINTER"
+    │   ├── button[role="tab"] "DATA INSIDEN"
+    │   ├── button[role="tab"] "PATROLI"
+    │   └── button[role="tab"] "DOKUMENTASI"
+    │
+    └── [Tab Content]
+        ├── [INFO POS]
+        │   ├── button[Edit Pos] "✎ Edit"
+        │   └── map placeholder
+        │
+        ├── [DEMOGRAFI]
+        │   ├── [DemografiTable]
+        │   │   ├── button[Tambah Data]
+        │   │   ├── button[Edit Row] (per row)
+        │   │   └── button[Delete Row] (per row)
+        │   └── [EditDemografiForm] (modal)
+        │       ├── input fields
+        │       ├── button[Batal]
+        │       └── button[Simpan]
+        │
+        ├── [GEO-DEMO-KONSOS]
+        │   └── [GeoDemoKonsos]
+        │       ├── GeoJSON map
+        │       └── Konsos data visualization
+        │
+        ├── [TOKOH]
+        │   ├── [TokohList]
+        │   │   ├── button[Tambah Tokoh]
+        │   │   ├── button[Edit Tokoh] (per card)
+        │   │   └── button[Hapus Tokoh] (per card)
+        │   └── [TokohForm] (modal)
+        │       ├── input fields
+        │       ├── button[Batal]
+        │       └── button[Simpan]
+        │
+        ├── [BINTER]
+        │   ├── [BinterList]
+        │   │   ├── button[Tambah Binter]
+        │   │   ├── button[Edit Binter] (per row)
+        │   │   └── button[Hapus Binter] (per row)
+        │   └── [BinterForm] (modal)
+        │       ├── input fields
+        │       ├── button[Batal]
+        │       └── button[Simpan]
+        │
+        ├── [DATA INSIDEN]
+        │   ├── [KerawananList]
+        │   │   ├── button[Tambah Insiden]
+        │   │   ├── button[Edit Insiden] (per card)
+        │   │   └── button[Hapus Insiden] (per card)
+        │   └── [KerawananForm] (modal)
+        │       ├── input fields
+        │       ├── button[Batal]
+        │       └── button[Simpan]
+        │
+        ├── [PATROLI]
+        │   ├── [PatroliList]
+        │   │   ├── button[Tambah Patroli]
+        │   │   ├── button[Edit Patroli] (per row)
+        │   │   └── button[Hapus Patroli] (per row)
+        │   └── [PatroliForm] (modal)
+        │       ├── input fields
+        │       ├── button[Batal]
+        │       └── button[Simpan]
+        │
+        └── [DOKUMENTASI]
+            └── [PhotoGallery]
+                └── Image grid with lightbox
 ```
 
 ---
@@ -366,3 +376,4 @@ Untuk report bug, sebutkan:
 ---
 
 *Generated: 2026-07-02*
+*Updated: 2026-07-02 (v2 - Fixed POS Detail tabs structure)*
