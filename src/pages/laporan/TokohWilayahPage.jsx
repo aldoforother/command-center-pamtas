@@ -293,7 +293,7 @@ function TokohCard({ tokoh, color, posName, delay, onClick }) {
 }
 
 /* ── Modal Biografi Tokoh ──────────────────────────────────── */
-function TokohBiografiModal({ tokoh, posName, onClose }) {
+function TokohBiografiModal({ tokoh, posName, onClose, onEdit }) {
   const kat   = normalizeKategori(tokoh.kategori)
   const color = KATEGORI_COLOR[kat] || 'var(--text-tertiary)'
 
@@ -336,16 +336,18 @@ function TokohBiografiModal({ tokoh, posName, onClose }) {
             <span className="font-mono text-[9px]" style={{ color: 'var(--text-tertiary)' }}>{posName}</span>
           </div>
           <div className="flex items-center gap-1">
-            <button
-              onClick={onEdit}
-              className="text-xs px-2 py-1 rounded-sm transition-all"
-              style={{ color: 'var(--accent-primary)', background: 'var(--accent-muted)', border: '1px solid var(--accent-primary)' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-primary)'; e.currentTarget.style.color = '#000' }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'var(--accent-muted)'; e.currentTarget.style.color = 'var(--accent-primary)' }}
-              aria-label="Edit tokoh"
-            >
-              Edit
-            </button>
+            {onEdit && (
+              <button
+                onClick={onEdit}
+                className="text-xs px-2 py-1 rounded-sm transition-all"
+                style={{ color: 'var(--accent-primary)', background: 'var(--accent-muted)', border: '1px solid var(--accent-primary)' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-primary)'; e.currentTarget.style.color = '#000' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'var(--accent-muted)'; e.currentTarget.style.color = 'var(--accent-primary)' }}
+                aria-label="Edit tokoh"
+              >
+                Edit
+              </button>
+            )}
             <button
               onClick={onClose}
               className="text-lg leading-none transition-all p-1 rounded-sm"
