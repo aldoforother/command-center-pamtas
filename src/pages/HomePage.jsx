@@ -264,7 +264,7 @@ export default function HomePage() {
           />
         )}
 
-        {/* HUD Panel - Modern Glassmorphism with Animations */}
+        {/* HUD Panel - Tactical Military Design */}
         <div
           className="absolute"
           style={{
@@ -274,117 +274,13 @@ export default function HomePage() {
             height: '34.54%',
           }}
         >
-          {/* Animated Border Glow Container */}
-          <div
-            className="relative w-full h-full"
-            style={{
-              animation: prefersReducedMotion ? 'none' : 'fadeInScale 600ms cubic-bezier(0.23, 1, 0.32, 1) forwards',
-              opacity: 0,
-              transform: 'scale(0.95)',
-            }}
-          >
-            {/* Animated Border Glow */}
-            <div
-              className="absolute inset-0 rounded-lg overflow-hidden"
-              style={{
-                background: 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(68,136,255,0.1), rgba(187,136,255,0.08))',
-                padding: '1px',
-              }}
-            >
-              <div
-                className="absolute inset-0 rounded-lg"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(0,255,136,0.4) 0%, rgba(68,136,255,0.3) 50%, rgba(187,136,255,0.2) 100%)',
-                  animation: prefersReducedMotion ? 'none' : 'borderGlow 4s ease-in-out infinite',
-                  opacity: 0.6,
-                }}
-              />
-            </div>
-
-            {/* Main Panel Background */}
-            <div
-              className="absolute inset-0 rounded-lg overflow-hidden"
-              style={{
-                background: 'linear-gradient(165deg, rgba(5,10,20,0.85) 0%, rgba(8,12,25,0.78) 100%)',
-                backdropFilter: 'blur(20px)',
-              }}
-            >
-              {/* Top Highlight Line */}
-              <div
-                className="absolute top-0 left-4 right-4 h-px"
-                style={{
-                  background: 'linear-gradient(90deg, transparent, rgba(0,255,136,0.5), rgba(68,136,255,0.3), transparent)',
-                }}
-              />
-
-              {/* Inner Glow */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: 'radial-gradient(ellipse at 30% 0%, rgba(0,255,136,0.08) 0%, transparent 60%)',
-                }}
-              />
-
-              {/* 2x3 Grid Content */}
-              <div className="relative w-full h-full p-4">
-                <div className="w-full h-full grid grid-cols-3 grid-rows-2 gap-3">
-                  {/* Row 1: Stats with Staggered Animation */}
-                  <StatCard
-                    icon="◈"
-                    label="PERSONEL"
-                    value={totalPersonel}
-                    color="#00ff88"
-                    delay={0}
-                    prefersReducedMotion={prefersReducedMotion}
-                  />
-                  <StatCard
-                    icon="◉"
-                    label="POS AKTIF"
-                    value={totalPos}
-                    color="#44aaff"
-                    delay={100}
-                    prefersReducedMotion={prefersReducedMotion}
-                  />
-                  <StatCard
-                    icon="◬"
-                    label="INSIDEN"
-                    value={aktifCount}
-                    color={aktifCount > 0 ? '#ff5555' : '#00ff88'}
-                    delay={200}
-                    pulse={aktifCount > 0}
-                    prefersReducedMotion={prefersReducedMotion}
-                  />
-
-                  {/* Row 2: Action Buttons */}
-                  <ActionCard
-                    icon={<MapIcon />}
-                    label="OVERVIEW"
-                    onClick={() => navigate('/overview')}
-                    color="#00ff88"
-                    delay={300}
-                    prefersReducedMotion={prefersReducedMotion}
-                  />
-                  <ActionCard
-                    icon={<AlertIcon />}
-                    label="INSIDEN"
-                    onClick={() => navigate('/insiden')}
-                    color={aktifCount > 0 ? '#ff5555' : '#00ff88'}
-                    badge={aktifCount > 0 ? aktifCount : null}
-                    delay={400}
-                    prefersReducedMotion={prefersReducedMotion}
-                  />
-                  <ActionCard
-                    icon={<ChartIcon />}
-                    label="LAPORAN"
-                    onClick={() => navigate('/laporan/kerawanan')}
-                    color="#bb88ff"
-                    delay={500}
-                    prefersReducedMotion={prefersReducedMotion}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+          <TacticalHUD
+            totalPersonel={totalPersonel}
+            totalPos={totalPos}
+            aktifCount={aktifCount}
+            navigate={navigate}
+            prefersReducedMotion={prefersReducedMotion}
+          />
         </div>
       </div>
 
@@ -419,63 +315,24 @@ export default function HomePage() {
         }
 
         /* HUD Panel Animations */
-        @keyframes fadeInScale {
+        @keyframes tacticalIn {
           0% {
             opacity: 0;
-            transform: scale(0.95);
-          }
-          100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-        @keyframes borderGlow {
-          0%, 100% {
-            opacity: 0.4;
-          }
-          50% {
-            opacity: 0.7;
-          }
-        }
-        @keyframes statCardIn {
-          0% {
-            opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(8px);
           }
           100% {
             opacity: 1;
             transform: translateY(0);
           }
         }
-        @keyframes actionCardIn {
-          0% {
-            opacity: 0;
-            transform: scale(0.95);
-          }
-          100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-        @keyframes pulseGlow {
+        @keyframes tacticalPulse {
           0%, 100% {
             opacity: 1;
-            box-shadow: 0 0 10px var(--glow-color, #ff5555), 0 0 20px var(--glow-color, #ff5555);
+            box-shadow: 0 0 4px currentColor;
           }
           50% {
-            opacity: 0.6;
-            box-shadow: 0 0 5px var(--glow-color, #ff5555), 0 0 10px var(--glow-color, #ff5555);
-          }
-        }
-        @keyframes badgePop {
-          0% {
-            transform: scale(0);
-          }
-          70% {
-            transform: scale(1.2);
-          }
-          100% {
-            transform: scale(1);
+            opacity: 0.5;
+            box-shadow: 0 0 2px currentColor;
           }
         }
 
@@ -573,178 +430,259 @@ export default function HomePage() {
   )
 }
 
-/* Modern Stat Card with Glow Effect */
-function StatCard({ icon, label, value, color, pulse, delay = 0, prefersReducedMotion }) {
-  const [hovered, setHovered] = useState(false)
+/* Tactical HUD Component - Military Grade Design */
+function TacticalHUD({ totalPersonel, totalPos, aktifCount, navigate, prefersReducedMotion }) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 100)
+    return () => clearTimeout(timer)
+  }, [])
 
   return (
     <div
-      className="relative flex flex-col items-center justify-center rounded-md overflow-hidden cursor-default"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      className="relative w-full h-full"
       style={{
-        background: hovered
-          ? `linear-gradient(135deg, ${color}08 0%, ${color}05 100%)`
-          : 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.01) 100%)',
-        border: `1px solid ${hovered ? color : 'rgba(255,255,255,0.08)'}`,
-        boxShadow: hovered ? `0 0 20px ${color}20, inset 0 0 15px ${color}08` : 'inset 0 0 10px rgba(0,0,0,0.2)',
-        transition: 'all 250ms cubic-bezier(0.23, 1, 0.32, 1)',
-        animation: prefersReducedMotion ? 'none' : `statCardIn 400ms ${delay}ms cubic-bezier(0.23, 1, 0.32, 1) forwards`,
-        opacity: 0,
-        transform: prefersReducedMotion ? 'none' : 'translateY(10px)',
-        padding: '12px 8px',
+        opacity: mounted ? 1 : 0,
+        transform: mounted ? 'translateX(0)' : 'translateX(-20px)',
+        transition: 'all 400ms cubic-bezier(0.23, 1, 0.32, 1)',
       }}
     >
-      {/* Glow Effect on Hover */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: `radial-gradient(ellipse at 50% 0%, ${color}15 0%, transparent 70%)`,
-          opacity: hovered ? 1 : 0,
-          transition: 'opacity 300ms ease',
-        }}
-      />
-
-      {/* Pulse Indicator */}
-      {pulse && (
+      {/* Main Frame - Angular Border */}
+      <div className="absolute inset-0">
+        {/* Outer Border */}
         <div
-          className="absolute top-2 right-2 w-2 h-2 rounded-full"
+          className="absolute inset-0"
           style={{
-            background: color,
-            boxShadow: `0 0 10px ${color}, 0 0 20px ${color}50`,
-            animation: prefersReducedMotion ? 'none' : 'pulseGlow 1.5s ease-in-out infinite',
+            background: 'linear-gradient(135deg, rgba(0,255,136,0.3) 0%, rgba(0,255,136,0.1) 50%, rgba(0,255,136,0.05) 100%)',
+            clipPath: 'polygon(0 8px, 8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px))',
           }}
         />
-      )}
 
-      {/* Icon */}
-      <span
-        className="text-sm mb-1"
-        style={{
-          color: color,
-          opacity: 0.7,
-          transform: hovered ? 'scale(1.1)' : 'scale(1)',
-          transition: 'transform 200ms ease',
-        }}
-      >
-        {icon}
-      </span>
+        {/* Inner Frame */}
+        <div
+          className="absolute inset-[2px]"
+          style={{
+            background: 'rgba(5,8,15,0.95)',
+            clipPath: 'polygon(0 8px, 8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px))',
+          }}
+        />
 
-      {/* Value */}
-      <span
-        className="font-mono font-bold text-xl leading-none"
-        style={{
-          color,
-          textShadow: hovered ? `0 0 20px ${color}80` : `0 0 12px ${color}50`,
-          transform: hovered ? 'scale(1.05)' : 'scale(1)',
-          transition: 'all 200ms ease',
-        }}
-      >
-        {value.toLocaleString('id-ID')}
-      </span>
+        {/* Corner Accents */}
+        <CornerAccent position="top-left" />
+        <CornerAccent position="top-right" />
+        <CornerAccent position="bottom-left" />
+        <CornerAccent position="bottom-right" />
+      </div>
 
-      {/* Label */}
-      <span
-        className="text-[7px] uppercase tracking-[0.2em] mt-1.5 font-medium"
-        style={{
-          color: hovered ? 'rgba(200,214,229,0.8)' : 'rgba(200,214,229,0.45)',
-          letterSpacing: '0.15em',
-          transition: 'color 200ms ease',
-        }}
-      >
-        {label}
-      </span>
+      {/* Header Bar */}
+      <div className="absolute top-0 left-0 right-0 h-7 flex items-center px-3"
+        style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px))' }}>
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#00ff88]" style={{ boxShadow: '0 0 8px #00ff88' }} />
+          <span className="font-mono text-[8px] tracking-[0.2em] text-[rgba(0,255,136,0.7)]">
+            SYSTEM STATUS
+          </span>
+        </div>
+        <div className="flex-1 h-px mx-3" style={{ background: 'linear-gradient(90deg, rgba(0,255,136,0.4), transparent)' }} />
+      </div>
+
+      {/* Content Grid */}
+      <div className="absolute inset-0 pt-8 pb-2 px-2">
+        {/* Row 1: Stats */}
+        <div className="grid grid-cols-3 gap-1.5 h-[calc(50%-4px)] mb-1">
+          <TacticalStat
+            icon={<CrosshairIcon />}
+            label="PERSONEL"
+            value={totalPersonel}
+            color="#00ff88"
+            index={0}
+            prefersReducedMotion={prefersReducedMotion}
+          />
+          <TacticalStat
+            icon={<TargetIcon />}
+            label="POS AKTIF"
+            value={totalPos}
+            color="#44aaff"
+            index={1}
+            prefersReducedMotion={prefersReducedMotion}
+          />
+          <TacticalStat
+            icon={<AlertIcon />}
+            label="INSIDEN"
+            value={aktifCount}
+            color={aktifCount > 0 ? '#ff5555' : '#00ff88'}
+            index={2}
+            pulse={aktifCount > 0}
+            prefersReducedMotion={prefersReducedMotion}
+          />
+        </div>
+
+        {/* Divider */}
+        <div className="h-px mx-2 my-1" style={{ background: 'linear-gradient(90deg, transparent, rgba(0,255,136,0.3), transparent)' }} />
+
+        {/* Row 2: Actions */}
+        <div className="grid grid-cols-3 gap-1.5 h-[calc(50%-4px)]">
+          <TacticalAction
+            icon={<MapIcon />}
+            label="OVERVIEW"
+            onClick={() => navigate('/overview')}
+            color="#00ff88"
+            index={3}
+            prefersReducedMotion={prefersReducedMotion}
+          />
+          <TacticalAction
+            icon={<AlertIcon />}
+            label="INSIDEN"
+            onClick={() => navigate('/insiden')}
+            color={aktifCount > 0 ? '#ff5555' : '#00ff88'}
+            badge={aktifCount > 0 ? aktifCount : null}
+            index={4}
+            prefersReducedMotion={prefersReducedMotion}
+          />
+          <TacticalAction
+            icon={<ChartIcon />}
+            label="LAPORAN"
+            onClick={() => navigate('/laporan/kerawanan')}
+            color="#bb88ff"
+            index={5}
+            prefersReducedMotion={prefersReducedMotion}
+          />
+        </div>
+      </div>
     </div>
   )
 }
 
-/* Modern Action Card with Interactive Effects */
-function ActionCard({ icon, label, onClick, color, badge, delay = 0, prefersReducedMotion }) {
-  const [hovered, setHovered] = useState(false)
+/* Corner Accent Component */
+function CornerAccent({ position }) {
+  const positions = {
+    'top-left': { top: 0, left: 0, rotate: '0deg' },
+    'top-right': { top: 0, right: 0, rotate: '90deg' },
+    'bottom-right': { bottom: 0, right: 0, rotate: '180deg' },
+    'bottom-left': { bottom: 0, left: 0, rotate: '270deg' },
+  }
+
+  return (
+    <div
+      className="absolute w-4 h-4"
+      style={{
+        ...positions[position],
+        background: 'linear-gradient(135deg, #00ff88 0%, transparent 60%)',
+        clipPath: 'polygon(0 0, 100% 0, 0 100%)',
+      }}
+    />
+  )
+}
+
+/* Tactical Stat Display */
+function TacticalStat({ icon, label, value, color, index, pulse, prefersReducedMotion }) {
+  return (
+    <div
+      className="relative flex flex-col items-center justify-center p-1.5 overflow-hidden"
+      style={{
+        background: 'rgba(0,255,136,0.03)',
+        border: '1px solid rgba(0,255,136,0.15)',
+        animation: prefersReducedMotion ? 'none' : `tacticalIn 300ms ${index * 80}ms ease-out forwards`,
+        opacity: 0,
+      }}
+    >
+      {/* Icon Badge */}
+      <div
+        className="absolute top-1 left-1/2 -translate-x-1/2 w-4 h-4 rounded-sm flex items-center justify-center"
+        style={{ background: `${color}15`, border: `1px solid ${color}40` }}
+      >
+        <span style={{ color, fontSize: '10px' }}>{icon}</span>
+      </div>
+
+      {/* Value */}
+      <div className="mt-3 flex items-baseline gap-0.5">
+        <span
+          className="font-mono font-bold text-lg leading-none"
+          style={{
+            color,
+            textShadow: `0 0 10px ${color}60`,
+            fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+          }}
+        >
+          {value.toLocaleString('id-ID')}
+        </span>
+        {pulse && (
+          <span
+            className="w-1.5 h-1.5 rounded-full"
+            style={{
+              background: color,
+              boxShadow: `0 0 6px ${color}`,
+              animation: prefersReducedMotion ? 'none' : 'tacticalPulse 1s ease-in-out infinite',
+            }}
+          />
+        )}
+      </div>
+
+      {/* Label */}
+      <span
+        className="text-[6px] uppercase tracking-[0.15em] mt-0.5 font-medium"
+        style={{
+          color: 'rgba(200,214,229,0.5)',
+          letterSpacing: '0.1em',
+        }}
+      >
+        {label}
+      </span>
+
+      {/* Bottom accent line */}
+      <div
+        className="absolute bottom-0 left-2 right-2 h-px"
+        style={{ background: `linear-gradient(90deg, transparent, ${color}40, transparent)` }}
+      />
+    </div>
+  )
+}
+
+/* Tactical Action Button */
+function TacticalAction({ icon, label, onClick, color, badge, index, prefersReducedMotion }) {
   const [pressed, setPressed] = useState(false)
 
   return (
     <button
       onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => { setHovered(false); setPressed(false) }}
       onMouseDown={() => setPressed(true)}
       onMouseUp={() => setPressed(false)}
-      className="relative flex flex-col items-center justify-center rounded-md overflow-hidden"
+      onMouseLeave={() => setPressed(false)}
+      className="relative flex flex-col items-center justify-center p-1.5 overflow-hidden"
       style={{
-        background: hovered
-          ? `linear-gradient(135deg, ${color}12 0%, ${color}06 100%)`
-          : 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.01) 100%)',
-        border: `1px solid ${hovered ? color : 'rgba(255,255,255,0.08)'}`,
-        boxShadow: hovered
-          ? `0 0 25px ${color}30, 0 0 50px ${color}10, inset 0 0 20px ${color}05`
-          : 'inset 0 0 10px rgba(0,0,0,0.2)',
-        transform: pressed
-          ? 'scale(0.96)'
-          : hovered
-            ? 'scale(1.02) translateY(-2px)'
-            : 'scale(1)',
-        transition: 'all 200ms cubic-bezier(0.23, 1, 0.32, 1)',
-        animation: prefersReducedMotion ? 'none' : `actionCardIn 400ms ${delay}ms cubic-bezier(0.23, 1, 0.32, 1) forwards`,
+        background: pressed ? `${color}10` : 'rgba(0,255,136,0.02)',
+        border: `1px solid ${pressed ? color : 'rgba(0,255,136,0.1)'}`,
+        transform: pressed ? 'scale(0.97)' : 'scale(1)',
+        transition: 'all 150ms ease',
+        animation: prefersReducedMotion ? 'none' : `tacticalIn 300ms ${index * 80}ms ease-out forwards`,
         opacity: 0,
-        minHeight: '80px',
-        padding: '8px',
       }}
     >
-      {/* Animated Border Line on Top */}
-      <div
-        className="absolute top-0 left-0 right-0 h-0.5"
-        style={{
-          background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
-          opacity: hovered ? 1 : 0,
-          transform: hovered ? 'scaleX(1)' : 'scaleX(0)',
-          transition: 'all 300ms ease',
-        }}
-      />
-
-      {/* Glow Effect */}
-      <div
-        className="absolute inset-0 pointer-events-none overflow-hidden"
-        style={{
-          background: `radial-gradient(ellipse at 50% 100%, ${color}10 0%, transparent 60%)`,
-          opacity: hovered ? 1 : 0.5,
-          transition: 'opacity 300ms ease',
-        }}
-      />
-
-      {/* Icon with Animation */}
-      <div
-        className="mb-1.5"
-        style={{
-          color: hovered ? color : 'rgba(200,214,229,0.5)',
-          transform: hovered ? 'scale(1.15) translateY(-2px)' : 'scale(1)',
-          transition: 'all 200ms cubic-bezier(0.23, 1, 0.32, 1)',
-        }}
-      >
-        <div className="w-5 h-5">{icon}</div>
+      {/* Icon */}
+      <div className="w-5 h-5 mb-0.5" style={{ color: pressed ? color : 'rgba(200,214,229,0.5)' }}>
+        {icon}
       </div>
 
       {/* Label */}
       <span
-        className="text-[8px] uppercase tracking-[0.18em] font-semibold"
+        className="text-[7px] uppercase tracking-[0.12em] font-semibold"
         style={{
-          color: hovered ? color : 'rgba(200,214,229,0.5)',
-          textShadow: hovered ? `0 0 10px ${color}60` : 'none',
-          transition: 'all 200ms ease',
-          letterSpacing: '0.15em',
+          color: pressed ? color : 'rgba(200,214,229,0.6)',
+          letterSpacing: '0.08em',
         }}
       >
         {label}
       </span>
 
-      {/* Arrow Indicator on Hover */}
+      {/* Arrow indicator */}
       <span
-        className="absolute bottom-1 right-2 text-xs"
+        className="absolute bottom-0.5 right-1 text-[8px]"
         style={{
           color,
-          opacity: hovered ? 0.8 : 0,
-          transform: hovered ? 'translateX(0)' : 'translateX(-5px)',
-          transition: 'all 200ms ease',
+          opacity: pressed ? 1 : 0.3,
+          transform: `translateX(${pressed ? 0 : -4}px)`,
+          transition: 'all 150ms ease',
         }}
       >
         →
@@ -753,17 +691,26 @@ function ActionCard({ icon, label, onClick, color, badge, delay = 0, prefersRedu
       {/* Badge */}
       {badge && (
         <span
-          className="absolute -top-1 -right-1 font-mono text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+          className="absolute -top-0.5 -right-0.5 font-mono text-[7px] font-bold px-1 py-0.5 rounded-sm"
           style={{
             background: color,
             color: '#000',
-            boxShadow: `0 0 12px ${color}, 0 0 24px ${color}50`,
-            animation: prefersReducedMotion ? 'none' : 'badgePop 300ms cubic-bezier(0.23, 1, 0.32, 1)',
+            boxShadow: `0 0 8px ${color}`,
           }}
         >
           {badge}
         </span>
       )}
+
+      {/* Left accent */}
+      <div
+        className="absolute left-0 top-1 bottom-1 w-px"
+        style={{
+          background: `linear-gradient(180deg, transparent, ${color}60, transparent)`,
+          opacity: pressed ? 1 : 0,
+          transition: 'opacity 150ms ease',
+        }}
+      />
     </button>
   )
 }
@@ -801,6 +748,25 @@ function Particles({ count = 15 }) {
 }
 
 /* Icons */
+function CrosshairIcon() {
+  return (
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      <circle cx="12" cy="12" r="3" strokeWidth="1.5" />
+    </svg>
+  )
+}
+
+function TargetIcon() {
+  return (
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2" />
+    </svg>
+  )
+}
+
 function MapIcon() {
   return (
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
