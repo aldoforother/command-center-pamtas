@@ -173,10 +173,14 @@ export function Sidebar({ id }) {
 /* ── Section Label ──────────────────────────────────────────── */
 function SidebarSectionLabel({ children, noMargin }) {
   return (
-    <div className={`px-2 mb-1 ${noMargin ? 'mb-0.5' : ''}`}>
+    <div className={`px-2 mb-0.5 ${noMargin ? 'mb-0' : ''}`}>
       <span
-        className="text-micro-xs font-bold tracking-[0.15em] uppercase"
-        style={{ color: 'var(--text-disabled)' }}
+        className="text-[8px] font-semibold tracking-[0.18em] uppercase"
+        style={{
+          color: 'var(--text-disabled)',
+          fontFamily: "'Inter', 'Segoe UI', sans-serif",
+          letterSpacing: '0.15em'
+        }}
       >
         {children}
       </span>
@@ -192,58 +196,61 @@ function NavItem({ to, icon, label, end, badge, badgeVariant = 'accent' }) {
     <NavLink
       to={to}
       end={end}
-      className={({ isActive }) => {
-        const baseClass = 'flex items-center gap-2 px-2 py-1.5 text-label-xs font-medium tracking-wide rounded-sm cursor-pointer'
-        return baseClass
-      }}
+      className="flex items-center gap-1.5 px-2 py-1 rounded-sm cursor-pointer"
       style={({ isActive }) => {
+        const baseFont = {
+          fontFamily: "'Inter', 'Segoe UI', sans-serif",
+          fontSize: '10px',
+          fontWeight: isActive ? 600 : 400,
+          letterSpacing: '0.03em',
+          transition: 'all 150ms ease',
+        }
         if (isActive) {
           return {
-            backgroundColor: 'var(--accent-muted)',
-            color: 'var(--accent-primary)',
-            borderLeft: '2px solid var(--accent-primary)',
-            transition: 'all var(--duration-fast) var(--ease-out)',
+            ...baseFont,
+            backgroundColor: 'rgba(0,255,136,0.08)',
+            color: '#00ff88',
+            borderLeft: '2px solid #00ff88',
           }
         }
         if (isHovered) {
           return {
-            backgroundColor: 'var(--surface-secondary)',
-            color: 'var(--text-primary)',
-            borderLeft: '2px solid transparent',
-            transition: 'all var(--duration-fast) var(--ease-out)',
+            ...baseFont,
+            fontWeight: 500,
+            backgroundColor: 'rgba(255,255,255,0.04)',
+            color: 'rgba(200,214,229,0.9)',
+            borderLeft: '2px solid rgba(0,255,136,0.3)',
           }
         }
         return {
-          color: 'var(--text-tertiary)',
+          ...baseFont,
+          color: 'rgba(200,214,229,0.55)',
           borderLeft: '2px solid transparent',
-          transition: 'all var(--duration-fast) var(--ease-out)',
         }
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <span
-        className="w-3 flex-shrink-0"
-        style={{ opacity: 0.85 }}
+        className="w-3 h-3 flex-shrink-0 opacity-70"
       >
         {icon}
       </span>
-      <span className="uppercase tracking-[0.08em] flex-1 truncate">{label}</span>
+      <span className="flex-1 truncate">{label}</span>
       {badge !== null && badge !== undefined && (
         <span
-          className="font-mono text-micro font-bold px-1.5 py-0.5 rounded-sm flex-shrink-0 animate-pulse"
+          className="font-mono text-[8px] font-bold px-1 py-0.5 rounded flex-shrink-0"
           style={
             badgeVariant === 'danger'
               ? {
-                  color: 'var(--color-danger)',
-                  background: 'var(--color-danger-subtle)',
-                  border: '1px solid var(--color-danger)',
-                  boxShadow: '0 0 6px rgba(255,59,59,0.3)',
+                  color: '#ff4444',
+                  background: 'rgba(255,68,68,0.15)',
+                  border: '1px solid rgba(255,68,68,0.4)',
                 }
               : {
-                  color: 'var(--accent-primary)',
-                  background: 'var(--accent-muted)',
-                  border: '1px solid var(--accent-primary)',
+                  color: '#00ff88',
+                  background: 'rgba(0,255,136,0.1)',
+                  border: '1px solid rgba(0,255,136,0.3)',
                 }
           }
         >
@@ -265,47 +272,48 @@ function PosNavItem({ pos, kerawanan }) {
   return (
     <NavLink
       to={`/pos/${pos.pos_id}`}
-      className={({ isActive }) => {
-        const baseClass = 'flex items-center gap-2 px-2 py-2 text-label-sm transition-all duration-100 rounded-sm cursor-pointer'
-        return baseClass
-      }}
+      className="flex items-center gap-1.5 px-2 py-1.5 rounded-sm cursor-pointer"
       style={({ isActive }) => {
+        const baseFont = {
+          fontFamily: "'Inter', 'Segoe UI', sans-serif",
+          transition: 'all 150ms ease',
+        }
         if (isActive) {
           return {
-            backgroundColor: 'var(--accent-muted)',
-            color: 'var(--accent-primary)',
-            transition: 'all var(--duration-fast) var(--ease-out)',
+            ...baseFont,
+            backgroundColor: 'rgba(0,255,136,0.08)',
+            color: '#00ff88',
           }
         }
         if (isHovered) {
           return {
-            backgroundColor: 'var(--surface-secondary)',
-            color: 'var(--text-primary)',
-            transition: 'all var(--duration-fast) var(--ease-out)',
+            ...baseFont,
+            backgroundColor: 'rgba(255,255,255,0.04)',
+            color: 'rgba(200,214,229,0.9)',
           }
         }
         return {
-          color: 'var(--text-tertiary)',
-          transition: 'all var(--duration-fast) var(--ease-out)',
+          ...baseFont,
+          color: 'rgba(200,214,229,0.5)',
         }
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <span
-        className="w-5 h-5 rounded-sm flex items-center justify-center flex-shrink-0 text-micro font-bold font-mono relative"
+        className="w-5 h-5 rounded-sm flex items-center justify-center flex-shrink-0 text-[9px] font-bold font-mono relative"
         style={
           hasRawan
             ? {
-                background: 'var(--color-danger-subtle)',
-                border: '1px solid var(--color-danger)',
-                color: 'var(--color-danger)',
-                boxShadow: '0 0 8px rgba(255,59,59,0.25)',
+                background: 'rgba(255,68,68,0.15)',
+                border: '1px solid rgba(255,68,68,0.4)',
+                color: '#ff4444',
+                boxShadow: '0 0 6px rgba(255,68,68,0.2)',
               }
             : {
-                background: 'var(--accent-muted)',
-                border: '1px solid var(--accent-primary)',
-                color: 'var(--accent-primary)',
+                background: 'rgba(0,255,136,0.08)',
+                border: '1px solid rgba(0,255,136,0.3)',
+                color: '#00ff88',
               }
         }
       >
@@ -314,8 +322,8 @@ function PosNavItem({ pos, kerawanan }) {
           <span
             className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full"
             style={{
-              backgroundColor: 'var(--color-danger)',
-              boxShadow: '0 0 4px rgba(255,59,59,0.9)',
+              backgroundColor: '#ff4444',
+              boxShadow: '0 0 4px rgba(255,68,68,0.8)',
               animation: 'statusPulse 2s ease-in-out infinite',
             }}
             aria-hidden="true"
@@ -325,13 +333,17 @@ function PosNavItem({ pos, kerawanan }) {
       <div className="min-w-0 flex-1">
         <p
           className="font-medium leading-tight truncate"
-          style={{ fontSize: '10px' }}
+          style={{ fontSize: '9px', fontFamily: "'Inter', sans-serif" }}
         >
           {pos.nama_pos}
         </p>
         <p
-          className="truncate leading-tight opacity-50"
-          style={{ fontSize: '9px' }}
+          className="truncate leading-tight"
+          style={{
+            fontSize: '8px',
+            color: 'rgba(200,214,229,0.4)',
+            fontFamily: "'Inter', sans-serif"
+          }}
         >
           {pos.lokasi_desa || pos.kabupaten}
         </p>

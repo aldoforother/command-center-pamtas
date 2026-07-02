@@ -254,22 +254,37 @@ Updated: 2026-07-02 (v3 - Detailed POS Detail)
 ### TAB 3: GEO-DEMO-KONSOS
 
 ```
-[GEO-DEMO-KONSOS Tab Content]
-├── [Map Container]
-│   ├── [Leaflet Map]
-│   │   ├── GeoJSON polygons overlay
-│   │   └── [Marker] at POS coordinate
-│   ├── button[zoom in]
-│   ├── button[zoom out]
-│   └── [Layer Controls]
+[GEO-DEMO-KONSOS Tab Content] - 3 Sections with Edit Buttons
+├── [Section: Kondisi Geografi] (◬ icon, green accent)
+│   ├── text/textarea "{auto-generated or custom description}"
+│   ├── InfoRow "Kabupaten" "{value}"
+│   ├── InfoRow "Kecamatan" "{value}"
+│   ├── InfoRow "Desa / Lokasi" "{value}"
+│   ├── InfoRow "Provinsi" "{value}"
+│   ├── InfoRow "Koordinat" "{lat}, {lng}"
+│   ├── InfoRow "Jumlah Patok" "{value}"
+│   └── button "✎ Edit" (opens AspekEditForm modal)
 │
-├── [Konsos Data Visualization]
-│   ├── text "DATA KONSOS"
-│   ├── table/list of konsos entries
-│   └── stat summaries
+├── [Section: Kondisi Demografi] (◈ icon, blue accent)
+│   ├── text/textarea "{auto-generated or custom description}"
+│   ├── StatBox "Total Penduduk" "{value}" "jiwa"
+│   ├── StatBox "Kepala Keluarga" "{value}" "KK"
+│   ├── InfoRow "Rata-rata Jiwa/KK" "{value}"
+│   ├── InfoRow "Klasifikasi" "{category}"
+│   └── button "✎ Edit" (opens AspekEditForm modal)
 │
-└── [Legend/Info Panel]
-    └── color indicators for geo zones
+└── [Section: Kondisi Sosial (Konsos)] (◉ icon, purple accent)
+    ├── text/textarea "{auto-generated or custom description}"
+    └── button "✎ Edit" (opens AspekEditForm modal)
+
+[AspekEditForm Modal] - Shared for all 3 sections
+├── header "Edit {section name}"
+├── button "✕" (close)
+├── textarea (6 rows, editable content)
+├── text "Kosongkan untuk menghapus narasi..."
+└── [Footer]
+    ├── button "Batal"
+    └── button "Simpan"
 ```
 
 ---
