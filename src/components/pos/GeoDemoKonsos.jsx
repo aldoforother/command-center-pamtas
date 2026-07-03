@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { LoadingSpinner } from '../ui/LoadingSpinner'
 import { EmptyState } from '../ui/EmptyState'
 import { useToast } from '../ui/Toast'
@@ -14,6 +14,57 @@ import { POS_LIST } from '../../constants/posList'
  * - Kondisi Demografi: Data dari demografi, bisa edit Total Penduduk & KK
  * - Kondisi Sosial: Auto-generated analysis, bisa edit manual
  */
+
+// ── Markdown-like renderer for social content ──────────────────────────────────
+function renderMarkdown(text) {
+  if (!text) return null
+  const lines = text.split('\n')
+  return lines.map((line, idx) => {
+    // Skip empty lines
+    if (!line.trim()) return <div key={idx} className="h-2" />
+
+    // Bold text (handle **text**)
+    const parts = line.split(/(\*\*[^*]+\*\*)/g)
+    const rendered = parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i} style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>{part.slice(2, -2)}</strong>
+      }
+      return part
+    })
+
+    // Check for headers
+    if (line.startsWith('**') && line.includes('**')) {
+      return (
+        <h4 key={idx} className="text-[11px] font-bold tracking-wide mt-3 mb-1"
+          style={{ color: 'var(--color-purple)' }}>
+          {rendered}
+        </h4>
+      )
+    }
+
+    // Check for list items
+    if (line.trim().startsWith('- ') || line.trim().startsWith('• ')) {
+      const content = line.trim().slice(2)
+      const listParts = content.split(/(\*\*[^*]+\*\*)/g).map((p, i) => {
+        if (p.startsWith('**') && p.endsWith('**')) {
+          return <strong key={i} style={{ color: 'var(--accent-primary)' }}>{p.slice(2, -2)}</strong>
+        }
+        return p
+      })
+      return (
+        <div key={idx} className="flex gap-2 py-0.5 pl-2">
+          <span style={{ color: 'var(--color-purple)' }}>▸</span>
+          <span className="flex-1">{listParts}</span>
+        </div>
+      )
+    }
+
+    // Regular paragraph
+    return (
+      <p key={idx} className="py-0.5">{rendered}</p>
+    )
+  })
+}
 
 /// ══════════════════════════════════════════════════════════════════════════════
 //  AUTO-GENERATED DESCRIPTIONS
@@ -235,17 +286,46 @@ function StatBox({ label, value, unit, color, editable, onChange, saving }) {
 }
 
 function KonsosEditForm({ initial, onSave, onCancel, saving }) {
-  const [value, setValue] = useState(initial || '')
+  // Handle both string initial (konsos_notes) and auto-generated content
+  const getInitialValue = () => {
+    if (typeof initial === 'string') return initial
+    if (initial === null || initial === undefined) return ''
+    return String(initial)
+  }
+
+  const [value, setValue] = useState(getInitialValue)
+
+  // Sync value when initial changes (e.g., data loaded after initial render)
+  const initialRef = useRef(initial)
+  useEffect(() => {
+    if (initial !== initialRef.current) {
+      initialRef.current = initial
+      setValue(getInitialValue())
+    }
+  }, [initial])
 
   return (
     <div className="space-y-3">
       <textarea
-        className="hud-input w-full resize-none text-xs leading-relaxed"
-        rows={10}
+        className="w-full resize-none text-xs leading-relaxed rounded-lg p-3 outline-none transition-all"
+        rows={12}
         value={value}
         onChange={e => setValue(e.target.value)}
         placeholder="Deskripsikan kondisi sosial: adat istiadat, agama dominan, mata pencaharian, tingkat pendidikan, isu sosial, hubungan lintas batas, dll."
         disabled={saving}
+        style={{
+          background: 'rgba(187,136,255,0.05)',
+          border: '1px solid rgba(187,136,255,0.3)',
+          color: 'rgba(200,214,229,0.85)',
+        }}
+        onFocus={e => {
+          e.target.style.borderColor = 'rgba(187,136,255,0.6)'
+          e.target.style.background = 'rgba(187,136,255,0.08)'
+        }}
+        onBlur={e => {
+          e.target.style.borderColor = 'rgba(187,136,255,0.3)'
+          e.target.style.background = 'rgba(187,136,255,0.05)'
+        }}
       />
       <p className="text-[9px]" style={{ color: 'rgba(200,214,229,0.3)' }}>
         Kosongkan untuk menghapus narasi dan kembali ke tampilan otomatis.
@@ -254,20 +334,46 @@ function KonsosEditForm({ initial, onSave, onCancel, saving }) {
         <button
           type="button"
           onClick={onCancel}
-          className="hud-btn hud-btn-danger flex-1 text-[10px]"
+          className="px-4 py-2 rounded-lg text-[10px] font-medium transition-all flex-1"
           disabled={saving}
+          style={{
+            background: 'rgba(255,100,100,0.1)',
+            border: '1px solid rgba(255,100,100,0.3)',
+            color: 'rgba(255,100,100,0.8)',
+          }}
+          onMouseEnter={e => {
+            e.target.style.background = 'rgba(255,100,100,0.2)'
+            e.target.style.color = '#ff6666'
+          }}
+          onMouseLeave={e => {
+            e.target.style.background = 'rgba(255,100,100,0.1)'
+            e.target.style.color = 'rgba(255,100,100,0.8)'
+          }}
         >
           Batal
         </button>
         <button
           type="button"
           onClick={() => onSave(value)}
-          className="hud-btn flex-1 text-[10px]"
+          className="px-4 py-2 rounded-lg text-[10px] font-medium transition-all flex-1"
           disabled={saving}
+          style={{
+            background: 'rgba(187,136,255,0.15)',
+            border: '1px solid rgba(187,136,255,0.4)',
+            color: '#a855f7',
+          }}
+          onMouseEnter={e => {
+            e.target.style.background = 'rgba(187,136,255,0.25)'
+            e.target.style.boxShadow = '0 0 15px rgba(187,136,255,0.3)'
+          }}
+          onMouseLeave={e => {
+            e.target.style.background = 'rgba(187,136,255,0.15)'
+            e.target.style.boxShadow = 'none'
+          }}
         >
           {saving ? (
             <span className="flex items-center justify-center gap-1.5">
-              <span className="inline-block w-2.5 h-2.5 border border-[#00ff88] border-t-transparent rounded-full animate-spin" />
+              <span className="inline-block w-2.5 h-2.5 border border-[#a855f7] border-t-transparent rounded-full animate-spin" />
               Menyimpan…
             </span>
           ) : 'Simpan'}
@@ -311,7 +417,7 @@ export function GeoDemoKonsos({ demografi, pos, loading, posId, onRefresh }) {
   })
 
   // Initialize edit state when data changes
-  useState(() => {
+  useEffect(() => {
     if (pos) {
       setGeoEdit({
         kabupaten: pos.kabupaten || '',
@@ -325,7 +431,7 @@ export function GeoDemoKonsos({ demografi, pos, loading, posId, onRefresh }) {
     }
   }, [pos])
 
-  useState(() => {
+  useEffect(() => {
     if (demografi) {
       setDemoEdit({
         total_penduduk: demografi.total_penduduk || 0,
@@ -577,10 +683,10 @@ export function GeoDemoKonsos({ demografi, pos, loading, posId, onRefresh }) {
         )}
       </Section>
 
-      {/* ── 3. KONDISI SOSIAL (KONSOS) ─────────────────────────── */}
+      {/* ── 3. KONDISI SOSIAL ─────────────────────────── */}
       <Section
         icon="◉"
-        label="Kondisi Sosial (Konsos)"
+        label="Kondisi Sosial"
         color="rgba(187,136,255,0.25)"
         glow="rgba(187,136,255,0.15)"
         headerRight={!editingKonsos && (
@@ -595,14 +701,12 @@ export function GeoDemoKonsos({ demografi, pos, loading, posId, onRefresh }) {
             saving={saving}
           />
         ) : demografi?.konsos_notes ? (
-          <p className="text-[rgba(200,214,229,0.7)] text-xs leading-relaxed whitespace-pre-wrap">
-            {demografi.konsos_notes}
-          </p>
+          <div className="text-[rgba(200,214,229,0.75)] text-xs leading-relaxed space-y-2">
+            {renderMarkdown(demografi.konsos_notes)}
+          </div>
         ) : (
-          <div className="space-y-2">
-            <p className="text-[rgba(200,214,229,0.7)] text-xs leading-relaxed whitespace-pre-wrap">
-              {autoKonsos}
-            </p>
+          <div className="text-[rgba(200,214,229,0.75)] text-xs leading-relaxed space-y-2">
+            {renderMarkdown(autoKonsos)}
           </div>
         )}
       </Section>

@@ -225,20 +225,20 @@ function TokohCard({ tokoh, kategori, onEdit, onDelete, deleting }) {
             <p className="text-[10px] mt-0.5" style={{ color: `${pal.color}80` }}>{tokoh.jabatan}</p>
           </div>
         </div>
-        <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-1.5 flex-shrink-0" onClick={e => e.stopPropagation()}>
           <IconBtn onClick={onEdit} title="Edit" color="green">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
           </IconBtn>
           <IconBtn onClick={onDelete} disabled={deleting} title="Hapus" color="red">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
           </IconBtn>
-          <span className="text-[rgba(0,255,136,0.3)] text-xs pl-1">{expanded ? '▲' : '▼'}</span>
+          <span className="text-[rgba(0,255,136,0.4)] text-xs pl-1">{expanded ? '▲' : '▼'}</span>
         </div>
       </div>
 
@@ -289,15 +289,30 @@ function TokohCard({ tokoh, kategori, onEdit, onDelete, deleting }) {
 }
 
 function IconBtn({ onClick, disabled, title, color, children }) {
-  const c = color === 'red'
-    ? 'text-[rgba(255,51,51,0.4)] hover:text-[#ff3333] hover:bg-[rgba(255,51,51,0.08)]'
-    : 'text-[rgba(0,255,136,0.35)] hover:text-[#00ff88] hover:bg-[rgba(0,255,136,0.08)]'
+  const isRed = color === 'red'
   return (
     <button
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className={`p-1.5 rounded-sm transition-colors disabled:opacity-30 ${c}`}
+      className="p-1.5 rounded-md transition-all disabled:opacity-30"
+      style={{
+        color: isRed ? 'rgba(255,80,80,0.7)' : 'rgba(0,255,136,0.7)',
+        background: isRed ? 'rgba(255,80,80,0.08)' : 'rgba(0,255,136,0.08)',
+        border: `1px solid ${isRed ? 'rgba(255,80,80,0.2)' : 'rgba(0,255,136,0.2)'}`,
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.color = isRed ? '#ff5050' : '#00ff88'
+        e.currentTarget.style.background = isRed ? 'rgba(255,80,80,0.2)' : 'rgba(0,255,136,0.2)'
+        e.currentTarget.style.borderColor = isRed ? 'rgba(255,80,80,0.5)' : 'rgba(0,255,136,0.5)'
+        e.currentTarget.style.boxShadow = isRed ? '0 0 12px rgba(255,80,80,0.4)' : '0 0 12px rgba(0,255,136,0.4)'
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.color = isRed ? 'rgba(255,80,80,0.7)' : 'rgba(0,255,136,0.7)'
+        e.currentTarget.style.background = isRed ? 'rgba(255,80,80,0.08)' : 'rgba(0,255,136,0.08)'
+        e.currentTarget.style.borderColor = isRed ? 'rgba(255,80,80,0.2)' : 'rgba(0,255,136,0.2)'
+        e.currentTarget.style.boxShadow = 'none'
+      }}
     >
       {children}
     </button>
